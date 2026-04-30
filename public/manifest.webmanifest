@@ -1,0 +1,24 @@
+{
+  "name": "Acts of Piety",
+  "short_name": "Piety",
+  "description": "A joyful Catholic habit and prayer app.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7FDF2",
+  "theme_color": "#58CC02",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
