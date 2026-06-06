@@ -12,6 +12,7 @@ import {
   Check,
   ChevronRight,
   Church,
+  CircleHelp,
   Clock3,
   ClipboardList,
   Compass,
@@ -30,6 +31,7 @@ import {
   ScrollText,
   Search,
   ShieldCheck,
+  Smartphone,
   Sparkles,
   Star,
   Sun,
@@ -121,6 +123,43 @@ const tabItems = [
   { id: "progress", labelKey: "tabProgress", icon: Award },
   { id: "profile", labelKey: "tabProfile", icon: UserRound },
 ] as const;
+const orientationSteps = [
+  {
+    tab: "today",
+    icon: Home,
+    titleKey: "orientationTodayTitle",
+    detailKey: "orientationTodayDetail",
+  },
+  {
+    tab: "explore",
+    icon: Compass,
+    titleKey: "orientationExploreTitle",
+    detailKey: "orientationExploreDetail",
+  },
+  {
+    tab: "prayers",
+    icon: ScrollText,
+    titleKey: "orientationPrayersTitle",
+    detailKey: "orientationPrayersDetail",
+  },
+  {
+    tab: "progress",
+    icon: Award,
+    titleKey: "orientationProgressTitle",
+    detailKey: "orientationProgressDetail",
+  },
+  {
+    tab: "profile",
+    icon: UserRound,
+    titleKey: "orientationProfileTitle",
+    detailKey: "orientationProfileDetail",
+  },
+] as const satisfies Array<{
+  tab: Tab;
+  icon: typeof Home;
+  titleKey: TranslationKey;
+  detailKey: TranslationKey;
+}>;
 
 const categoryMeta = {
   daily_practices: {
@@ -350,6 +389,37 @@ const uiText = {
     appVersion: "App version",
     currentVersion: "Current version",
     installedVersion: "Installed version",
+    helpAndSetup: "Help and setup",
+    installApp: "Install app",
+    installGuide: "Install guide",
+    installGuideDetail: "Add this app to your phone home screen for offline-style access.",
+    androidInstall: "Android",
+    androidInstallStep1: "Open this app in Chrome.",
+    androidInstallStep2: "Tap the three-dot menu.",
+    androidInstallStep3: "Choose Add to Home screen or Install app.",
+    androidInstallStep4: "Confirm Install.",
+    iosInstall: "iPhone",
+    iosInstallStep1: "Open this app in Safari.",
+    iosInstallStep2: "Tap the Share button.",
+    iosInstallStep3: "Choose Add to Home Screen.",
+    iosInstallStep4: "Tap Add.",
+    orientation: "Orientation",
+    orientationButton: "Open orientation",
+    orientationTitle: "Quick orientation",
+    orientationSubtitle: "A short tour of the main screens.",
+    orientationHighlight: "Highlighted",
+    orientationTodayTitle: "Today",
+    orientationTodayDetail: "See today's acts, current novena, tips, streak, and upcoming preview.",
+    orientationExploreTitle: "Explore",
+    orientationExploreDetail: "Browse sacramental life, acts of piety, saints, and schedule practices.",
+    orientationPrayersTitle: "Prayers",
+    orientationPrayersDetail: "Save intentions, browse prayers, favorite prayers, and join novenas.",
+    orientationProgressTitle: "Progress",
+    orientationProgressDetail: "Review streaks, badges, completion history, and category balance.",
+    orientationProfileTitle: "Profile",
+    orientationProfileDetail: "Edit your profile, preferences, version updates, install help, and storage tools.",
+    finishOrientation: "Finish tour",
+    skipOrientation: "Skip",
     newUpdateFound: "New update found",
     newUpdateDetail: "Version {version} is ready with new improvements.",
     alreadyLatest: "Already latest",
@@ -566,6 +636,37 @@ const uiText = {
     appVersion: "應用程式版本",
     currentVersion: "目前版本",
     installedVersion: "已記錄版本",
+    helpAndSetup: "說明與設定",
+    installApp: "安裝應用程式",
+    installGuide: "安裝指南",
+    installGuideDetail: "把此應用程式加到手機主畫面，方便像 App 一樣使用。",
+    androidInstall: "Android",
+    androidInstallStep1: "用 Chrome 開啟此應用程式。",
+    androidInstallStep2: "點選右上角三點選單。",
+    androidInstallStep3: "選擇「新增至主畫面」或「安裝應用程式」。",
+    androidInstallStep4: "確認安裝。",
+    iosInstall: "iPhone",
+    iosInstallStep1: "用 Safari 開啟此應用程式。",
+    iosInstallStep2: "點選分享按鈕。",
+    iosInstallStep3: "選擇「加入主畫面」。",
+    iosInstallStep4: "點選「新增」。",
+    orientation: "導覽",
+    orientationButton: "開啟導覽",
+    orientationTitle: "快速導覽",
+    orientationSubtitle: "簡短認識主要畫面。",
+    orientationHighlight: "目前焦點",
+    orientationTodayTitle: "今天",
+    orientationTodayDetail: "查看今日敬禮、進行中的九日敬禮、提示、連續紀錄和接下來預覽。",
+    orientationExploreTitle: "探索",
+    orientationExploreDetail: "瀏覽聖事生活、敬禮、聖人，並安排靈修實踐。",
+    orientationPrayersTitle: "經文",
+    orientationPrayersDetail: "儲存祈禱意向、瀏覽經文、加入最愛，並參與九日敬禮。",
+    orientationProgressTitle: "進度",
+    orientationProgressDetail: "查看連續紀錄、徽章、完成紀錄和今日類別分佈。",
+    orientationProfileTitle: "個人",
+    orientationProfileDetail: "編輯個人資料、偏好設定、版本更新、安裝說明和儲存工具。",
+    finishOrientation: "完成導覽",
+    skipOrientation: "略過",
     newUpdateFound: "發現新更新",
     newUpdateDetail: "{version} 版本已準備好，包含新的改進。",
     alreadyLatest: "已是最新版本",
@@ -670,10 +771,17 @@ export default function App() {
     "plan-of-life:app-version",
     CURRENT_APP_VERSION,
   );
+  const [orientationSeen, setOrientationSeen, orientationSeenHydrated] = useLocalStorageState<boolean>(
+    "plan-of-life:orientation-seen",
+    false,
+  );
   const [selectedDetail, setSelectedDetail] = useState<SelectedDetail | null>(null);
   const [selectedPrayerId, setSelectedPrayerId] = useState<string | null>(null);
   const [selectedNovenaId, setSelectedNovenaId] = useState<string | null>(null);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
+  const [installGuideOpen, setInstallGuideOpen] = useState(false);
+  const [orientationOpen, setOrientationOpen] = useState(false);
+  const [orientationStepIndex, setOrientationStepIndex] = useState(0);
   const [confessionLogs, setConfessionLogs, confessionLogsHydrated] = useLocalStorageState<ConfessionLogEntry[]>(
     "plan-of-life:confession-logs",
     [],
@@ -746,9 +854,11 @@ export default function App() {
     prayerIntentionsHydrated &&
     favoritePrayerIdsHydrated &&
     lastSeenAppVersionHydrated &&
+    orientationSeenHydrated &&
     confessionLogsHydrated &&
     novenaProgressHydrated;
   const hasNewAppVersion = compareVersionStrings(lastSeenAppVersion, CURRENT_APP_VERSION) < 0;
+  const currentOrientationStep = orientationSteps[orientationStepIndex];
 
   useEffect(() => {
     const timer = window.setTimeout(() => setShowSplash(false), 900);
@@ -773,6 +883,17 @@ export default function App() {
       setScheduledPieties(getRecommendedSchedule(profile, today));
     }
   }, [profile, scheduledPieties.length, setScheduledPieties, stage, today]);
+
+  useEffect(() => {
+    if (showSplash || !storageHydrated || stage !== "app" || orientationSeen || orientationOpen) {
+      return;
+    }
+
+    setSelectedDetail(null);
+    setOrientationStepIndex(0);
+    setActiveTab(orientationSteps[0].tab);
+    setOrientationOpen(true);
+  }, [orientationOpen, orientationSeen, showSplash, stage, storageHydrated]);
 
   function chooseAnswer(key: OnboardingAnswerKey, value: string) {
     const nextAnswers = { ...answers, [key]: value };
@@ -964,6 +1085,24 @@ export default function App() {
     setLastSeenAppVersion(CURRENT_APP_VERSION);
   }
 
+  function openOrientationTour() {
+    setSelectedDetail(null);
+    setOrientationStepIndex(0);
+    setActiveTab(orientationSteps[0].tab);
+    setOrientationOpen(true);
+  }
+
+  function moveOrientationStep(nextIndex: number) {
+    const safeIndex = Math.min(Math.max(nextIndex, 0), orientationSteps.length - 1);
+    setOrientationStepIndex(safeIndex);
+    setActiveTab(orientationSteps[safeIndex].tab);
+  }
+
+  function closeOrientationTour() {
+    setOrientationOpen(false);
+    setOrientationSeen(true);
+  }
+
   if (showSplash) {
     return <SplashScreen t={t} />;
   }
@@ -1125,6 +1264,8 @@ export default function App() {
               }))
             }
             onReset={resetOnboarding}
+            onShowInstallGuide={() => setInstallGuideOpen(true)}
+            onShowOrientation={openOrientationTour}
           />
         )}
       </div>
@@ -1163,8 +1304,40 @@ export default function App() {
         ) : null}
       </AnimatePresence>
 
-      {!selectedDetail ? (
-        <BottomNav activeTab={activeTab} t={t} onChange={setActiveTab} />
+      <AnimatePresence>
+        {installGuideOpen ? (
+          <InstallGuideDialog t={t} onClose={() => setInstallGuideOpen(false)} />
+        ) : null}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {orientationOpen ? (
+          <OrientationDialog
+            currentStep={currentOrientationStep}
+            stepIndex={orientationStepIndex}
+            t={t}
+            totalSteps={orientationSteps.length}
+            onClose={closeOrientationTour}
+            onNext={() => {
+              if (orientationStepIndex >= orientationSteps.length - 1) {
+                closeOrientationTour();
+                return;
+              }
+
+              moveOrientationStep(orientationStepIndex + 1);
+            }}
+            onPrevious={() => moveOrientationStep(orientationStepIndex - 1)}
+          />
+        ) : null}
+      </AnimatePresence>
+
+      {!selectedDetail && !selectedPrayer && !selectedNovena && !installGuideOpen ? (
+        <BottomNav
+          activeTab={activeTab}
+          highlightedTab={orientationOpen ? currentOrientationStep.tab : null}
+          t={t}
+          onChange={setActiveTab}
+        />
       ) : null}
     </main>
   );
@@ -3267,6 +3440,7 @@ function PrayerCardGameDialog({
         frontLabel={t("cardFront")}
         key={prayer.id}
         metadata={translation.subtitle ?? readablePrayerCategory(prayer.category, t)}
+        navigationStyle="plain"
         onNext={() => goToPrayer(selectedIndex + 1)}
         onPrevious={() => goToPrayer(selectedIndex - 1)}
         prayerText={translation.text}
@@ -3336,9 +3510,12 @@ function NovenaCardGameDialog({
           frontLabel={t("cardFront")}
           key={selectedDay.day}
           metadata={t("dayOf", { day: selectedDay.day, total: novena.days.length })}
+          navigationStyle="stacked"
+          autoFlip={selectedIndex === initialIndex}
           onNext={() => setSelectedIndex((index) => Math.min(novena.days.length - 1, index + 1))}
           onPrevious={() => setSelectedIndex((index) => Math.max(0, index - 1))}
           prayerText={`${selectedDay.reflection}\n\n${selectedDay.prayer}\n\n${t("action")}: ${selectedDay.action}`}
+          remainingCards={novena.days.length - selectedIndex - 1}
           textLanguage="en"
           title={selectedDay.title}
           typeLabel={t("typeNovena")}
@@ -3373,24 +3550,26 @@ function FlipCardDialogShell({
 }) {
   return (
     <motion.div
-      className="fixed inset-0 z-40 grid place-items-center bg-foreground/50 px-4 py-8"
+      className="fixed inset-0 z-40 grid place-items-center bg-foreground/50 px-2 py-5"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      onClick={onClose}
     >
       <motion.div
-        className="w-full max-w-md"
+        className="relative w-full max-w-md"
         initial={{ opacity: 0, scale: 0.9, y: 18 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 10 }}
         transition={{ type: "spring", stiffness: 230, damping: 20 }}
+        onClick={(event) => event.stopPropagation()}
       >
-        <div className="mb-3 flex justify-end">
+        <div className="pointer-events-none absolute -top-3 right-2 z-30 flex justify-end">
           <button
             type="button"
             aria-label={t("close")}
             onClick={onClose}
-            className="grid size-11 place-items-center rounded-full border-4 border-white bg-white text-xl font-black text-muted shadow-soft"
+            className="pointer-events-auto grid size-11 place-items-center rounded-full border-2 border-white bg-white text-xl font-black text-muted shadow-soft"
           >
             ×
           </button>
@@ -3402,27 +3581,33 @@ function FlipCardDialogShell({
 }
 
 function PrayerFlipCard({
+  autoFlip = true,
   backLabel,
   canGoNext = false,
   canGoPrevious = false,
   frontLabel,
   metadata,
+  navigationStyle = "plain",
   onNext,
   onPrevious,
   prayerText,
+  remainingCards = 0,
   textLanguage,
   title,
   typeLabel,
   t,
 }: {
+  autoFlip?: boolean;
   backLabel: string;
   canGoNext?: boolean;
   canGoPrevious?: boolean;
   frontLabel: string;
   metadata: string;
+  navigationStyle?: "plain" | "stacked";
   onNext?: () => void;
   onPrevious?: () => void;
   prayerText: string;
+  remainingCards?: number;
   textLanguage: PrayerLanguage;
   title: string;
   typeLabel: string;
@@ -3432,9 +3617,11 @@ function PrayerFlipCard({
 
   useEffect(() => {
     setFlipped(false);
+    if (!autoFlip) return;
+
     const timer = window.setTimeout(() => setFlipped(true), 520);
     return () => window.clearTimeout(timer);
-  }, [title]);
+  }, [autoFlip, title]);
 
   function handleSwipe(offsetX: number) {
     if (offsetX < -64 && canGoNext) {
@@ -3448,47 +3635,28 @@ function PrayerFlipCard({
   }
 
   return (
-    <div className="relative mx-auto w-[min(88vw,22rem)] [perspective:1400px]">
-      <button
-        type="button"
-        aria-label={t("previousCard")}
-        disabled={!canGoPrevious}
-        onClick={onPrevious}
-        className={cn(
-          "absolute -left-3 top-1/2 z-10 grid size-11 -translate-y-1/2 place-items-center rounded-full border-4 border-white bg-white text-foreground shadow-soft transition active:translate-y-[calc(-50%+0.25rem)]",
-          !canGoPrevious && "pointer-events-none opacity-35",
-        )}
-      >
-        <ArrowLeft className="size-5" strokeWidth={3} />
-      </button>
-      <button
-        type="button"
-        aria-label={t("nextCard")}
-        disabled={!canGoNext}
-        onClick={onNext}
-        className={cn(
-          "absolute -right-3 top-1/2 z-10 grid size-11 -translate-y-1/2 place-items-center rounded-full border-4 border-white bg-white text-foreground shadow-soft transition active:translate-y-[calc(-50%+0.25rem)]",
-          !canGoNext && "pointer-events-none opacity-35",
-        )}
-      >
-        <ChevronRight className="size-5" strokeWidth={3} />
-      </button>
-      <motion.div
-        className="relative h-[70svh] min-h-[30rem] max-h-[46rem] cursor-grab active:cursor-grabbing [transform-style:preserve-3d]"
-        animate={{ rotateY: flipped ? 180 : 0 }}
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.18}
-        onDragEnd={(_, info) => handleSwipe(info.offset.x)}
-        transition={{ type: "spring", stiffness: 170, damping: 22 }}
-      >
-        <Card className="absolute inset-0 overflow-hidden border-4 border-yellow bg-yellow p-3 shadow-playful [backface-visibility:hidden]">
-          <div className="flex h-full flex-col rounded-[1.35rem] border-4 border-white bg-white p-4">
+    <div className="relative mx-auto w-[min(92vw,25rem)] [perspective:1400px]">
+      <div className="relative h-[72svh] min-h-[31rem] max-h-[47rem]">
+        {navigationStyle === "stacked" ? (
+          <NovenaDeckBackStack remainingCards={remainingCards} />
+        ) : null}
+        <motion.div
+          className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing [transform-style:preserve-3d]"
+          animate={{ rotateY: flipped ? 180 : 0, x: 0, rotateZ: 0 }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.24}
+          whileDrag={{ rotateZ: canGoNext ? -3 : canGoPrevious ? 3 : 0 }}
+          onDragEnd={(_, info) => handleSwipe(info.offset.x)}
+          transition={{ type: "spring", stiffness: 150, damping: 20, mass: 0.9 }}
+        >
+        <Card className="absolute inset-0 overflow-hidden border-2 border-yellow bg-yellow p-2 shadow-playful [backface-visibility:hidden]">
+          <div className="flex h-full flex-col rounded-[1.1rem] border-2 border-white bg-white p-4">
             <div className="rounded-2xl bg-primary-light px-4 py-2 text-center">
               <p className="text-sm font-black uppercase text-primary-dark">{frontLabel}</p>
             </div>
-            <div className="my-4 grid flex-1 place-items-center rounded-[1.5rem] border-4 border-yellow bg-background px-4 py-8 text-center">
-              <div className="mb-4 grid size-24 place-items-center rounded-full border-4 border-white bg-yellow text-white shadow-soft">
+            <div className="my-4 grid flex-1 place-items-center rounded-[1.35rem] border-2 border-yellow bg-background px-4 py-8 text-center">
+              <div className="mb-4 grid size-24 place-items-center rounded-full border-2 border-white bg-yellow text-white shadow-soft">
                 <Sparkles className="size-12" strokeWidth={2.8} />
               </div>
               <p className="text-base font-black uppercase text-yellow">{typeLabel}</p>
@@ -3502,8 +3670,8 @@ function PrayerFlipCard({
           </div>
         </Card>
 
-        <Card className="absolute inset-0 overflow-hidden border-4 border-primary bg-primary p-3 shadow-playful [backface-visibility:hidden] [transform:rotateY(180deg)]">
-          <div className="flex h-full flex-col rounded-[1.35rem] border-4 border-white bg-white p-4">
+        <Card className="absolute inset-0 overflow-hidden border-2 border-primary bg-primary p-2 shadow-playful [backface-visibility:hidden] [transform:rotateY(180deg)]">
+          <div className="flex h-full flex-col rounded-[1.1rem] border-2 border-white bg-white p-4">
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-black uppercase text-primary-dark">{backLabel}</p>
@@ -3514,7 +3682,7 @@ function PrayerFlipCard({
                 aria-label={t("flipCard")}
                 title={t("flipCard")}
                 onClick={() => setFlipped(false)}
-                className="grid size-11 shrink-0 place-items-center rounded-2xl border-4 border-primary-light bg-primary-light text-primary-dark shadow-soft"
+                className="grid size-11 shrink-0 place-items-center rounded-2xl border-2 border-primary-light bg-primary-light text-primary-dark shadow-soft"
               >
                 <RefreshCw className="size-5" strokeWidth={2.8} />
               </button>
@@ -3531,7 +3699,58 @@ function PrayerFlipCard({
             </div>
           </div>
         </Card>
-      </motion.div>
+        </motion.div>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <Button
+          type="button"
+          size="lg"
+          variant="secondary"
+          disabled={!canGoPrevious}
+          onClick={onPrevious}
+        >
+          <ArrowLeft className="size-5" />
+          {t("previous")}
+        </Button>
+        <Button
+          type="button"
+          size="lg"
+          disabled={!canGoNext}
+          onClick={onNext}
+        >
+          {t("next")}
+          <ChevronRight className="size-5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function NovenaDeckBackStack({ remainingCards }: { remainingCards: number }) {
+  const visibleCards = Math.min(remainingCards, 5);
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-0">
+      {Array.from({ length: visibleCards }).map((_, index) => {
+        const layer = visibleCards - index;
+        const distance = layer * 0.55;
+        const rotation = layer % 2 === 0 ? layer * 2.4 : layer * -2.2;
+        const scale = 1 - layer * 0.035;
+
+        return (
+          <div
+            key={layer}
+            className="absolute inset-0 rounded-[1.25rem] border-2 border-white bg-white shadow-soft"
+            style={{
+              opacity: 0.9 - layer * 0.08,
+              transform: `translate(${distance}rem, ${distance * 0.28}rem) rotate(${rotation}deg) scale(${scale})`,
+              transformOrigin: "50% 92%",
+            }}
+          >
+            <div className="h-full rounded-[1.1rem] border-2 border-yellow bg-background" />
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -3720,6 +3939,8 @@ function ProfileScreen({
   onPrayerLanguageChange,
   onUiLanguageChange,
   onReset,
+  onShowInstallGuide,
+  onShowOrientation,
 }: {
   appVersion: string;
   lastSeenAppVersion: string;
@@ -3735,6 +3956,8 @@ function ProfileScreen({
   onPrayerLanguageChange: (language: PrayerLanguage) => void;
   onUiLanguageChange: (language: UiLanguage) => void;
   onReset: () => void;
+  onShowInstallGuide: () => void;
+  onShowOrientation: () => void;
 }) {
   const [editingPersonalProfile, setEditingPersonalProfile] = useState(false);
 
@@ -3947,6 +4170,28 @@ function ProfileScreen({
         onAcknowledgeVersionUpdate={onAcknowledgeVersionUpdate}
       />
 
+      <Card className="border-4 border-yellow p-5">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="grid size-12 place-items-center rounded-2xl bg-yellow text-white">
+            <CircleHelp className="size-6" strokeWidth={2.8} />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black">{t("helpAndSetup")}</h2>
+            <p className="text-base font-bold text-muted">{t("orientationSubtitle")}</p>
+          </div>
+        </div>
+        <div className="grid gap-2">
+          <Button type="button" size="lg" className="w-full" onClick={onShowInstallGuide}>
+            <Smartphone className="size-5" />
+            {t("installApp")}
+          </Button>
+          <Button type="button" size="lg" variant="secondary" className="w-full" onClick={onShowOrientation}>
+            <Compass className="size-5" />
+            {t("orientationButton")}
+          </Button>
+        </div>
+      </Card>
+
       <Button size="lg" variant="secondary" className="w-full" onClick={onReset}>
         <RotateCcw className="size-5" />
         {t("resetOnboarding")}
@@ -4124,6 +4369,199 @@ function AppUpdateCard({
   );
 }
 
+function InstallGuideDialog({ t, onClose }: { t: Translator; onClose: () => void }) {
+  return (
+    <motion.div
+      className="fixed inset-0 z-40 grid place-items-center bg-foreground/50 px-4 py-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="w-full max-w-md"
+        initial={{ opacity: 0, scale: 0.92, y: 18 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 10 }}
+        transition={{ type: "spring", stiffness: 230, damping: 20 }}
+      >
+        <Card className="max-h-[86svh] overflow-y-auto border-4 border-yellow p-5 shadow-soft">
+          <div className="mb-5 flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-yellow text-white">
+                <Smartphone className="size-6" strokeWidth={2.8} />
+              </div>
+              <div>
+                <p className="text-sm font-black uppercase text-yellow">{t("installApp")}</p>
+                <h2 className="text-3xl font-black tracking-normal">{t("installGuide")}</h2>
+                <p className="mt-1 text-base font-bold leading-relaxed text-muted">
+                  {t("installGuideDetail")}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              aria-label={t("close")}
+              onClick={onClose}
+              className="grid size-10 shrink-0 place-items-center rounded-full bg-background text-xl font-black text-muted"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="grid gap-4">
+            <InstallGuideSteps
+              title={t("androidInstall")}
+              steps={[
+                t("androidInstallStep1"),
+                t("androidInstallStep2"),
+                t("androidInstallStep3"),
+                t("androidInstallStep4"),
+              ]}
+            />
+            <InstallGuideSteps
+              title={t("iosInstall")}
+              steps={[
+                t("iosInstallStep1"),
+                t("iosInstallStep2"),
+                t("iosInstallStep3"),
+                t("iosInstallStep4"),
+              ]}
+            />
+          </div>
+
+          <Button type="button" size="lg" className="mt-5 w-full" onClick={onClose}>
+            {t("close")}
+          </Button>
+        </Card>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function InstallGuideSteps({ title, steps }: { title: string; steps: string[] }) {
+  return (
+    <div className="rounded-3xl border-4 border-border bg-background p-4">
+      <h3 className="mb-3 text-xl font-black tracking-normal">{title}</h3>
+      <div className="grid gap-2">
+        {steps.map((step, index) => (
+          <div key={step} className="grid grid-cols-[auto_1fr] gap-3 rounded-2xl bg-white px-3 py-2">
+            <span className="grid size-8 place-items-center rounded-full bg-primary text-sm font-black text-white">
+              {index + 1}
+            </span>
+            <p className="text-base font-bold leading-relaxed text-foreground">{step}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function OrientationDialog({
+  currentStep,
+  stepIndex,
+  totalSteps,
+  t,
+  onClose,
+  onNext,
+  onPrevious,
+}: {
+  currentStep: (typeof orientationSteps)[number];
+  stepIndex: number;
+  totalSteps: number;
+  t: Translator;
+  onClose: () => void;
+  onNext: () => void;
+  onPrevious: () => void;
+}) {
+  const Icon = currentStep.icon;
+  const isLastStep = stepIndex >= totalSteps - 1;
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-30 flex items-end bg-foreground/35 px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom))]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="mx-auto w-full max-w-md"
+        initial={{ opacity: 0, y: 40, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 24, scale: 0.96 }}
+        transition={{ type: "spring", stiffness: 230, damping: 22 }}
+      >
+        <Card className="border-4 border-primary-light p-5 shadow-soft">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary text-white">
+                <Icon className="size-6" strokeWidth={2.8} />
+              </div>
+              <div>
+                <p className="text-sm font-black uppercase text-primary-dark">{t("orientation")}</p>
+                <h2 className="text-2xl font-black tracking-normal">
+                  {t(currentStep.titleKey)}
+                </h2>
+              </div>
+            </div>
+            <button
+              type="button"
+              aria-label={t("skipOrientation")}
+              onClick={onClose}
+              className="rounded-full bg-background px-3 py-2 text-sm font-black text-muted"
+            >
+              {t("skipOrientation")}
+            </button>
+          </div>
+
+          <p className="text-base font-bold leading-relaxed text-muted">
+            {t(currentStep.detailKey)}
+          </p>
+
+          <div className="my-4 grid grid-cols-5 gap-2">
+            {orientationSteps.map((step, index) => {
+              const StepIcon = step.icon;
+              const active = index === stepIndex;
+
+              return (
+                <div
+                  key={step.tab}
+                  className={cn(
+                    "grid aspect-square place-items-center rounded-2xl border-4",
+                    active
+                      ? "border-primary bg-primary text-white shadow-playful"
+                      : "border-border bg-background text-muted",
+                  )}
+                >
+                  <StepIcon className="size-5" strokeWidth={active ? 3 : 2.4} />
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="mb-4 rounded-2xl bg-primary-light px-4 py-3 text-sm font-black text-primary-dark">
+            {t("orientationHighlight")}: {t(currentStep.titleKey)} · {stepIndex + 1}/{totalSteps}
+          </p>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              size="lg"
+              variant="secondary"
+              disabled={stepIndex === 0}
+              onClick={onPrevious}
+            >
+              {t("previous")}
+            </Button>
+            <Button type="button" size="lg" onClick={onNext}>
+              {isLastStep ? t("finishOrientation") : t("next")}
+            </Button>
+          </div>
+        </Card>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function FloatingBackButton({ t, onBack }: { t: Translator; onBack: () => void }) {
   return (
     <button
@@ -4139,10 +4577,12 @@ function FloatingBackButton({ t, onBack }: { t: Translator; onBack: () => void }
 
 function BottomNav({
   activeTab,
+  highlightedTab,
   t,
   onChange,
 }: {
   activeTab: Tab;
+  highlightedTab: Tab | null;
   t: Translator;
   onChange: (tab: Tab) => void;
 }) {
@@ -4152,6 +4592,7 @@ function BottomNav({
         {tabItems.map((item) => {
           const Icon = item.icon;
           const active = activeTab === item.id;
+          const highlighted = highlightedTab === item.id;
           return (
             <button
               key={item.id}
@@ -4159,6 +4600,7 @@ function BottomNav({
               className={cn(
                 "flex min-h-16 flex-col items-center justify-center gap-1 rounded-3xl text-[0.68rem] font-black leading-tight transition",
                 active ? "bg-primary-light text-primary-dark" : "text-muted",
+                highlighted && "animate-pulse ring-4 ring-yellow ring-offset-2 ring-offset-white",
               )}
             >
               <Icon className="size-6" strokeWidth={active ? 3 : 2.4} />
