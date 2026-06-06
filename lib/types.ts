@@ -87,6 +87,8 @@ export type PietyScheduleEntry = {
   pietyId: string;
   frequency: PietyFrequency;
   startDate: string;
+  repeatDays?: number[];
+  repeatTimes?: string[];
   enabled: boolean;
 };
 
@@ -118,6 +120,23 @@ export type SacramentalAction = {
   description: string;
   cadence: string;
   steps: string[];
+};
+
+export type SaintProfile = {
+  id: string;
+  feastDay: string;
+  patronage: string[];
+  tags: string[];
+  languages: Record<
+    UiLanguage,
+    {
+      name: string;
+      title: string;
+      introduction: string;
+      patronage: string;
+      reflection: string;
+    }
+  >;
 };
 
 export type ConfessionLogEntry = {

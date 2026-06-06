@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  ArrowLeft,
   Award,
   BookOpen,
   CalendarCheck2,
@@ -14,6 +15,7 @@ import {
   ClipboardList,
   Compass,
   Flame,
+  FolderOpen,
   Heart,
   Home,
   Languages,
@@ -51,6 +53,7 @@ import {
   novenas,
   onboardingQuestions,
   sacramentalActions,
+  saintProfiles,
 } from "@/lib/mock-data";
 import type {
   ActOfPiety,
@@ -69,6 +72,7 @@ import type {
   PrayerIntention,
   PrayerLanguage,
   SacramentalAction,
+  SaintProfile,
   UiLanguage,
   UserSpiritualProfile,
 } from "@/lib/types";
@@ -167,6 +171,7 @@ const confessionFrequencyOptions = [
   { days: 60, label: "2 months" },
   { days: 90, label: "3 months" },
 ] as const;
+const frequencyOptions: PietyFrequency[] = ["daily", "weekly", "monthly", "yearly"];
 
 const uiText = {
   en: {
@@ -187,6 +192,17 @@ const uiText = {
     scheduled: "Scheduled",
     suggested: "Suggested",
     scheduledFor: "Scheduled for {date}",
+    suggestedFrequency: "Suggested frequency",
+    startDate: "Start date",
+    repeatDays: "Repeat days",
+    repeatTimes: "Repeat times",
+    addTime: "Add time",
+    noRepeatTimes: "No times selected",
+    scheduleDetails: "Schedule details",
+    practiceInfo: "Practice info",
+    howToImprove: "How to do this better",
+    howToImproveDetail: "Start small, keep the time realistic, and review the act after you complete it.",
+    preferredTimes: "Suggested time",
     currentNovena: "Current novena",
     prayerDate: "Prayer date",
     cadence: "Rhythm",
@@ -205,6 +221,15 @@ const uiText = {
     prayer: "Prayer",
     completed: "Completed",
     markCompleted: "Mark as Completed",
+    library: "Library",
+    spiritualLibrary: "Spiritual library",
+    librarySubtitle: "Browse sacramental life, acts of piety, and saints.",
+    folderSacramentalLife: "Sacramental Life",
+    folderPiety: "Acts of Piety",
+    folderSaints: "Saints",
+    saints: "Saints",
+    feastDay: "Feast day",
+    patronage: "Patronage",
     sacramentalLife: "Sacramental life",
     confessionRhythm: "Confession rhythm",
     date: "Date",
@@ -338,6 +363,17 @@ const uiText = {
     scheduled: "已排程",
     suggested: "建議",
     scheduledFor: "排定日期：{date}",
+    suggestedFrequency: "建議頻率",
+    startDate: "開始日期",
+    repeatDays: "重複日子",
+    repeatTimes: "重複時間",
+    addTime: "加入時間",
+    noRepeatTimes: "尚未選擇時間",
+    scheduleDetails: "排程細節",
+    practiceInfo: "敬禮資訊",
+    howToImprove: "如何做得更好",
+    howToImproveDetail: "從小步驟開始，保持時間實際，完成後簡短回顧。",
+    preferredTimes: "建議時間",
     currentNovena: "目前九日敬禮",
     prayerDate: "祈禱日期",
     cadence: "節奏",
@@ -356,6 +392,15 @@ const uiText = {
     prayer: "祈禱",
     completed: "已完成",
     markCompleted: "標記為完成",
+    library: "圖書館",
+    spiritualLibrary: "靈修圖書館",
+    librarySubtitle: "瀏覽聖事生活、敬禮行動與聖人。",
+    folderSacramentalLife: "聖事生活",
+    folderPiety: "敬禮行動",
+    folderSaints: "聖人",
+    saints: "聖人",
+    feastDay: "慶日",
+    patronage: "主保",
     sacramentalLife: "聖事生活",
     confessionRhythm: "告解節奏",
     date: "日期",
@@ -636,7 +681,11 @@ export default function App() {
     setTimeout(() => setCompletionMessage(null), 1800);
   }
 
-  function togglePietySchedule(pietyId: string, frequency?: PietyFrequency) {
+  function updatePietySchedule(
+    pietyId: string,
+    updates: Partial<Omit<PietyScheduleEntry, "id" | "pietyId">> = {},
+    shouldToggle = false,
+  ) {
     setScheduledPieties((entries) => {
       const existing = entries.find((entry) => entry.pietyId === pietyId);
 
@@ -645,22 +694,25 @@ export default function App() {
           entry.pietyId === pietyId
             ? {
                 ...entry,
-                frequency: frequency ?? entry.frequency,
-                enabled: !entry.enabled,
+                ...updates,
+                enabled: shouldToggle ? !entry.enabled : updates.enabled ?? entry.enabled,
               }
             : entry,
         );
       }
 
       const piety = actsOfPiety.find((entry) => entry.id === pietyId);
+      const frequency = updates.frequency ?? getDefaultFrequencyForPiety(piety);
       return [
         ...entries,
         {
           id: `schedule-${pietyId}`,
           pietyId,
-          frequency: frequency ?? getDefaultFrequencyForPiety(piety),
-          startDate: getTodayInputDate(),
-          enabled: true,
+          frequency,
+          startDate: updates.startDate ?? getTodayInputDate(),
+          repeatDays: updates.repeatDays ?? getDefaultRepeatDays(frequency),
+          repeatTimes: updates.repeatTimes ?? [],
+          enabled: updates.enabled ?? true,
         },
       ];
     });
@@ -786,18 +838,17 @@ export default function App() {
   return (
     <main
       className={cn(
-        "mx-auto flex min-h-screen w-full max-w-md flex-col bg-background",
+        "app-shell mx-auto flex w-full max-w-md flex-col bg-background",
         selectedDetail ? "overflow-visible" : "overflow-hidden",
       )}
     >
-      <div className="flex-1 px-4 pb-28 pt-5">
+      <div className="app-content flex-1 px-4 pt-5">
         {selectedPietyDetail ? (
           <PracticeDetail
             key={`${selectedPietyDetail.piety.id}-${selectedPietyDetail.date}`}
             item={selectedPietyDetail}
             language={uiLanguage}
             t={t}
-            onBack={() => setSelectedDetail(null)}
             onComplete={() => completePiety(selectedPietyDetail.piety.id, selectedPietyDetail.date)}
           />
         ) : selectedNovenaDetail ? (
@@ -806,7 +857,6 @@ export default function App() {
             item={selectedNovenaDetail}
             t={t}
             language={uiLanguage}
-            onBack={() => setSelectedDetail(null)}
             onComplete={() => completeNovenaDay(selectedNovenaDetail.day)}
           />
         ) : activeTab === "today" ? (
@@ -847,7 +897,7 @@ export default function App() {
               }))
             }
             onDeleteConfessionLog={deleteConfessionLog}
-            onTogglePietySchedule={togglePietySchedule}
+            onUpdatePietySchedule={updatePietySchedule}
           />
         ) : activeTab === "prayers" ? (
           <PrayersScreen
@@ -908,6 +958,10 @@ export default function App() {
           />
         )}
       </div>
+
+      {selectedDetail ? (
+        <FloatingBackButton t={t} onBack={() => setSelectedDetail(null)} />
+      ) : null}
 
       <AnimatePresence>
         {completionMessage ? <CompletionToast message={completionMessage} /> : null}
@@ -1253,13 +1307,11 @@ function PracticeDetail({
   item,
   language,
   t,
-  onBack,
   onComplete,
 }: {
   item: PietyAgendaItem;
   language: UiLanguage;
   t: Translator;
-  onBack: () => void;
   onComplete: () => void;
 }) {
   const completed = item.completed;
@@ -1269,13 +1321,6 @@ function PracticeDetail({
 
   return (
     <ScreenMotion className="flex min-h-[calc(100vh-2.5rem)] flex-col space-y-5">
-      <button
-        onClick={onBack}
-        className="sticky top-3 z-30 w-fit rounded-full border-4 border-border bg-white px-4 py-2 text-base font-black shadow-playful active:translate-y-1 active:shadow-none"
-      >
-        {t("back")}
-      </button>
-
       <Card className={cn("border-4 p-5", meta.borderClass)}>
         <div className={cn("mb-5 grid size-20 place-items-center rounded-3xl text-white", meta.bgClass)}>
           <Icon className="size-10" strokeWidth={2.8} />
@@ -1328,26 +1373,17 @@ function NovenaDetailScreen({
   item,
   language,
   t,
-  onBack,
   onComplete,
 }: {
   item: NovenaAgendaItem;
   language: UiLanguage;
   t: Translator;
-  onBack: () => void;
   onComplete: () => void;
 }) {
   const currentDay = item.novena.days[item.day - 1];
 
   return (
     <ScreenMotion className="flex min-h-[calc(100vh-2.5rem)] flex-col space-y-5">
-      <button
-        onClick={onBack}
-        className="sticky top-3 z-30 w-fit rounded-full border-4 border-border bg-white px-4 py-2 text-base font-black shadow-playful active:translate-y-1 active:shadow-none"
-      >
-        {t("back")}
-      </button>
-
       <Card className="border-4 border-yellow p-5">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -1412,7 +1448,7 @@ function ExploreScreen({
   onAddConfessionLog,
   onConfessionFrequencyChange,
   onDeleteConfessionLog,
-  onTogglePietySchedule,
+  onUpdatePietySchedule,
 }: {
   confessionFrequencyDays: number;
   confessionLogs: ConfessionLogEntry[];
@@ -1423,7 +1459,11 @@ function ExploreScreen({
   onAddConfessionLog: (date: string, note: string) => void;
   onConfessionFrequencyChange: (days: number) => void;
   onDeleteConfessionLog: (entryId: string) => void;
-  onTogglePietySchedule: (pietyId: string, frequency?: PietyFrequency) => void;
+  onUpdatePietySchedule: (
+    pietyId: string,
+    updates?: Partial<Omit<PietyScheduleEntry, "id" | "pietyId">>,
+    shouldToggle?: boolean,
+  ) => void;
 }) {
   const [confessionDate, setConfessionDate] = useState(getTodayInputDate());
   const [confessionNote, setConfessionNote] = useState("");
@@ -1440,125 +1480,136 @@ function ExploreScreen({
 
   return (
     <ScreenMotion className="space-y-5">
-      <header>
+      <header className="space-y-2">
         <p className="text-base font-black text-primary-dark">{t("tabExplore")}</p>
-        <h1 className="text-3xl font-black tracking-normal">{t("sacramentalLife")}</h1>
+        <h1 className="text-3xl font-black tracking-normal">{t("spiritualLibrary")}</h1>
+        <p className="text-base font-bold leading-relaxed text-muted">{t("librarySubtitle")}</p>
       </header>
 
-      <Card className="border-4 border-danger p-5">
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-black uppercase text-danger">{t("confessionRhythm")}</p>
-            <h2 className="text-2xl font-black tracking-normal">{confessionStatus.title}</h2>
-            <p className="mt-1 text-base font-bold text-muted">{confessionStatus.detail}</p>
-          </div>
-          <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-danger text-white">
-            <ClipboardList className="size-7" strokeWidth={2.8} />
-          </div>
-        </div>
-
-        <Progress value={confessionStatus.progressValue} />
-
-        <div className="mt-5 grid grid-cols-4 gap-1 rounded-[1.5rem] border-4 border-white bg-white p-1 shadow-soft">
-          {confessionFrequencyOptions.map((option) => {
-            const active = confessionFrequencyDays === option.days;
-
-            return (
-              <button
-                key={option.days}
-                type="button"
-                aria-pressed={active}
-                onClick={() => onConfessionFrequencyChange(option.days)}
-                className={cn(
-                  "min-h-11 rounded-2xl px-2 text-xs font-black leading-tight transition",
-                  active ? "bg-danger text-white" : "text-muted",
-                )}
-              >
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
-
-        <form onSubmit={submitConfessionLog} className="mt-5 grid gap-3">
-          <label className="grid gap-2">
-            <span className="text-sm font-black uppercase text-muted">{t("date")}</span>
-            <input
-              type="date"
-              value={confessionDate}
-              onChange={(event) => setConfessionDate(event.target.value)}
-              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-black text-foreground outline-none focus:border-danger"
-            />
-          </label>
-
-          <label className="grid gap-2">
-            <span className="text-sm font-black uppercase text-muted">{t("note")}</span>
-            <input
-              type="text"
-              value={confessionNote}
-              onChange={(event) => setConfessionNote(event.target.value)}
-              placeholder={t("confessionNotePlaceholder")}
-              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-danger"
-            />
-          </label>
-
-          <Button type="submit" size="lg" className="w-full">
-            {t("addConfession")}
-            <CalendarPlus className="size-5" />
-          </Button>
-        </form>
-
-        <div className="mt-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-black">{t("confessionLog")}</h3>
-            <span className="rounded-full bg-background px-3 py-1 text-sm font-black text-muted">
-              {confessionLogs.length}
-            </span>
-          </div>
-
-          {confessionLogs.length > 0 ? (
-            <div className="divide-y-4 divide-border overflow-hidden rounded-2xl border-4 border-border bg-white">
-              {confessionLogs.map((entry) => (
-                <div key={entry.id} className="flex items-start gap-3 p-3">
-                  <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-light text-primary-dark">
-                    <CalendarDays className="size-5" strokeWidth={2.8} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-base font-black">{formatDisplayDate(entry.date, language)}</p>
-                    {entry.note ? (
-                      <p className="break-words text-sm font-bold text-muted">{entry.note}</p>
-                    ) : null}
-                  </div>
-                  <button
-                    type="button"
-                    aria-label={t("deleteConfession", { date: formatDisplayDate(entry.date, language) })}
-                    onClick={() => onDeleteConfessionLog(entry.id)}
-                    className="grid size-10 shrink-0 place-items-center rounded-full text-muted transition hover:bg-background hover:text-danger"
-                  >
-                    <Trash2 className="size-5" />
-                  </button>
-                </div>
-              ))}
+      <LibraryFolder
+        count={sacramentalActions.length + 1}
+        description={t("readyForConfessionDetail")}
+        icon={Church}
+        title={t("folderSacramentalLife")}
+        tone="danger"
+      >
+        <Card className="border-4 border-danger p-5">
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-black uppercase text-danger">{t("confessionRhythm")}</p>
+              <h2 className="text-2xl font-black tracking-normal">{confessionStatus.title}</h2>
+              <p className="mt-1 text-base font-bold text-muted">{confessionStatus.detail}</p>
             </div>
-          ) : (
-            <div className="rounded-2xl border-4 border-border bg-white p-4 text-base font-bold text-muted">
-              {t("noConfession")}
+            <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-danger text-white">
+              <ClipboardList className="size-7" strokeWidth={2.8} />
             </div>
-          )}
-        </div>
-      </Card>
+          </div>
 
-      <div className="grid gap-4">
-        {sacramentalActions.map((action) => (
-          <SacramentalActionCard key={action.id} action={action} language={language} />
-        ))}
-      </div>
+          <Progress value={confessionStatus.progressValue} />
 
-      <section className="space-y-3">
-        <div>
-          <p className="text-base font-black text-primary-dark">{t("schedule")}</p>
-          <h2 className="text-3xl font-black tracking-normal">{t("todayPlan")}</h2>
+          <div className="mt-5 grid grid-cols-4 gap-1 rounded-[1.5rem] border-4 border-white bg-white p-1 shadow-soft">
+            {confessionFrequencyOptions.map((option) => {
+              const active = confessionFrequencyDays === option.days;
+
+              return (
+                <button
+                  key={option.days}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => onConfessionFrequencyChange(option.days)}
+                  className={cn(
+                    "min-h-11 rounded-2xl px-2 text-xs font-black leading-tight transition",
+                    active ? "bg-danger text-white" : "text-muted",
+                  )}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <form onSubmit={submitConfessionLog} className="mt-5 grid gap-3">
+            <label className="grid gap-2">
+              <span className="text-sm font-black uppercase text-muted">{t("date")}</span>
+              <input
+                type="date"
+                value={confessionDate}
+                onChange={(event) => setConfessionDate(event.target.value)}
+                className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-black text-foreground outline-none focus:border-danger"
+              />
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-sm font-black uppercase text-muted">{t("note")}</span>
+              <input
+                type="text"
+                value={confessionNote}
+                onChange={(event) => setConfessionNote(event.target.value)}
+                placeholder={t("confessionNotePlaceholder")}
+                className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-danger"
+              />
+            </label>
+
+            <Button type="submit" size="lg" className="w-full">
+              {t("addConfession")}
+              <CalendarPlus className="size-5" />
+            </Button>
+          </form>
+
+          <div className="mt-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-black">{t("confessionLog")}</h3>
+              <span className="rounded-full bg-background px-3 py-1 text-sm font-black text-muted">
+                {confessionLogs.length}
+              </span>
+            </div>
+
+            {confessionLogs.length > 0 ? (
+              <div className="divide-y-4 divide-border overflow-hidden rounded-2xl border-4 border-border bg-white">
+                {confessionLogs.map((entry) => (
+                  <div key={entry.id} className="flex items-start gap-3 p-3">
+                    <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-light text-primary-dark">
+                      <CalendarDays className="size-5" strokeWidth={2.8} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-base font-black">{formatDisplayDate(entry.date, language)}</p>
+                      {entry.note ? (
+                        <p className="break-words text-sm font-bold text-muted">{entry.note}</p>
+                      ) : null}
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={t("deleteConfession", { date: formatDisplayDate(entry.date, language) })}
+                      onClick={() => onDeleteConfessionLog(entry.id)}
+                      className="grid size-10 shrink-0 place-items-center rounded-full text-muted transition hover:bg-background hover:text-danger"
+                    >
+                      <Trash2 className="size-5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border-4 border-border bg-white p-4 text-base font-bold text-muted">
+                {t("noConfession")}
+              </div>
+            )}
+          </div>
+        </Card>
+
+        <div className="grid gap-4">
+          {sacramentalActions.map((action) => (
+            <SacramentalActionCard key={action.id} action={action} language={language} />
+          ))}
         </div>
+      </LibraryFolder>
+
+      <LibraryFolder
+        count={recommendedPieties.length}
+        description={t("todayPlan")}
+        icon={FolderOpen}
+        title={t("folderPiety")}
+        tone="primary"
+      >
         <div className="grid gap-4">
           {recommendedPieties.map(({ practice: piety, score }) => {
             const schedule = scheduledPieties.find((entry) => entry.pietyId === piety.id);
@@ -1571,13 +1622,135 @@ function ExploreScreen({
                 score={score}
                 schedule={schedule}
                 t={t}
-                onToggle={() => onTogglePietySchedule(piety.id)}
+                onUpdate={(updates, shouldToggle) =>
+                  onUpdatePietySchedule(piety.id, updates, shouldToggle)
+                }
               />
             );
           })}
         </div>
-      </section>
+      </LibraryFolder>
+
+      <LibraryFolder
+        count={saintProfiles.length}
+        description={t("saints")}
+        icon={UserRound}
+        title={t("folderSaints")}
+        tone="blue"
+      >
+        <div className="grid gap-4">
+          {saintProfiles.map((saint) => (
+            <SaintCard key={saint.id} language={language} saint={saint} t={t} />
+          ))}
+        </div>
+      </LibraryFolder>
     </ScreenMotion>
+  );
+}
+
+function LibraryFolder({
+  children,
+  count,
+  description,
+  icon: Icon,
+  title,
+  tone,
+}: {
+  children: React.ReactNode;
+  count: number;
+  description: string;
+  icon: typeof Sun;
+  title: string;
+  tone: "primary" | "danger" | "blue";
+}) {
+  const toneClasses = {
+    primary: {
+      border: "border-primary-light",
+      bg: "bg-primary-light",
+      iconBg: "bg-primary",
+      text: "text-primary-dark",
+    },
+    danger: {
+      border: "border-danger",
+      bg: "bg-danger/10",
+      iconBg: "bg-danger",
+      text: "text-danger",
+    },
+    blue: {
+      border: "border-blue",
+      bg: "bg-blue/10",
+      iconBg: "bg-blue",
+      text: "text-blue",
+    },
+  }[tone];
+
+  return (
+    <section className={cn("rounded-[2rem] border-4 bg-white p-4 shadow-soft", toneClasses.border)}>
+      <div className={cn("mb-4 rounded-[1.5rem] px-4 py-3", toneClasses.bg)}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className={cn("grid size-12 shrink-0 place-items-center rounded-2xl text-white", toneClasses.iconBg)}>
+              <Icon className="size-6" strokeWidth={2.8} />
+            </div>
+            <div className="min-w-0">
+              <p className={cn("text-sm font-black uppercase", toneClasses.text)}>{title}</p>
+              <p className="truncate text-base font-bold text-muted">{description}</p>
+            </div>
+          </div>
+          <span className="shrink-0 rounded-full bg-white px-3 py-1 text-sm font-black text-muted">
+            {count}
+          </span>
+        </div>
+      </div>
+
+      <div className="grid gap-4">{children}</div>
+    </section>
+  );
+}
+
+function SaintCard({
+  language,
+  saint,
+  t,
+}: {
+  language: UiLanguage;
+  saint: SaintProfile;
+  t: Translator;
+}) {
+  const text = saint.languages[language];
+
+  return (
+    <Card className="border-4 border-blue p-5">
+      <div className="mb-4 flex items-start gap-4">
+        <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-blue text-white">
+          <Medal className="size-7" strokeWidth={2.8} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-black uppercase text-blue">{t("saints")}</p>
+          <h3 className="text-2xl font-black tracking-normal">{text.name}</h3>
+          <p className="mt-1 text-base font-bold leading-relaxed text-muted">{text.title}</p>
+        </div>
+      </div>
+
+      <p className="text-base font-bold leading-relaxed text-foreground">
+        {text.introduction}
+      </p>
+
+      <div className="mt-4 grid gap-3 rounded-2xl bg-background px-4 py-3">
+        <div>
+          <p className="text-sm font-black uppercase text-muted">{t("feastDay")}</p>
+          <p className="text-base font-black text-foreground">{saint.feastDay}</p>
+        </div>
+        <div>
+          <p className="text-sm font-black uppercase text-muted">{t("patronage")}</p>
+          <p className="text-base font-black text-foreground">{text.patronage}</p>
+        </div>
+      </div>
+
+      <p className="mt-4 rounded-2xl bg-blue/10 px-4 py-3 text-base font-black leading-relaxed text-foreground">
+        {text.reflection}
+      </p>
+    </Card>
   );
 }
 
@@ -1587,19 +1760,51 @@ function PietyScheduleCard({
   score,
   schedule,
   t,
-  onToggle,
+  onUpdate,
 }: {
   language: UiLanguage;
   piety: ActOfPiety;
   score: number;
   schedule?: PietyScheduleEntry;
   t: Translator;
-  onToggle: () => void;
+  onUpdate: (
+    updates?: Partial<Omit<PietyScheduleEntry, "id" | "pietyId">>,
+    shouldToggle?: boolean,
+  ) => void;
 }) {
   const text = getPracticeText(piety, language);
   const frequency = schedule?.frequency ?? getDefaultFrequencyForPiety(piety);
+  const startDate = schedule?.startDate ?? getTodayInputDate();
+  const repeatDays = schedule?.repeatDays ?? getDefaultRepeatDays(frequency);
+  const repeatTimes = schedule?.repeatTimes ?? [];
   const meta = getCategoryMeta(piety.category);
   const Icon = meta.icon;
+  const weekdayOptions = getWeekdayOptions(language);
+
+  function updateFrequency(nextFrequency: PietyFrequency) {
+    onUpdate({
+      frequency: nextFrequency,
+      repeatDays: repeatDays.length > 0 ? repeatDays : getDefaultRepeatDays(nextFrequency),
+      enabled: true,
+    });
+  }
+
+  function toggleRepeatDay(day: number) {
+    const nextDays = repeatDays.includes(day)
+      ? repeatDays.filter((entry) => entry !== day)
+      : [...repeatDays, day].sort((a, b) => a - b);
+
+    onUpdate({ repeatDays: nextDays, enabled: true });
+  }
+
+  function addRepeatTime(time: string) {
+    if (!time || repeatTimes.includes(time)) return;
+    onUpdate({ repeatTimes: [...repeatTimes, time].sort(), enabled: true });
+  }
+
+  function removeRepeatTime(time: string) {
+    onUpdate({ repeatTimes: repeatTimes.filter((entry) => entry !== time), enabled: true });
+  }
 
   return (
     <Card className={cn("border-4 p-5", schedule?.enabled ? meta.borderClass : "border-border")}>
@@ -1629,17 +1834,183 @@ function PietyScheduleCard({
           {schedule?.enabled ? t("scheduled") : t("cadence")}
         </span>
       </div>
+
+      <div className="mb-4 grid gap-3 rounded-2xl bg-background px-4 py-3">
+        <div>
+          <p className="text-sm font-black uppercase text-muted">{t("practiceInfo")}</p>
+          <p className="mt-1 text-base font-bold leading-relaxed text-foreground">
+            {text.content}
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <ScheduleInfoPill label={t("suggestedFrequency")} value={getFrequencyLabel(getDefaultFrequencyForPiety(piety), t)} />
+          <ScheduleInfoPill
+            label={t("preferredTimes")}
+            value={piety.prayerTimes.map((time) => readableProfileValue(time, language)).join(", ")}
+          />
+        </div>
+        <div>
+          <p className="text-sm font-black uppercase text-muted">{t("howToImprove")}</p>
+          <p className="mt-1 text-base font-bold leading-relaxed text-foreground">
+            {t("howToImproveDetail")}
+          </p>
+        </div>
+      </div>
+
+      <div className="mb-4 grid gap-4">
+        <div>
+          <p className="mb-2 text-sm font-black uppercase text-muted">{t("suggestedFrequency")}</p>
+          <div
+            role="group"
+            aria-label={t("suggestedFrequency")}
+            className="grid grid-cols-4 gap-1 rounded-[1.5rem] border-4 border-white bg-white p-1 shadow-soft"
+          >
+            {frequencyOptions.map((option) => {
+              const active = frequency === option;
+
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => updateFrequency(option)}
+                  className={cn(
+                    "min-h-11 rounded-2xl px-2 text-xs font-black leading-tight transition",
+                    active ? cn(meta.bgClass, "text-white") : "text-muted",
+                  )}
+                >
+                  {getFrequencyLabel(option, t)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <label className="grid gap-2">
+          <span className="text-sm font-black uppercase text-muted">{t("startDate")}</span>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(event) => onUpdate({ startDate: event.target.value, enabled: true })}
+            className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-black text-foreground outline-none focus:border-primary"
+          />
+        </label>
+
+        <div>
+          <p className="mb-2 text-sm font-black uppercase text-muted">{t("repeatDays")}</p>
+          <div className="grid grid-cols-7 gap-1">
+            {weekdayOptions.map((option) => {
+              const active = repeatDays.includes(option.value);
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => toggleRepeatDay(option.value)}
+                  className={cn(
+                    "grid aspect-square place-items-center rounded-full border-4 text-xs font-black transition",
+                    active
+                      ? cn(meta.borderClass, meta.bgClass, "text-white")
+                      : "border-border bg-white text-muted",
+                  )}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <RepeatTimesEditor
+          repeatTimes={repeatTimes}
+          t={t}
+          onAdd={addRepeatTime}
+          onRemove={removeRepeatTime}
+        />
+      </div>
+
       <Button
         type="button"
         size="lg"
         className="w-full"
         variant={schedule?.enabled ? "secondary" : "default"}
-        onClick={onToggle}
+        onClick={() => onUpdate(undefined, true)}
       >
         {schedule?.enabled ? t("scheduled") : t("addToSchedule")}
         <CalendarPlus className="size-5" />
       </Button>
     </Card>
+  );
+}
+
+function ScheduleInfoPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-white px-3 py-2">
+      <p className="text-xs font-black uppercase text-muted">{label}</p>
+      <p className="text-sm font-black text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function RepeatTimesEditor({
+  repeatTimes,
+  t,
+  onAdd,
+  onRemove,
+}: {
+  repeatTimes: string[];
+  t: Translator;
+  onAdd: (time: string) => void;
+  onRemove: (time: string) => void;
+}) {
+  const [time, setTime] = useState("");
+
+  return (
+    <div>
+      <p className="mb-2 text-sm font-black uppercase text-muted">{t("repeatTimes")}</p>
+      <div className="grid grid-cols-[1fr_auto] gap-2">
+        <input
+          type="time"
+          value={time}
+          onChange={(event) => setTime(event.target.value)}
+          className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-black text-foreground outline-none focus:border-primary"
+        />
+        <Button
+          type="button"
+          size="sm"
+          className="size-12 min-h-12 px-0 py-0"
+          aria-label={t("addTime")}
+          title={t("addTime")}
+          disabled={!time}
+          onClick={() => {
+            onAdd(time);
+            setTime("");
+          }}
+        >
+          <Plus className="size-5" strokeWidth={3} />
+        </Button>
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-2">
+        {repeatTimes.length > 0 ? (
+          repeatTimes.map((entry) => (
+            <button
+              key={entry}
+              type="button"
+              onClick={() => onRemove(entry)}
+              className="rounded-full bg-primary-light px-3 py-1 text-sm font-black text-primary-dark"
+            >
+              {entry} ×
+            </button>
+          ))
+        ) : (
+          <span className="rounded-full bg-background px-3 py-1 text-sm font-black text-muted">
+            {t("noRepeatTimes")}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -2659,6 +3030,19 @@ function AppUpdateCard({ t }: { t: Translator }) {
   );
 }
 
+function FloatingBackButton({ t, onBack }: { t: Translator; onBack: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={t("back")}
+      onClick={onBack}
+      className="floating-back z-30 grid size-12 place-items-center rounded-full border-4 border-border bg-white text-foreground shadow-playful active:translate-y-1 active:shadow-none"
+    >
+      <ArrowLeft className="size-6" strokeWidth={3} />
+    </button>
+  );
+}
+
 function BottomNav({
   activeTab,
   t,
@@ -2669,7 +3053,7 @@ function BottomNav({
   onChange: (tab: Tab) => void;
 }) {
   return (
-    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md px-4 pb-3">
+    <nav className="bottom-dock z-20 px-4">
       <div className="grid grid-cols-5 gap-1 rounded-[2rem] border-4 border-white bg-white p-2 shadow-soft">
         {tabItems.map((item) => {
           const Icon = item.icon;
@@ -2957,6 +3341,12 @@ function isScheduleDueOnDate(entry: PietyScheduleEntry, date: string) {
   const startDate = parseInputDate(entry.startDate);
   const targetDate = parseInputDate(date);
   const dayDifference = getDayDifference(startDate, targetDate);
+  const repeatDays = entry.repeatDays;
+
+  if (repeatDays) {
+    if (repeatDays.length === 0) return false;
+    if (!repeatDays.includes(targetDate.getDay())) return false;
+  }
 
   switch (entry.frequency) {
     case "daily":
@@ -2968,6 +3358,19 @@ function isScheduleDueOnDate(entry: PietyScheduleEntry, date: string) {
     case "yearly":
       return targetDate.getMonth() === startDate.getMonth() && targetDate.getDate() === startDate.getDate();
   }
+}
+
+function getDefaultRepeatDays(frequency: PietyFrequency) {
+  return frequency === "daily" ? [0, 1, 2, 3, 4, 5, 6] : [];
+}
+
+function getWeekdayOptions(language: UiLanguage) {
+  const labels =
+    language === "zhHant"
+      ? ["日", "一", "二", "三", "四", "五", "六"]
+      : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  return labels.map((label, value) => ({ label, value }));
 }
 
 function hasPietyCompletion(completions: PietyCompletionEntry[], pietyId: string, date: string) {

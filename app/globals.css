@@ -11,11 +11,14 @@
 }
 
 html {
+  min-height: 100%;
   background: #f7fdf2;
 }
 
 body {
   min-height: 100vh;
+  min-height: 100svh;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at 18% 0%, rgba(215, 255, 184, 0.72), transparent 26rem),
     linear-gradient(180deg, #f7fdf2 0%, #ffffff 74%, #f7fdf2 100%);
@@ -29,6 +32,32 @@ a {
 
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+.app-shell {
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+.app-content {
+  padding-bottom: calc(8.5rem + env(safe-area-inset-bottom));
+}
+
+.bottom-dock {
+  bottom: 0;
+  left: 50%;
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  position: fixed;
+  right: auto;
+  transform: translate3d(-50%, 0, 0);
+  width: min(100%, 28rem);
+  will-change: transform;
+}
+
+.floating-back {
+  left: max(1rem, calc((100vw - 28rem) / 2 + 1rem));
+  position: fixed;
+  top: calc(0.75rem + env(safe-area-inset-top));
 }
 
 html[data-density="compact"] .border-4 {

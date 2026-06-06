@@ -11,6 +11,7 @@ import type {
   PietyScheduleEntry,
   PreferredPrayerTime,
   SacramentalAction,
+  SaintProfile,
   UiLanguage,
   UserSpiritualProfile,
 } from "@/lib/types";
@@ -697,6 +698,8 @@ export function getRecommendedSchedule(
     pietyId: item.practice.id,
     frequency: item.practice.cadence === "always" ? "daily" : item.practice.cadence,
     startDate,
+    repeatDays: item.practice.cadence === "daily" || item.practice.cadence === "always" ? [0, 1, 2, 3, 4, 5, 6] : [],
+    repeatTimes: [],
     enabled: true,
   }));
 }
@@ -790,6 +793,87 @@ export const sacramentalActions: SacramentalAction[] = [
       "Pray slowly",
       "Close with thanksgiving",
     ],
+  },
+];
+
+export const saintProfiles: SaintProfile[] = [
+  {
+    id: "st-joseph",
+    feastDay: "March 19",
+    patronage: ["families", "workers", "the universal church"],
+    tags: ["humility", "work", "family", "silence"],
+    languages: {
+      en: {
+        name: "St. Joseph",
+        title: "Guardian of Jesus and spouse of Mary",
+        introduction:
+          "St. Joseph lived hidden fidelity through work, family care, silence, and trust. He protected Jesus and Mary with practical love.",
+        patronage: "Families, workers, and the universal Church",
+        reflection:
+          "Ask St. Joseph to help you work faithfully, protect your family, and respond to God with quiet courage.",
+      },
+      zhHant: {
+        name: "聖若瑟",
+        title: "耶穌的監護者、聖母的淨配",
+        introduction:
+          "聖若瑟以工作、家庭照顧、沉默和信賴活出隱藏的忠信。他以實際的愛保護耶穌和聖母。",
+        patronage: "家庭、工人與普世教會",
+        reflection:
+          "請聖若瑟幫助你忠信工作、守護家庭，並以安靜的勇氣回應天主。",
+      },
+    },
+  },
+  {
+    id: "st-josemaria",
+    feastDay: "June 26",
+    patronage: ["ordinary work", "lay holiness", "daily life"],
+    tags: ["work", "holiness", "ordinary life", "plan of life"],
+    languages: {
+      en: {
+        name: "St. Josemaria Escriva",
+        title: "Saint of ordinary life and work",
+        introduction:
+          "St. Josemaria taught that ordinary work, family life, study, friendship, and rest can become paths to holiness when offered to God.",
+        patronage: "Ordinary work, lay holiness, and daily life",
+        reflection:
+          "Ask St. Josemaria to help you sanctify ordinary duties and turn your daily schedule into a meeting place with God.",
+      },
+      zhHant: {
+        name: "聖施禮華",
+        title: "平凡生活與工作的聖人",
+        introduction:
+          "聖施禮華教導我們：平凡工作、家庭生活、學習、友誼和休息，若奉獻給天主，都能成為成聖道路。",
+        patronage: "平凡工作、平信徒成聖與日常生活",
+        reflection:
+          "請聖施禮華幫助你聖化日常責任，把每日安排變成與天主相遇的地方。",
+      },
+    },
+  },
+  {
+    id: "st-therese",
+    feastDay: "October 1",
+    patronage: ["missions", "small sacrifices", "trust"],
+    tags: ["little way", "trust", "love", "simplicity"],
+    languages: {
+      en: {
+        name: "St. Therese of Lisieux",
+        title: "Teacher of the Little Way",
+        introduction:
+          "St. Therese followed Christ through small acts of love, trust, patience, and simplicity. Her Little Way makes holiness concrete.",
+        patronage: "Missions, small sacrifices, and trust",
+        reflection:
+          "Ask St. Therese to help you offer small sacrifices with love and trust God in simple daily moments.",
+      },
+      zhHant: {
+        name: "聖女小德蘭",
+        title: "小路的導師",
+        introduction:
+          "聖女小德蘭以愛、信賴、忍耐和簡樸的小行動跟隨基督。她的小路使成聖變得具體。",
+        patronage: "傳教、小犧牲與信賴",
+        reflection:
+          "請聖女小德蘭幫助你以愛奉獻小犧牲，並在簡單日常中信賴天主。",
+      },
+    },
   },
 ];
 
