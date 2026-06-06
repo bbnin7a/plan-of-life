@@ -78,6 +78,8 @@ import type {
   UserSpiritualProfile,
 } from "@/lib/types";
 
+const CURRENT_APP_VERSION = "0.2.0";
+
 type AppStage = "welcome" | "onboarding" | "app";
 type Tab = "today" | "explore" | "prayers" | "progress" | "profile";
 type PrayerTab = "intentions" | "prayers" | "favorites";
@@ -277,6 +279,8 @@ const uiText = {
     typeNovena: "Novena",
     typeLitany: "Litany",
     typeRosary: "Rosary",
+    previousCard: "Previous card",
+    nextCard: "Next card",
     close: "Close",
     prayerLanguage: "Prayer language",
     searchPrayers: "Search prayers",
@@ -343,6 +347,14 @@ const uiText = {
     preferredDevotion: "Preferred devotion",
     dailyGoal: "Daily goal",
     appUpdate: "App update",
+    appVersion: "App version",
+    currentVersion: "Current version",
+    installedVersion: "Installed version",
+    newUpdateFound: "New update found",
+    newUpdateDetail: "Version {version} is ready with new improvements.",
+    alreadyLatest: "Already latest",
+    alreadyLatestDetail: "You are using the latest version.",
+    acknowledgeUpdate: "Got it",
     updateReady: "Ready",
     updateInstall: "Available after install",
     updating: "Updating...",
@@ -483,6 +495,8 @@ const uiText = {
     typeNovena: "九日敬禮",
     typeLitany: "連禱",
     typeRosary: "玫瑰經",
+    previousCard: "上一張卡",
+    nextCard: "下一張卡",
     close: "關閉",
     prayerLanguage: "經文語言",
     searchPrayers: "搜尋經文",
@@ -549,6 +563,14 @@ const uiText = {
     preferredDevotion: "偏好敬禮",
     dailyGoal: "每日目標",
     appUpdate: "應用程式更新",
+    appVersion: "應用程式版本",
+    currentVersion: "目前版本",
+    installedVersion: "已記錄版本",
+    newUpdateFound: "發現新更新",
+    newUpdateDetail: "{version} 版本已準備好，包含新的改進。",
+    alreadyLatest: "已是最新版本",
+    alreadyLatestDetail: "你正在使用最新版本。",
+    acknowledgeUpdate: "知道了",
     updateReady: "準備就緒",
     updateInstall: "安裝後可使用",
     updating: "更新中...",
@@ -644,6 +666,10 @@ export default function App() {
     "plan-of-life:favorite-prayers",
     [],
   );
+  const [lastSeenAppVersion, setLastSeenAppVersion, lastSeenAppVersionHydrated] = useLocalStorageState<string>(
+    "plan-of-life:app-version",
+    CURRENT_APP_VERSION,
+  );
   const [selectedDetail, setSelectedDetail] = useState<SelectedDetail | null>(null);
   const [selectedPrayerId, setSelectedPrayerId] = useState<string | null>(null);
   const [selectedNovenaId, setSelectedNovenaId] = useState<string | null>(null);
@@ -719,8 +745,10 @@ export default function App() {
     pietyCompletionsHydrated &&
     prayerIntentionsHydrated &&
     favoritePrayerIdsHydrated &&
+    lastSeenAppVersionHydrated &&
     confessionLogsHydrated &&
     novenaProgressHydrated;
+  const hasNewAppVersion = compareVersionStrings(lastSeenAppVersion, CURRENT_APP_VERSION) < 0;
 
   useEffect(() => {
     const timer = window.setTimeout(() => setShowSplash(false), 900);
@@ -932,6 +960,10 @@ export default function App() {
     setSelectedDetail(null);
   }
 
+  function acknowledgeCurrentAppVersion() {
+    setLastSeenAppVersion(CURRENT_APP_VERSION);
+  }
+
   if (showSplash) {
     return <SplashScreen t={t} />;
   }
@@ -992,6 +1024,14 @@ export default function App() {
             language={uiLanguage}
             progressValue={progressValue}
             t={t}
+            versionUpdate={
+              hasNewAppVersion
+                ? {
+                    currentVersion: CURRENT_APP_VERSION,
+                    previousVersion: lastSeenAppVersion,
+                  }
+                : null
+            }
             onOpenAgendaItem={(item) =>
               setSelectedDetail(
                 item.type === "piety"
@@ -1001,6 +1041,7 @@ export default function App() {
             }
             onCompletePiety={completePiety}
             onCompleteNovenaDay={completeNovenaDay}
+            onAcknowledgeVersionUpdate={acknowledgeCurrentAppVersion}
             onOpenProgress={() => setActiveTab("progress")}
           />
         ) : activeTab === "explore" ? (
@@ -1060,6 +1101,9 @@ export default function App() {
             profile={profile}
             progressValue={progressValue}
             t={t}
+            appVersion={CURRENT_APP_VERSION}
+            lastSeenAppVersion={lastSeenAppVersion}
+            onAcknowledgeVersionUpdate={acknowledgeCurrentAppVersion}
             onClearStorage={clearStoredAppData}
             onFontScaleChange={(fontScale) =>
               setPreferences((currentPreferences) => ({
@@ -1101,6 +1145,7 @@ export default function App() {
             prayer={selectedPrayer}
             t={t}
             onClose={() => setSelectedPrayerId(null)}
+            onSelectPrayer={setSelectedPrayerId}
           />
         ) : null}
       </AnimatePresence>
@@ -1270,9 +1315,11 @@ function TodayScreen({
   language,
   progressValue,
   t,
+  versionUpdate,
   onOpenAgendaItem,
   onCompletePiety,
   onCompleteNovenaDay,
+  onAcknowledgeVersionUpdate,
   onOpenProgress,
 }: {
   personalProfile: PersonalProfile;
@@ -1285,9 +1332,11 @@ function TodayScreen({
   language: UiLanguage;
   progressValue: number;
   t: Translator;
+  versionUpdate: { currentVersion: string; previousVersion: string } | null;
   onOpenAgendaItem: (item: AgendaItem) => void;
   onCompletePiety: (pietyId: string, date: string) => void;
   onCompleteNovenaDay: (day: number) => void;
+  onAcknowledgeVersionUpdate: () => void;
   onOpenProgress: () => void;
 }) {
   const [greeting] = useState(() =>
@@ -1310,6 +1359,17 @@ function TodayScreen({
           {t("streakValue", { days: streakDays })}
         </button>
       </header>
+
+      <AnimatePresence>
+        {versionUpdate ? (
+          <AppVersionNotice
+            currentVersion={versionUpdate.currentVersion}
+            previousVersion={versionUpdate.previousVersion}
+            t={t}
+            onAcknowledge={onAcknowledgeVersionUpdate}
+          />
+        ) : null}
+      </AnimatePresence>
 
       <MetricCard
         label={t("dailyProgress")}
@@ -1503,6 +1563,50 @@ function MetricCard({
       </div>
       {children}
     </Card>
+  );
+}
+
+function AppVersionNotice({
+  currentVersion,
+  previousVersion,
+  t,
+  onAcknowledge,
+}: {
+  currentVersion: string;
+  previousVersion: string;
+  t: Translator;
+  onAcknowledge: () => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -16, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -12, scale: 0.96 }}
+      transition={{ type: "spring", stiffness: 220, damping: 20 }}
+    >
+      <Card className="border-4 border-blue bg-blue/10 p-5">
+        <div className="mb-4 flex items-start gap-3">
+          <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-blue text-white">
+            <RefreshCw className="size-6" strokeWidth={2.8} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-black uppercase text-blue">{t("appVersion")}</p>
+            <h2 className="text-2xl font-black tracking-normal">{t("newUpdateFound")}</h2>
+            <p className="mt-1 text-base font-bold leading-relaxed text-muted">
+              {t("newUpdateDetail", { version: currentVersion })}
+            </p>
+          </div>
+        </div>
+        <div className="mb-4 grid grid-cols-2 gap-2">
+          <ScheduleInfoPill label={t("installedVersion")} value={previousVersion} />
+          <ScheduleInfoPill label={t("currentVersion")} value={currentVersion} />
+        </div>
+        <Button type="button" size="lg" className="w-full" onClick={onAcknowledge}>
+          {t("acknowledgeUpdate")}
+          <Check className="size-5" />
+        </Button>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -3136,20 +3240,35 @@ function PrayerCardGameDialog({
   prayer,
   t,
   onClose,
+  onSelectPrayer,
 }: {
   language: PrayerLanguage;
   prayer: CatholicPrayer;
   t: Translator;
   onClose: () => void;
+  onSelectPrayer: (prayerId: string) => void;
 }) {
   const translation = prayer.languages[language];
+  const selectedIndex = catholicPrayers.findIndex((candidate) => candidate.id === prayer.id);
+  const canGoPrevious = selectedIndex > 0;
+  const canGoNext = selectedIndex >= 0 && selectedIndex < catholicPrayers.length - 1;
+
+  function goToPrayer(index: number) {
+    const nextPrayer = catholicPrayers[index];
+    if (nextPrayer) onSelectPrayer(nextPrayer.id);
+  }
 
   return (
     <FlipCardDialogShell t={t} onClose={onClose}>
       <PrayerFlipCard
         backLabel={t("cardBack")}
+        canGoNext={canGoNext}
+        canGoPrevious={canGoPrevious}
         frontLabel={t("cardFront")}
+        key={prayer.id}
         metadata={translation.subtitle ?? readablePrayerCategory(prayer.category, t)}
+        onNext={() => goToPrayer(selectedIndex + 1)}
+        onPrevious={() => goToPrayer(selectedIndex - 1)}
         prayerText={translation.text}
         textLanguage={language}
         title={translation.title}
@@ -3212,8 +3331,13 @@ function NovenaCardGameDialog({
 
         <PrayerFlipCard
           backLabel={t("cardBack")}
+          canGoNext={selectedIndex < novena.days.length - 1}
+          canGoPrevious={selectedIndex > 0}
           frontLabel={t("cardFront")}
+          key={selectedDay.day}
           metadata={t("dayOf", { day: selectedDay.day, total: novena.days.length })}
+          onNext={() => setSelectedIndex((index) => Math.min(novena.days.length - 1, index + 1))}
+          onPrevious={() => setSelectedIndex((index) => Math.max(0, index - 1))}
           prayerText={`${selectedDay.reflection}\n\n${selectedDay.prayer}\n\n${t("action")}: ${selectedDay.action}`}
           textLanguage="en"
           title={selectedDay.title}
@@ -3279,8 +3403,12 @@ function FlipCardDialogShell({
 
 function PrayerFlipCard({
   backLabel,
+  canGoNext = false,
+  canGoPrevious = false,
   frontLabel,
   metadata,
+  onNext,
+  onPrevious,
   prayerText,
   textLanguage,
   title,
@@ -3288,8 +3416,12 @@ function PrayerFlipCard({
   t,
 }: {
   backLabel: string;
+  canGoNext?: boolean;
+  canGoPrevious?: boolean;
   frontLabel: string;
   metadata: string;
+  onNext?: () => void;
+  onPrevious?: () => void;
   prayerText: string;
   textLanguage: PrayerLanguage;
   title: string;
@@ -3298,11 +3430,56 @@ function PrayerFlipCard({
 }) {
   const [flipped, setFlipped] = useState(false);
 
+  useEffect(() => {
+    setFlipped(false);
+    const timer = window.setTimeout(() => setFlipped(true), 520);
+    return () => window.clearTimeout(timer);
+  }, [title]);
+
+  function handleSwipe(offsetX: number) {
+    if (offsetX < -64 && canGoNext) {
+      onNext?.();
+      return;
+    }
+
+    if (offsetX > 64 && canGoPrevious) {
+      onPrevious?.();
+    }
+  }
+
   return (
-    <div className="[perspective:1400px]">
+    <div className="relative mx-auto w-[min(88vw,22rem)] [perspective:1400px]">
+      <button
+        type="button"
+        aria-label={t("previousCard")}
+        disabled={!canGoPrevious}
+        onClick={onPrevious}
+        className={cn(
+          "absolute -left-3 top-1/2 z-10 grid size-11 -translate-y-1/2 place-items-center rounded-full border-4 border-white bg-white text-foreground shadow-soft transition active:translate-y-[calc(-50%+0.25rem)]",
+          !canGoPrevious && "pointer-events-none opacity-35",
+        )}
+      >
+        <ArrowLeft className="size-5" strokeWidth={3} />
+      </button>
+      <button
+        type="button"
+        aria-label={t("nextCard")}
+        disabled={!canGoNext}
+        onClick={onNext}
+        className={cn(
+          "absolute -right-3 top-1/2 z-10 grid size-11 -translate-y-1/2 place-items-center rounded-full border-4 border-white bg-white text-foreground shadow-soft transition active:translate-y-[calc(-50%+0.25rem)]",
+          !canGoNext && "pointer-events-none opacity-35",
+        )}
+      >
+        <ChevronRight className="size-5" strokeWidth={3} />
+      </button>
       <motion.div
-        className="relative min-h-[34rem] [transform-style:preserve-3d]"
+        className="relative h-[70svh] min-h-[30rem] max-h-[46rem] cursor-grab active:cursor-grabbing [transform-style:preserve-3d]"
         animate={{ rotateY: flipped ? 180 : 0 }}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.18}
+        onDragEnd={(_, info) => handleSwipe(info.offset.x)}
         transition={{ type: "spring", stiffness: 170, damping: 22 }}
       >
         <Card className="absolute inset-0 overflow-hidden border-4 border-yellow bg-yellow p-3 shadow-playful [backface-visibility:hidden]">
@@ -3310,7 +3487,7 @@ function PrayerFlipCard({
             <div className="rounded-2xl bg-primary-light px-4 py-2 text-center">
               <p className="text-sm font-black uppercase text-primary-dark">{frontLabel}</p>
             </div>
-            <div className="my-4 grid place-items-center rounded-[1.5rem] border-4 border-yellow bg-background px-4 py-8 text-center">
+            <div className="my-4 grid flex-1 place-items-center rounded-[1.5rem] border-4 border-yellow bg-background px-4 py-8 text-center">
               <div className="mb-4 grid size-24 place-items-center rounded-full border-4 border-white bg-yellow text-white shadow-soft">
                 <Sparkles className="size-12" strokeWidth={2.8} />
               </div>
@@ -3529,23 +3706,29 @@ function BadgeLevelRow({
 }
 
 function ProfileScreen({
+  appVersion,
+  lastSeenAppVersion,
   personalProfile,
   preferences,
   profile,
   progressValue,
   t,
   onClearStorage,
+  onAcknowledgeVersionUpdate,
   onFontScaleChange,
   onPersonalProfileChange,
   onPrayerLanguageChange,
   onUiLanguageChange,
   onReset,
 }: {
+  appVersion: string;
+  lastSeenAppVersion: string;
   personalProfile: PersonalProfile;
   preferences: AppPreferences;
   profile: UserSpiritualProfile;
   progressValue: number;
   t: Translator;
+  onAcknowledgeVersionUpdate: () => void;
   onClearStorage: () => void;
   onFontScaleChange: (fontScale: number) => void;
   onPersonalProfileChange: (profile: PersonalProfile) => void;
@@ -3757,7 +3940,12 @@ function ProfileScreen({
         />
       </div>
 
-      <AppUpdateCard t={t} />
+      <AppUpdateCard
+        appVersion={appVersion}
+        lastSeenAppVersion={lastSeenAppVersion}
+        t={t}
+        onAcknowledgeVersionUpdate={onAcknowledgeVersionUpdate}
+      />
 
       <Button size="lg" variant="secondary" className="w-full" onClick={onReset}>
         <RotateCcw className="size-5" />
@@ -3832,18 +4020,35 @@ function CategoryDistributionRow({
   );
 }
 
-function AppUpdateCard({ t }: { t: Translator }) {
+function AppUpdateCard({
+  appVersion,
+  lastSeenAppVersion,
+  t,
+  onAcknowledgeVersionUpdate,
+}: {
+  appVersion: string;
+  lastSeenAppVersion: string;
+  t: Translator;
+  onAcknowledgeVersionUpdate: () => void;
+}) {
   const [isSupported, setIsSupported] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [status, setStatus] = useState<TranslationKey>("updateReady");
+  const hasNewVersion = compareVersionStrings(lastSeenAppVersion, appVersion) < 0;
 
   useEffect(() => {
     setIsSupported("serviceWorker" in navigator && process.env.NODE_ENV === "production");
   }, []);
 
   async function updateApp() {
+    if (hasNewVersion) {
+      onAcknowledgeVersionUpdate();
+      setStatus("alreadyLatest");
+      return;
+    }
+
     if (!("serviceWorker" in navigator) || process.env.NODE_ENV !== "production") {
-      setStatus("updateInstall");
+      setStatus("alreadyLatest");
       return;
     }
 
@@ -3872,25 +4077,11 @@ function AppUpdateCard({ t }: { t: Translator }) {
         return;
       }
 
-      const readyRegistration = await navigator.serviceWorker.ready;
-      const worker = readyRegistration.active ?? navigator.serviceWorker.controller;
-
-      if (worker) {
-        await requestAppShellRefresh(worker);
-      } else {
-        await clearAppCaches();
-      }
-
-      reloadApp();
+      setStatus("alreadyLatest");
+      setIsUpdating(false);
     } catch {
-      try {
-        await clearAppCaches();
-        setStatus("updatedRestarting");
-        window.setTimeout(() => window.location.reload(), 300);
-      } catch {
-        setStatus("updateFailed");
-        setIsUpdating(false);
-      }
+      setStatus("updateFailed");
+      setIsUpdating(false);
     }
   }
 
@@ -3903,9 +4094,20 @@ function AppUpdateCard({ t }: { t: Translator }) {
         <div>
           <h2 className="text-2xl font-black">{t("appUpdate")}</h2>
           <p className="text-base font-bold text-muted">
-            {isSupported ? t(status) : t("updateInstall")}
+            {hasNewVersion
+              ? t("newUpdateDetail", { version: appVersion })
+              : status === "alreadyLatest"
+                ? t("alreadyLatestDetail")
+                : isSupported
+                  ? t(status)
+                  : t("alreadyLatestDetail")}
           </p>
         </div>
+      </div>
+
+      <div className="mb-4 grid grid-cols-2 gap-2">
+        <ScheduleInfoPill label={t("installedVersion")} value={lastSeenAppVersion} />
+        <ScheduleInfoPill label={t("currentVersion")} value={appVersion} />
       </div>
 
       <Button
@@ -3913,9 +4115,9 @@ function AppUpdateCard({ t }: { t: Translator }) {
         size="lg"
         className="w-full"
         onClick={updateApp}
-        disabled={!isSupported || isUpdating}
+        disabled={isUpdating}
       >
-        {isUpdating ? t("updating") : t("updateApp")}
+        {isUpdating ? t("updating") : hasNewVersion ? t("acknowledgeUpdate") : t("updateApp")}
         <RefreshCw className={cn("size-5", isUpdating ? "animate-spin" : "")} />
       </Button>
     </Card>
@@ -4518,6 +4720,22 @@ function readablePrayerCategory(category: PrayerCategory, t: Translator) {
 function getPrayerCardTypeLabel(prayer: CatholicPrayer, t: Translator) {
   if (prayer.category === "rosary") return t("typeRosary");
   return t("typePrayers");
+}
+
+function compareVersionStrings(left: string, right: string) {
+  const leftParts = left.split(".").map((part) => Number.parseInt(part, 10) || 0);
+  const rightParts = right.split(".").map((part) => Number.parseInt(part, 10) || 0);
+  const length = Math.max(leftParts.length, rightParts.length);
+
+  for (let index = 0; index < length; index += 1) {
+    const leftValue = leftParts[index] ?? 0;
+    const rightValue = rightParts[index] ?? 0;
+
+    if (leftValue < rightValue) return -1;
+    if (leftValue > rightValue) return 1;
+  }
+
+  return 0;
 }
 
 function getPrayerSearchText(prayer: CatholicPrayer) {
