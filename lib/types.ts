@@ -31,6 +31,8 @@ export type PietyCadence = "daily" | "weekly" | "monthly" | "yearly" | "always";
 
 export type PietyDifficulty = "beginner" | "intermediate" | "advanced";
 
+export type PietyFrequency = "daily" | "weekly" | "monthly" | "yearly";
+
 export type ActOfPiety = {
   id: string;
   sourceTitle: string;
@@ -78,6 +80,21 @@ export type DailyPlanItem = {
   practice: ActOfPiety;
   status: PracticeStatus;
   recommendedOrder: number;
+};
+
+export type PietyScheduleEntry = {
+  id: string;
+  pietyId: string;
+  frequency: PietyFrequency;
+  startDate: string;
+  enabled: boolean;
+};
+
+export type PietyCompletionEntry = {
+  id: string;
+  pietyId: string;
+  date: string;
+  completedAt: string;
 };
 
 export type CatholicPrayer = {

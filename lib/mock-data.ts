@@ -8,6 +8,7 @@ import type {
   Novena,
   OnboardingAnswerKey,
   PersonalProfile,
+  PietyScheduleEntry,
   PreferredPrayerTime,
   SacramentalAction,
   UiLanguage,
@@ -632,7 +633,7 @@ export const dailyPlan: DailyPlanItem[] = [
   { id: "plan-3", practice: actsOfPiety[2], status: "pending", recommendedOrder: 3 },
 ];
 
-export function getRecommendedPlan(profile: UserSpiritualProfile): DailyPlanItem[] {
+export function getScoredPietyRecommendations(profile: UserSpiritualProfile) {
   const preferred = (profile.preferredDevotions[0] ?? "").toLowerCase();
   const rhythm = profile.preferredPrayerTime;
   const goal = profile.spiritualGoal.toLowerCase();
@@ -648,7 +649,7 @@ export function getRecommendedPlan(profile: UserSpiritualProfile): DailyPlanItem
     advanced: 2,
   };
 
-  const scored = actsOfPiety
+  return actsOfPiety
     .map((practice) => {
       let score = 0;
       const difficultyGap =
@@ -673,14 +674,30 @@ export function getRecommendedPlan(profile: UserSpiritualProfile): DailyPlanItem
       if (profile.experienceLevel === "growing_deeper" && ["monthly", "yearly"].includes(practice.cadence)) score += 2;
       return { practice, score };
     })
-    .sort((a, b) => b.score - a.score || a.practice.estimatedMinutes - b.practice.estimatedMinutes)
-    .slice(0, 3);
+    .sort((a, b) => b.score - a.score || a.practice.estimatedMinutes - b.practice.estimatedMinutes);
+}
+
+export function getRecommendedPlan(profile: UserSpiritualProfile): DailyPlanItem[] {
+  const scored = getScoredPietyRecommendations(profile).filter(({ score }) => score > 0);
 
   return scored.map(({ practice }, index) => ({
     id: `plan-${practice.id}`,
     practice,
     status: "pending",
     recommendedOrder: index + 1,
+  }));
+}
+
+export function getRecommendedSchedule(
+  profile: UserSpiritualProfile,
+  startDate: string,
+): PietyScheduleEntry[] {
+  return getRecommendedPlan(profile).map((item) => ({
+    id: `schedule-${item.practice.id}`,
+    pietyId: item.practice.id,
+    frequency: item.practice.cadence === "always" ? "daily" : item.practice.cadence,
+    startDate,
+    enabled: true,
   }));
 }
 

@@ -30,3 +30,71 @@ a {
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+html[data-density="compact"] .border-4 {
+  border-width: 3px;
+}
+
+html[data-density="compact"] .p-5 {
+  padding: 1rem;
+}
+
+html[data-density="compact"] .p-4 {
+  padding: 0.875rem;
+}
+
+html[data-density="compact"] .px-5 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+html[data-density="compact"] .py-4 {
+  padding-bottom: 0.875rem;
+  padding-top: 0.875rem;
+}
+
+html[data-density="compact"] .gap-4 {
+  gap: 0.875rem;
+}
+
+html[data-density="compact"] .shadow-playful {
+  box-shadow: 0 5px 0 rgba(31, 41, 55, 0.07);
+}
+
+html[data-density="compact"] button[class*="shadow-"] {
+  box-shadow: 0 4px 0 rgba(31, 41, 55, 0.07);
+}
+
+html[data-density="roomy"] .border-4 {
+  border-width: 5px;
+}
+
+html[data-density="roomy"] .p-5 {
+  padding: 1.5rem;
+}
+
+html[data-density="roomy"] .p-4 {
+  padding: 1.25rem;
+}
+
+html[data-density="roomy"] .px-5 {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+html[data-density="roomy"] .py-4 {
+  padding-bottom: 1.25rem;
+  padding-top: 1.25rem;
+}
+
+html[data-density="roomy"] .gap-4 {
+  gap: 1.25rem;
+}
+
+html[data-density="roomy"] .shadow-playful {
+  box-shadow: 0 10px 0 rgba(31, 41, 55, 0.09);
+}
+
+html[data-density="roomy"] button[class*="shadow-"] {
+  box-shadow: 0 8px 0 rgba(31, 41, 55, 0.09);
+}

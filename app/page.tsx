@@ -36,18 +36,21 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import {
+  actsOfPiety,
   catholicPrayers,
   defaultPersonalProfile,
   defaultPreferences,
   defaultProfile,
   dailyPlan,
   getRecommendedPlan,
+  getRecommendedSchedule,
+  getScoredPietyRecommendations,
   novenas,
   onboardingQuestions,
   sacramentalActions,
-  weeklyProgress,
 } from "@/lib/mock-data";
 import type {
+  ActOfPiety,
   AppPreferences,
   CatholicPrayer,
   ConfessionLogEntry,
@@ -56,9 +59,11 @@ import type {
   NovenaProgress,
   OnboardingAnswerKey,
   PersonalProfile,
+  PietyCompletionEntry,
+  PietyFrequency,
+  PietyScheduleEntry,
   PrayerCategory,
   PrayerLanguage,
-  PracticeStatus,
   SacramentalAction,
   UiLanguage,
   UserSpiritualProfile,
@@ -66,6 +71,35 @@ import type {
 
 type AppStage = "welcome" | "onboarding" | "app";
 type Tab = "today" | "explore" | "prayers" | "progress" | "profile";
+type SelectedDetail =
+  | { type: "piety"; pietyId: string; date: string }
+  | { type: "novena" };
+type PietyAgendaItem = {
+  type: "piety";
+  id: string;
+  piety: ActOfPiety;
+  schedule: PietyScheduleEntry;
+  date: string;
+  completed: boolean;
+};
+type NovenaAgendaItem = {
+  type: "novena";
+  id: string;
+  novena: Novena;
+  progress: NovenaProgress;
+  day: number;
+  date: string;
+  completed: boolean;
+};
+type AgendaItem = PietyAgendaItem | NovenaAgendaItem;
+type CategoryMeta = {
+  icon: typeof Sun;
+  bgClass: string;
+  borderClass: string;
+  textClass: string;
+  softClass: string;
+  labelKey: TranslationKey;
+};
 
 const tabItems = [
   { id: "today", labelKey: "tabToday", icon: Home },
@@ -75,7 +109,40 @@ const tabItems = [
   { id: "profile", labelKey: "tabProfile", icon: UserRound },
 ] as const;
 
-const practiceIcons = [Sun, BookOpen, Heart, Church, Moon];
+const categoryMeta = {
+  daily_practices: {
+    icon: Sun,
+    bgClass: "bg-primary",
+    borderClass: "border-primary-light",
+    textClass: "text-primary-dark",
+    softClass: "bg-primary-light",
+    labelKey: "categoryDailyPractices",
+  },
+  devotions: {
+    icon: Heart,
+    bgClass: "bg-blue",
+    borderClass: "border-blue",
+    textClass: "text-blue",
+    softClass: "bg-blue/10",
+    labelKey: "categoryDevotions",
+  },
+  formation: {
+    icon: BookOpen,
+    bgClass: "bg-yellow",
+    borderClass: "border-yellow",
+    textClass: "text-yellow",
+    softClass: "bg-yellow/20",
+    labelKey: "categoryFormation",
+  },
+  sacramental_life: {
+    icon: Church,
+    bgClass: "bg-danger",
+    borderClass: "border-danger",
+    textClass: "text-danger",
+    softClass: "bg-danger/10",
+    labelKey: "categorySacramentalLife",
+  },
+} satisfies Record<ActOfPiety["category"], CategoryMeta>;
 const prayerLanguageOptions: Array<{ id: PrayerLanguage; label: string; shortLabel: string }> = [
   { id: "en", label: "English", shortLabel: "EN" },
   { id: "zhHant", label: "Traditional Chinese", shortLabel: "繁中" },
@@ -106,8 +173,25 @@ const uiText = {
     peace: "Peace be with you",
     today: "Today",
     streak: "7 day streak",
+    streakValue: "{days} day streak",
     dailyProgress: "Daily progress",
     completeCount: "{completed} of {total} complete",
+    noTasksToday: "No acts scheduled for today.",
+    nextDaysPreview: "Next days",
+    schedule: "Schedule",
+    addToSchedule: "Add to schedule",
+    scheduled: "Scheduled",
+    suggested: "Suggested",
+    scheduledFor: "Scheduled for {date}",
+    currentNovena: "Current novena",
+    prayerDate: "Prayer date",
+    cadence: "Rhythm",
+    frequencyDaily: "Daily",
+    frequencyWeekly: "Weekly",
+    frequencyMonthly: "Monthly",
+    frequencyYearly: "Yearly",
+    dueToday: "Due today",
+    previewEmpty: "No upcoming acts in the next few days.",
     minuteGoal: "Your {minutes}-minute goal is ready in small steps.",
     todayPlan: "Today's Spiritual Plan",
     open: "Open",
@@ -128,6 +212,8 @@ const uiText = {
     noConfession: "No confession logged yet.",
     prayers: "Prayers",
     commonPrayers: "Common Catholic prayers",
+    viewPrayer: "View prayer",
+    close: "Close",
     prayerLanguage: "Prayer language",
     searchPrayers: "Search prayers",
     noPrayersFound: "No prayers found",
@@ -146,9 +232,11 @@ const uiText = {
     progress: "Progress",
     progressTitle: "Small steps add up",
     prayerStreak: "day prayer streak",
+    streakMetric: "Current streak",
     thisWeek: "This week",
     completedCount: "{count} completed",
     gracePoints: "Grace Points",
+    categoryDistribution: "Today's categories",
     badgeHint: "Keep showing up. Your next badge is close.",
     savedTracks: "Saved tracks",
     confessionsLogged: "Confessions logged",
@@ -215,6 +303,8 @@ const uiText = {
     novenaStartedToast: "Novena started. Day 1 is ready.",
     novenaCompleteToast: "Novena complete.",
     novenaDayCompleteToast: "Novena day {day} complete.",
+    statusActive: "active",
+    statusCompleted: "completed",
   },
   zhHant: {
     appTitle: "敬禮生活",
@@ -224,8 +314,25 @@ const uiText = {
     peace: "願平安與你同在",
     today: "今天",
     streak: "連續 7 天",
+    streakValue: "連續 {days} 天",
     dailyProgress: "今日進度",
     completeCount: "已完成 {completed} / {total}",
+    noTasksToday: "今天沒有排定敬禮。",
+    nextDaysPreview: "接下來幾天",
+    schedule: "排程",
+    addToSchedule: "加入排程",
+    scheduled: "已排程",
+    suggested: "建議",
+    scheduledFor: "排定日期：{date}",
+    currentNovena: "目前九日敬禮",
+    prayerDate: "祈禱日期",
+    cadence: "節奏",
+    frequencyDaily: "每日",
+    frequencyWeekly: "每週",
+    frequencyMonthly: "每月",
+    frequencyYearly: "每年",
+    dueToday: "今天",
+    previewEmpty: "未來幾天沒有排定敬禮。",
     minuteGoal: "你的 {minutes} 分鐘目標已拆成小步驟。",
     todayPlan: "今日靈修計劃",
     open: "開啟",
@@ -246,6 +353,8 @@ const uiText = {
     noConfession: "尚未紀錄告解。",
     prayers: "經文",
     commonPrayers: "常用天主教經文",
+    viewPrayer: "查看經文",
+    close: "關閉",
     prayerLanguage: "經文語言",
     searchPrayers: "搜尋經文",
     noPrayersFound: "找不到經文",
@@ -264,9 +373,11 @@ const uiText = {
     progress: "進度",
     progressTitle: "小步驟會累積",
     prayerStreak: "天祈禱連續紀錄",
+    streakMetric: "目前連續紀錄",
     thisWeek: "本週",
     completedCount: "已完成 {count}",
     gracePoints: "恩寵點數",
+    categoryDistribution: "今日類別分佈",
     badgeHint: "持續前進。下一個徽章已經接近。",
     savedTracks: "已儲存追蹤",
     confessionsLogged: "告解紀錄",
@@ -333,6 +444,8 @@ const uiText = {
     novenaStartedToast: "九日敬禮已開始。第 1 天已準備好。",
     novenaCompleteToast: "九日敬禮完成。",
     novenaDayCompleteToast: "九日敬禮第 {day} 天完成。",
+    statusActive: "進行中",
+    statusCompleted: "已完成",
   },
 } as const;
 
@@ -373,7 +486,16 @@ export default function App() {
     "plan-of-life:daily-plan",
     dailyPlan,
   );
-  const [selectedPracticeId, setSelectedPracticeId] = useState<string | null>(null);
+  const [scheduledPieties, setScheduledPieties] = useLocalStorageState<PietyScheduleEntry[]>(
+    "plan-of-life:piety-schedule",
+    [],
+  );
+  const [pietyCompletions, setPietyCompletions] = useLocalStorageState<PietyCompletionEntry[]>(
+    "plan-of-life:piety-completions",
+    [],
+  );
+  const [selectedDetail, setSelectedDetail] = useState<SelectedDetail | null>(null);
+  const [selectedPrayerId, setSelectedPrayerId] = useState<string | null>(null);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
   const [confessionLogs, setConfessionLogs] = useLocalStorageState<ConfessionLogEntry[]>(
     "plan-of-life:confession-logs",
@@ -385,17 +507,52 @@ export default function App() {
   );
   const uiLanguage = preferences.uiLanguage ?? "zhHant";
   const t = useMemo(() => makeTranslator(uiLanguage), [uiLanguage]);
-
-  const completedCount = plan.filter((item) => item.status === "completed").length;
-  const progressValue = Math.round((completedCount / plan.length) * 100);
-  const selectedPractice = plan.find((item) => item.id === selectedPracticeId);
-
-  const visiblePlan = useMemo(() => {
-    return [...plan].sort((a, b) => a.recommendedOrder - b.recommendedOrder);
-  }, [plan]);
+  const today = getTodayInputDate();
+  const currentNovenaItem = useMemo(
+    () => getCurrentNovenaAgendaItem(novenaProgress, today),
+    [novenaProgress, today],
+  );
+  const todayAgenda = useMemo(
+    () => getAgendaForDate(scheduledPieties, pietyCompletions, today, currentNovenaItem),
+    [scheduledPieties, pietyCompletions, today, currentNovenaItem],
+  );
+  const upcomingAgenda = useMemo(
+    () => getUpcomingAgenda(scheduledPieties, pietyCompletions, today, novenaProgress),
+    [scheduledPieties, pietyCompletions, today, novenaProgress],
+  );
+  const completedCount = todayAgenda.filter((item) => item.completed).length;
+  const progressValue = todayAgenda.length > 0 ? Math.round((completedCount / todayAgenda.length) * 100) : 0;
+  const streakDays = useMemo(
+    () => getCompletionStreak(pietyCompletions, novenaProgress, today),
+    [pietyCompletions, novenaProgress, today],
+  );
+  const weekProgress = useMemo(
+    () => getWeekProgress(pietyCompletions, novenaProgress, today, uiLanguage),
+    [pietyCompletions, novenaProgress, today, uiLanguage],
+  );
+  const scoredRecommendations = useMemo(
+    () => getScoredPietyRecommendations(profile),
+    [profile],
+  );
+  const categoryDistribution = useMemo(
+    () => getCategoryDistribution(todayAgenda),
+    [todayAgenda],
+  );
+  const selectedPietyDetail =
+    selectedDetail?.type === "piety"
+      ? getPietyDetailItem(selectedDetail, scheduledPieties, pietyCompletions)
+      : null;
+  const selectedNovenaDetail =
+    selectedDetail?.type === "novena" ? getCurrentNovenaAgendaItem(novenaProgress, today) : null;
+  const selectedPrayer = selectedPrayerId
+    ? catholicPrayers.find((prayer) => prayer.id === selectedPrayerId) ?? null
+    : null;
 
   useEffect(() => {
-    document.documentElement.style.fontSize = `${preferences.fontScale ?? 100}%`;
+    const fontScale = preferences.fontScale ?? 100;
+    document.documentElement.style.fontSize = `${fontScale}%`;
+    document.documentElement.dataset.density =
+      fontScale <= 90 ? "compact" : fontScale >= 120 ? "roomy" : "normal";
   }, [preferences.fontScale]);
 
   useEffect(() => {
@@ -403,6 +560,12 @@ export default function App() {
       setPlan(getRecommendedPlan(profile));
     }
   }, [plan, profile, setPlan]);
+
+  useEffect(() => {
+    if (stage === "app" && scheduledPieties.length === 0) {
+      setScheduledPieties(getRecommendedSchedule(profile, today));
+    }
+  }, [profile, scheduledPieties.length, setScheduledPieties, stage, today]);
 
   function chooseAnswer(key: OnboardingAnswerKey, value: string) {
     const nextAnswers = { ...answers, [key]: value };
@@ -416,22 +579,63 @@ export default function App() {
     const nextProfile = buildProfile(nextAnswers);
     setProfile(nextProfile);
     setPlan(getRecommendedPlan(nextProfile));
+    setScheduledPieties(getRecommendedSchedule(nextProfile, getTodayInputDate()));
     setTimeout(() => setStage("app"), 220);
   }
 
-  function completePractice(itemId: string) {
-    const item = plan.find((entry) => entry.id === itemId);
-    setPlan((items) =>
-      items.map((entry) =>
-        entry.id === itemId ? { ...entry, status: "completed" as PracticeStatus } : entry,
-      ),
-    );
+  function completePiety(pietyId: string, date: string) {
+    const piety = actsOfPiety.find((entry) => entry.id === pietyId);
+    setPietyCompletions((entries) => {
+      if (entries.some((entry) => entry.pietyId === pietyId && entry.date === date)) {
+        return entries;
+      }
+
+      return [
+        ...entries,
+        {
+          id: `piety-completion-${pietyId}-${date}`,
+          pietyId,
+          date,
+          completedAt: new Date().toISOString(),
+        },
+      ];
+    });
     setCompletionMessage(
       t("practiceCompleteToast", {
-        title: item ? getPracticeText(item.practice, uiLanguage).title : t("genericPractice"),
+        title: piety ? getPracticeText(piety, uiLanguage).title : t("genericPractice"),
       }),
     );
     setTimeout(() => setCompletionMessage(null), 1800);
+  }
+
+  function togglePietySchedule(pietyId: string, frequency?: PietyFrequency) {
+    setScheduledPieties((entries) => {
+      const existing = entries.find((entry) => entry.pietyId === pietyId);
+
+      if (existing) {
+        return entries.map((entry) =>
+          entry.pietyId === pietyId
+            ? {
+                ...entry,
+                frequency: frequency ?? entry.frequency,
+                enabled: !entry.enabled,
+              }
+            : entry,
+        );
+      }
+
+      const piety = actsOfPiety.find((entry) => entry.id === pietyId);
+      return [
+        ...entries,
+        {
+          id: `schedule-${pietyId}`,
+          pietyId,
+          frequency: frequency ?? getDefaultFrequencyForPiety(piety),
+          startDate: getTodayInputDate(),
+          enabled: true,
+        },
+      ];
+    });
   }
 
   function addConfessionLog(date: string, note: string) {
@@ -506,7 +710,7 @@ export default function App() {
     setAnswers({});
     setStage("onboarding");
     setActiveTab("today");
-    setSelectedPracticeId(null);
+    setSelectedDetail(null);
   }
 
   if (stage === "welcome") {
@@ -528,30 +732,48 @@ export default function App() {
     <main
       className={cn(
         "mx-auto flex min-h-screen w-full max-w-md flex-col bg-background",
-        selectedPractice ? "overflow-visible" : "overflow-hidden",
+        selectedDetail ? "overflow-visible" : "overflow-hidden",
       )}
     >
       <div className="flex-1 px-4 pb-28 pt-5">
-        {selectedPractice ? (
+        {selectedPietyDetail ? (
           <PracticeDetail
-            key={selectedPractice.id}
-            item={selectedPractice}
+            key={`${selectedPietyDetail.piety.id}-${selectedPietyDetail.date}`}
+            item={selectedPietyDetail}
             language={uiLanguage}
             t={t}
-            onBack={() => setSelectedPracticeId(null)}
-            onComplete={() => completePractice(selectedPractice.id)}
+            onBack={() => setSelectedDetail(null)}
+            onComplete={() => completePiety(selectedPietyDetail.piety.id, selectedPietyDetail.date)}
+          />
+        ) : selectedNovenaDetail ? (
+          <NovenaDetailScreen
+            key={selectedNovenaDetail.id}
+            item={selectedNovenaDetail}
+            t={t}
+            language={uiLanguage}
+            onBack={() => setSelectedDetail(null)}
+            onComplete={() => completeNovenaDay(selectedNovenaDetail.day)}
           />
         ) : activeTab === "today" ? (
           <TodayScreen
             key="today"
             profile={profile}
-            plan={visiblePlan}
+            todayAgenda={todayAgenda}
+            upcomingAgenda={upcomingAgenda}
+            streakDays={streakDays}
             completedCount={completedCount}
             language={uiLanguage}
             progressValue={progressValue}
             t={t}
-            onOpenPractice={setSelectedPracticeId}
-            onComplete={completePractice}
+            onOpenAgendaItem={(item) =>
+              setSelectedDetail(
+                item.type === "piety"
+                  ? { type: "piety", pietyId: item.piety.id, date: item.date }
+                  : { type: "novena" },
+              )
+            }
+            onCompletePiety={completePiety}
+            onCompleteNovenaDay={completeNovenaDay}
           />
         ) : activeTab === "explore" ? (
           <ExploreScreen
@@ -559,6 +781,8 @@ export default function App() {
             confessionFrequencyDays={preferences.confessionFrequencyDays}
             confessionLogs={confessionLogs}
             language={uiLanguage}
+            recommendedPieties={scoredRecommendations}
+            scheduledPieties={scheduledPieties}
             t={t}
             onAddConfessionLog={addConfessionLog}
             onConfessionFrequencyChange={(confessionFrequencyDays) =>
@@ -568,6 +792,7 @@ export default function App() {
               }))
             }
             onDeleteConfessionLog={deleteConfessionLog}
+            onTogglePietySchedule={togglePietySchedule}
           />
         ) : activeTab === "prayers" ? (
           <PrayersScreen
@@ -584,6 +809,7 @@ export default function App() {
               }))
             }
             onQuitNovena={quitNovena}
+            onOpenPrayer={setSelectedPrayerId}
             onStartNovena={startNovena}
           />
         ) : activeTab === "progress" ? (
@@ -591,7 +817,10 @@ export default function App() {
             key="progress"
             completedCount={completedCount}
             confessionLogs={confessionLogs}
+            streakDays={streakDays}
+            categoryDistribution={categoryDistribution}
             t={t}
+            weekProgress={weekProgress}
             novenaProgress={novenaProgress}
             progressValue={progressValue}
           />
@@ -632,7 +861,16 @@ export default function App() {
         {completionMessage ? <CompletionToast message={completionMessage} /> : null}
       </AnimatePresence>
 
-      {!selectedPractice ? (
+      {selectedPrayer ? (
+        <PrayerDetailDialog
+          language={preferences.prayerLanguage}
+          prayer={selectedPrayer}
+          t={t}
+          onClose={() => setSelectedPrayerId(null)}
+        />
+      ) : null}
+
+      {!selectedDetail ? (
         <BottomNav activeTab={activeTab} t={t} onChange={setActiveTab} />
       ) : null}
     </main>
@@ -742,22 +980,28 @@ function OnboardingScreen({
 
 function TodayScreen({
   profile,
-  plan,
+  todayAgenda,
+  upcomingAgenda,
+  streakDays,
   completedCount,
   language,
   progressValue,
   t,
-  onOpenPractice,
-  onComplete,
+  onOpenAgendaItem,
+  onCompletePiety,
+  onCompleteNovenaDay,
 }: {
   profile: UserSpiritualProfile;
-  plan: DailyPlanItem[];
+  todayAgenda: AgendaItem[];
+  upcomingAgenda: AgendaItem[];
+  streakDays: number;
   completedCount: number;
   language: UiLanguage;
   progressValue: number;
   t: Translator;
-  onOpenPractice: (id: string) => void;
-  onComplete: (id: string) => void;
+  onOpenAgendaItem: (item: AgendaItem) => void;
+  onCompletePiety: (pietyId: string, date: string) => void;
+  onCompleteNovenaDay: (day: number) => void;
 }) {
   return (
     <ScreenMotion className="space-y-5">
@@ -768,7 +1012,7 @@ function TodayScreen({
         </div>
         <div className="flex items-center gap-2 rounded-full border-4 border-white bg-yellow px-3 py-2 text-sm font-black shadow-playful">
           <Flame className="size-5 fill-white text-white" />
-          {t("streak")}
+          {t("streakValue", { days: streakDays })}
         </div>
       </header>
 
@@ -777,7 +1021,7 @@ function TodayScreen({
           <div>
             <p className="text-sm font-black uppercase text-muted">{t("dailyProgress")}</p>
             <p className="text-2xl font-black">
-              {t("completeCount", { completed: completedCount, total: plan.length })}
+              {t("completeCount", { completed: completedCount, total: todayAgenda.length })}
             </p>
           </div>
           <div className="grid size-16 place-items-center rounded-full bg-primary-light text-xl font-black text-primary-dark">
@@ -793,64 +1037,101 @@ function TodayScreen({
       <section>
         <h2 className="mb-3 text-2xl font-black">{t("todayPlan")}</h2>
         <div className="space-y-4">
-          {plan.map((item, index) => (
-            <PracticeCard
-              key={item.id}
-              item={item}
-              iconIndex={index}
-              language={language}
-              t={t}
-              onOpen={() => onOpenPractice(item.id)}
-              onComplete={() => onComplete(item.id)}
+          {todayAgenda.length > 0 ? (
+            todayAgenda.map((item, index) => (
+              <AgendaCard
+                key={item.id}
+                item={item}
+                language={language}
+                t={t}
+                onOpen={() => onOpenAgendaItem(item)}
+                onComplete={() => {
+                  if (item.completed) return;
+                  if (item.type === "piety") {
+                    onCompletePiety(item.piety.id, item.date);
+                    return;
+                  }
+
+                  onCompleteNovenaDay(item.day);
+                }}
             />
-          ))}
+            ))
+          ) : (
+            <Card className="border-4 border-border p-5 text-base font-bold text-muted">
+              {t("noTasksToday")}
+            </Card>
+          )}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-2xl font-black">{t("nextDaysPreview")}</h2>
+        <div className="space-y-3">
+          {upcomingAgenda.length > 0 ? (
+            upcomingAgenda.map((item) => (
+              <AgendaPreviewRow
+                key={`${item.id}-preview`}
+                item={item}
+                language={language}
+                t={t}
+              />
+            ))
+          ) : (
+            <Card className="border-4 border-border p-4 text-base font-bold text-muted">
+              {t("previewEmpty")}
+            </Card>
+          )}
         </div>
       </section>
     </ScreenMotion>
   );
 }
 
-function PracticeCard({
+function AgendaCard({
   item,
-  iconIndex,
   language,
   t,
   onOpen,
   onComplete,
 }: {
-  item: DailyPlanItem;
-  iconIndex: number;
+  item: AgendaItem;
   language: UiLanguage;
   t: Translator;
   onOpen: () => void;
   onComplete: () => void;
 }) {
-  const Icon = practiceIcons[iconIndex % practiceIcons.length];
-  const completed = item.status === "completed";
-  const practiceText = getPracticeText(item.practice, language);
+  const completed = item.completed;
+  const title = getAgendaTitle(item, language);
+  const description = getAgendaDescription(item, language, t);
+  const minutes = item.type === "piety" ? item.piety.estimatedMinutes : 9;
+  const meta = getAgendaCategoryMeta(item);
+  const Icon = meta.icon;
 
   return (
     <Card
       onClick={onOpen}
       className={cn(
         "cursor-pointer border-4 p-4 transition active:translate-y-1 active:shadow-none",
-        completed ? "border-primary bg-primary-light" : "border-border",
+        completed ? `${meta.borderClass} ${meta.softClass}` : "border-border",
       )}
     >
       <div className="flex gap-4">
-        <div className={cn("grid size-16 shrink-0 place-items-center rounded-3xl", completed ? "bg-primary text-white" : "bg-blue text-white")}>
+        <div className={cn("grid size-16 shrink-0 place-items-center rounded-3xl text-white", meta.bgClass)}>
           <Icon className="size-8" strokeWidth={2.8} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-start justify-between gap-3">
-            <h3 className="text-xl font-black leading-tight">{practiceText.title}</h3>
+            <h3 className="text-xl font-black leading-tight">{title}</h3>
             <span className="rounded-full bg-background px-3 py-1 text-sm font-black text-muted">
-              {item.practice.estimatedMinutes} min
+              {minutes} min
             </span>
           </div>
           <p className="mb-4 text-base font-bold leading-snug text-muted">
-            {practiceText.description}
+            {description}
           </p>
+          <span className={cn("mb-3 inline-flex rounded-full px-3 py-1 text-xs font-black", meta.softClass, meta.textClass)}>
+            {item.type === "piety" ? t(meta.labelKey) : t("novena")}
+          </span>
           <div className="grid grid-cols-[0.85fr_1.15fr] gap-2">
             <Button
               size="sm"
@@ -882,6 +1163,37 @@ function PracticeCard({
   );
 }
 
+function AgendaPreviewRow({
+  item,
+  language,
+  t,
+}: {
+  item: AgendaItem;
+  language: UiLanguage;
+  t: Translator;
+}) {
+  const meta = getAgendaCategoryMeta(item);
+  const Icon = meta.icon;
+
+  return (
+    <Card className={cn("border-4 p-4", meta.borderClass)}>
+      <div className="flex items-center gap-3">
+        <div className={cn("grid size-12 shrink-0 place-items-center rounded-2xl text-white", meta.bgClass)}>
+          <Icon className="size-6" strokeWidth={2.8} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-lg font-black">{getAgendaTitle(item, language)}</p>
+          <p className="text-sm font-bold text-muted">
+            {formatDisplayDate(item.date, language)}
+            {" · "}
+            {item.type === "piety" ? getFrequencyLabel(item.schedule.frequency, t) : t("currentNovena")}
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 function PracticeDetail({
   item,
   language,
@@ -889,14 +1201,16 @@ function PracticeDetail({
   onBack,
   onComplete,
 }: {
-  item: DailyPlanItem;
+  item: PietyAgendaItem;
   language: UiLanguage;
   t: Translator;
   onBack: () => void;
   onComplete: () => void;
 }) {
-  const completed = item.status === "completed";
-  const practiceText = getPracticeText(item.practice, language);
+  const completed = item.completed;
+  const practiceText = getPracticeText(item.piety, language);
+  const meta = getCategoryMeta(item.piety.category);
+  const Icon = meta.icon;
 
   return (
     <ScreenMotion className="flex min-h-[calc(100vh-2.5rem)] flex-col space-y-5">
@@ -907,16 +1221,19 @@ function PracticeDetail({
         {t("back")}
       </button>
 
-      <Card className="border-4 border-primary-light p-5">
-        <div className="mb-5 grid size-20 place-items-center rounded-3xl bg-primary-light text-primary-dark">
-          <BookOpen className="size-10" strokeWidth={2.8} />
+      <Card className={cn("border-4 p-5", meta.borderClass)}>
+        <div className={cn("mb-5 grid size-20 place-items-center rounded-3xl text-white", meta.bgClass)}>
+          <Icon className="size-10" strokeWidth={2.8} />
         </div>
         <div className="mb-4 flex flex-wrap gap-2">
-          <span className="rounded-full bg-blue px-3 py-1 text-sm font-black text-white">
-            {readableCategory(item.practice.category, t)}
+          <span className={cn("rounded-full px-3 py-1 text-sm font-black", meta.softClass, meta.textClass)}>
+            {readableCategory(item.piety.category, t)}
           </span>
           <span className="rounded-full bg-yellow px-3 py-1 text-sm font-black text-foreground">
-            {item.practice.estimatedMinutes} min
+            {item.piety.estimatedMinutes} min
+          </span>
+          <span className="rounded-full bg-primary-light px-3 py-1 text-sm font-black text-primary-dark">
+            {getFrequencyLabel(item.schedule.frequency, t)}
           </span>
         </div>
         <h1 className="mb-3 text-4xl font-black leading-tight tracking-normal">
@@ -925,6 +1242,11 @@ function PracticeDetail({
         <p className="text-lg font-bold leading-relaxed text-muted">
           {practiceText.description}
         </p>
+      </Card>
+
+      <Card className="border-4 border-yellow p-5">
+        <p className="text-sm font-black uppercase text-muted">{t("scheduledFor")}</p>
+        <p className="text-2xl font-black">{formatDisplayDate(item.date, language)}</p>
       </Card>
 
       <Card className="flex-1 border-4 border-border p-5">
@@ -947,22 +1269,106 @@ function PracticeDetail({
   );
 }
 
+function NovenaDetailScreen({
+  item,
+  language,
+  t,
+  onBack,
+  onComplete,
+}: {
+  item: NovenaAgendaItem;
+  language: UiLanguage;
+  t: Translator;
+  onBack: () => void;
+  onComplete: () => void;
+}) {
+  const currentDay = item.novena.days[item.day - 1];
+
+  return (
+    <ScreenMotion className="flex min-h-[calc(100vh-2.5rem)] flex-col space-y-5">
+      <button
+        onClick={onBack}
+        className="sticky top-3 z-30 w-fit rounded-full border-4 border-border bg-white px-4 py-2 text-base font-black shadow-playful active:translate-y-1 active:shadow-none"
+      >
+        {t("back")}
+      </button>
+
+      <Card className="border-4 border-yellow p-5">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-black uppercase text-yellow">{t("currentNovena")}</p>
+            <h1 className="text-3xl font-black leading-tight tracking-normal">
+              {item.novena.title}
+            </h1>
+          </div>
+          <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-yellow text-white">
+            <CalendarDays className="size-7" strokeWidth={2.8} />
+          </div>
+        </div>
+        <div className="grid gap-3 rounded-2xl bg-background px-4 py-3">
+          <div>
+            <p className="text-sm font-black uppercase text-muted">{t("prayerDate")}</p>
+            <p className="text-xl font-black">{formatDisplayDate(item.date, language)}</p>
+          </div>
+          <div>
+            <p className="text-sm font-black uppercase text-muted">
+              {t("dayOf", { day: item.day, total: item.novena.days.length })}
+            </p>
+            <p className="text-xl font-black">{currentDay.title}</p>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="flex-1 border-4 border-border p-5">
+        <p className="mb-4 text-base font-bold leading-relaxed text-muted">
+          {currentDay.reflection}
+        </p>
+        <h2 className="mb-3 text-2xl font-black">{t("prayer")}</h2>
+        <p className="whitespace-pre-line text-lg font-bold leading-relaxed text-foreground">
+          {currentDay.prayer}
+        </p>
+        <div className="mt-5 rounded-2xl bg-background px-4 py-3">
+          <p className="text-sm font-black uppercase text-muted">{t("action")}</p>
+          <p className="text-base font-black text-foreground">{currentDay.action}</p>
+        </div>
+      </Card>
+
+      <Button
+        size="xl"
+        className="w-full"
+        variant={item.completed ? "secondary" : "default"}
+        disabled={item.completed}
+        onClick={onComplete}
+      >
+        {item.completed ? t("completed") : t("completeDay")}
+        <Check className="size-6" />
+      </Button>
+    </ScreenMotion>
+  );
+}
+
 function ExploreScreen({
   confessionFrequencyDays,
   confessionLogs,
   language,
+  recommendedPieties,
+  scheduledPieties,
   t,
   onAddConfessionLog,
   onConfessionFrequencyChange,
   onDeleteConfessionLog,
+  onTogglePietySchedule,
 }: {
   confessionFrequencyDays: number;
   confessionLogs: ConfessionLogEntry[];
   language: UiLanguage;
+  recommendedPieties: Array<{ practice: ActOfPiety; score: number }>;
+  scheduledPieties: PietyScheduleEntry[];
   t: Translator;
   onAddConfessionLog: (date: string, note: string) => void;
   onConfessionFrequencyChange: (days: number) => void;
   onDeleteConfessionLog: (entryId: string) => void;
+  onTogglePietySchedule: (pietyId: string, frequency?: PietyFrequency) => void;
 }) {
   const [confessionDate, setConfessionDate] = useState(getTodayInputDate());
   const [confessionNote, setConfessionNote] = useState("");
@@ -1092,7 +1498,93 @@ function ExploreScreen({
           <SacramentalActionCard key={action.id} action={action} language={language} />
         ))}
       </div>
+
+      <section className="space-y-3">
+        <div>
+          <p className="text-base font-black text-primary-dark">{t("schedule")}</p>
+          <h2 className="text-3xl font-black tracking-normal">{t("todayPlan")}</h2>
+        </div>
+        <div className="grid gap-4">
+          {recommendedPieties.map(({ practice: piety, score }) => {
+            const schedule = scheduledPieties.find((entry) => entry.pietyId === piety.id);
+
+            return (
+              <PietyScheduleCard
+                key={piety.id}
+                language={language}
+                piety={piety}
+                score={score}
+                schedule={schedule}
+                t={t}
+                onToggle={() => onTogglePietySchedule(piety.id)}
+              />
+            );
+          })}
+        </div>
+      </section>
     </ScreenMotion>
+  );
+}
+
+function PietyScheduleCard({
+  language,
+  piety,
+  score,
+  schedule,
+  t,
+  onToggle,
+}: {
+  language: UiLanguage;
+  piety: ActOfPiety;
+  score: number;
+  schedule?: PietyScheduleEntry;
+  t: Translator;
+  onToggle: () => void;
+}) {
+  const text = getPracticeText(piety, language);
+  const frequency = schedule?.frequency ?? getDefaultFrequencyForPiety(piety);
+  const meta = getCategoryMeta(piety.category);
+  const Icon = meta.icon;
+
+  return (
+    <Card className={cn("border-4 p-5", schedule?.enabled ? meta.borderClass : "border-border")}>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className={cn("grid size-12 shrink-0 place-items-center rounded-2xl text-white", meta.bgClass)}>
+          <Icon className="size-6" strokeWidth={2.8} />
+        </div>
+        <div className="min-w-0">
+          <p className={cn("text-sm font-black uppercase", meta.textClass)}>
+            {getFrequencyLabel(frequency, t)}
+          </p>
+          <h3 className="text-2xl font-black tracking-normal">{text.title}</h3>
+          <p className="mt-1 text-base font-bold leading-relaxed text-muted">
+            {text.description}
+          </p>
+          <p className="mt-2 text-sm font-black text-muted">
+            {t(meta.labelKey)}
+            {score > 0 ? ` · ${t("suggested")}` : ""}
+          </p>
+        </div>
+        <span
+          className={cn(
+            "shrink-0 rounded-full px-3 py-1 text-xs font-black",
+            schedule?.enabled ? "bg-primary-light text-primary-dark" : "bg-background text-muted",
+          )}
+        >
+          {schedule?.enabled ? t("scheduled") : t("cadence")}
+        </span>
+      </div>
+      <Button
+        type="button"
+        size="lg"
+        className="w-full"
+        variant={schedule?.enabled ? "secondary" : "default"}
+        onClick={onToggle}
+      >
+        {schedule?.enabled ? t("scheduled") : t("addToSchedule")}
+        <CalendarPlus className="size-5" />
+      </Button>
+    </Card>
   );
 }
 
@@ -1141,6 +1633,7 @@ function PrayersScreen({
   onCompleteNovenaDay,
   onLanguageChange,
   onQuitNovena,
+  onOpenPrayer,
   onStartNovena,
 }: {
   language: PrayerLanguage;
@@ -1150,6 +1643,7 @@ function PrayersScreen({
   onCompleteNovenaDay: (day: number) => void;
   onLanguageChange: (language: PrayerLanguage) => void;
   onQuitNovena: () => void;
+  onOpenPrayer: (prayerId: string) => void;
   onStartNovena: (novenaId: string, intention: string) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -1236,7 +1730,13 @@ function PrayersScreen({
             ))}
 
             {visiblePrayers.map((prayer) => (
-              <PrayerCard key={prayer.id} prayer={prayer} language={language} t={t} />
+              <PrayerCard
+                key={prayer.id}
+                prayer={prayer}
+                language={language}
+                t={t}
+                onOpen={() => onOpenPrayer(prayer.id)}
+              />
             ))}
           </>
         ) : (
@@ -1344,13 +1844,6 @@ function NovenaCard({
               <p className="text-base font-bold leading-relaxed text-muted">
                 {currentDay.reflection}
               </p>
-              <p className="whitespace-pre-line text-lg font-bold leading-relaxed text-foreground">
-                {currentDay.prayer}
-              </p>
-              <div className="rounded-2xl bg-background px-4 py-3">
-                <p className="text-sm font-black uppercase text-muted">{t("action")}</p>
-                <p className="text-base font-black text-foreground">{currentDay.action}</p>
-              </div>
             </div>
           )}
 
@@ -1424,10 +1917,12 @@ function PrayerCard({
   prayer,
   language,
   t,
+  onOpen,
 }: {
   prayer: CatholicPrayer;
   language: PrayerLanguage;
   t: Translator;
+  onOpen: () => void;
 }) {
   const translation = prayer.languages[language];
 
@@ -1439,48 +1934,100 @@ function PrayerCard({
             {readablePrayerCategory(prayer.category, t)}
           </p>
           <h2 className="text-2xl font-black tracking-normal">{translation.title}</h2>
-          {translation.subtitle ? (
-            <p className="mt-1 text-base font-bold text-muted">{translation.subtitle}</p>
-          ) : null}
         </div>
         <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary-light text-primary-dark">
           <ScrollText className="size-6" strokeWidth={2.8} />
         </div>
       </div>
 
-      <p
-        className={cn(
-          "whitespace-pre-line font-bold leading-relaxed text-foreground",
-          language === "zhHant" ? "text-xl" : "text-lg",
-        )}
-      >
-        {translation.text}
+      <p className="text-base font-bold leading-relaxed text-muted">
+        {translation.subtitle ?? readablePrayerCategory(prayer.category, t)}
       </p>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {prayer.tags.slice(0, 3).map((tag) => (
-          <span
-            key={tag}
-            className="rounded-full bg-primary-light px-3 py-1 text-xs font-black text-primary-dark"
-          >
-            {tag}
-          </span>
-        ))}
+      <div className="mt-4 grid gap-3">
+        <div className="flex flex-wrap gap-2">
+          {prayer.tags.slice(0, 3).map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-primary-light px-3 py-1 text-xs font-black text-primary-dark"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+        <Button type="button" size="lg" className="w-full" onClick={onOpen}>
+          {t("viewPrayer")}
+          <ScrollText className="size-5" />
+        </Button>
       </div>
     </Card>
   );
 }
 
+function PrayerDetailDialog({
+  language,
+  prayer,
+  t,
+  onClose,
+}: {
+  language: PrayerLanguage;
+  prayer: CatholicPrayer;
+  t: Translator;
+  onClose: () => void;
+}) {
+  const translation = prayer.languages[language];
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-end bg-foreground/40 px-4 pb-4 pt-16">
+      <Card className="mx-auto max-h-[82vh] w-full max-w-md overflow-y-auto border-4 border-primary-light p-5">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-black uppercase text-primary-dark">
+              {readablePrayerCategory(prayer.category, t)}
+            </p>
+            <h2 className="text-3xl font-black tracking-normal">{translation.title}</h2>
+          </div>
+          <button
+            type="button"
+            aria-label={t("close")}
+            onClick={onClose}
+            className="grid size-10 shrink-0 place-items-center rounded-full bg-background text-xl font-black text-muted"
+          >
+            ×
+          </button>
+        </div>
+        <p
+          className={cn(
+            "whitespace-pre-line font-bold leading-relaxed text-foreground",
+            language === "zhHant" ? "text-xl" : "text-lg",
+          )}
+        >
+          {translation.text}
+        </p>
+        <Button type="button" size="lg" className="mt-5 w-full" onClick={onClose}>
+          {t("close")}
+        </Button>
+      </Card>
+    </div>
+  );
+}
+
 function ProgressScreen({
+  categoryDistribution,
   completedCount,
   confessionLogs,
+  streakDays,
   t,
+  weekProgress,
   novenaProgress,
   progressValue,
 }: {
+  categoryDistribution: Array<{ category: ActOfPiety["category"]; total: number; completed: number }>;
   completedCount: number;
   confessionLogs: ConfessionLogEntry[];
+  streakDays: number;
   t: Translator;
+  weekProgress: Array<{ day: string; done: boolean }>;
   novenaProgress: NovenaProgress | null;
   progressValue: number;
 }) {
@@ -1499,8 +2046,8 @@ function ProgressScreen({
             <Flame className="size-10 fill-white" />
           </div>
           <div>
-            <p className="text-4xl font-black">7</p>
-            <p className="text-lg font-black text-muted">{t("prayerStreak")}</p>
+            <p className="text-4xl font-black">{streakDays}</p>
+            <p className="text-lg font-black text-muted">{t("streakMetric")}</p>
           </div>
         </div>
       </Card>
@@ -1513,7 +2060,7 @@ function ProgressScreen({
           </span>
         </div>
         <div className="grid grid-cols-7 gap-2">
-          {weeklyProgress.map((day, index) => (
+          {weekProgress.map((day, index) => (
             <div key={`${day.day}-${index}`} className="text-center">
               <div
                 className={cn(
@@ -1536,10 +2083,32 @@ function ProgressScreen({
           <Medal className="size-9 text-blue" />
           <h2 className="text-2xl font-black">{t("gracePoints")}</h2>
         </div>
-        <Progress value={Math.max(progressValue, 35)} />
+        <Progress value={progressValue} />
         <p className="mt-4 text-lg font-black text-muted">
           {t("badgeHint")}
         </p>
+      </Card>
+
+      <Card className="border-4 border-primary-light p-5">
+        <div className="mb-4 flex items-center gap-3">
+          <Award className="size-9 text-primary-dark" />
+          <h2 className="text-2xl font-black">{t("categoryDistribution")}</h2>
+        </div>
+        <div className="grid gap-3">
+          {categoryDistribution.length > 0 ? (
+            categoryDistribution.map((entry) => (
+              <CategoryDistributionRow
+                key={entry.category}
+                completed={entry.completed}
+                category={entry.category}
+                t={t}
+                total={entry.total}
+              />
+            ))
+          ) : (
+            <p className="text-base font-bold text-muted">{t("noTasksToday")}</p>
+          )}
+        </div>
       </Card>
 
       <Card className="border-4 border-border p-5">
@@ -1553,7 +2122,7 @@ function ProgressScreen({
             label={t("novenaProgress")}
             value={
               novenaProgress
-                ? `${novenaCompletedCount}/9 ${novenaProgress.status}`
+                ? `${novenaCompletedCount}/9 ${getNovenaStatusLabel(novenaProgress.status, t)}`
                 : t("noActiveNovena")
             }
           />
@@ -1793,6 +2362,39 @@ function TrackSummaryRow({ label, value }: { label: string; value: string }) {
     <div className="rounded-2xl bg-background px-4 py-3">
       <p className="text-sm font-black uppercase text-muted">{label}</p>
       <p className="text-xl font-black text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function CategoryDistributionRow({
+  category,
+  completed,
+  total,
+  t,
+}: {
+  category: ActOfPiety["category"];
+  completed: number;
+  total: number;
+  t: Translator;
+}) {
+  const meta = getCategoryMeta(category);
+  const Icon = meta.icon;
+  const progressValue = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  return (
+    <div className={cn("rounded-2xl border-4 p-3", meta.borderClass, meta.softClass)}>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className={cn("grid size-10 shrink-0 place-items-center rounded-2xl text-white", meta.bgClass)}>
+            <Icon className="size-5" strokeWidth={2.8} />
+          </div>
+          <p className="truncate text-base font-black">{t(meta.labelKey)}</p>
+        </div>
+        <span className="shrink-0 rounded-full bg-white px-3 py-1 text-sm font-black text-muted">
+          {completed}/{total}
+        </span>
+      </div>
+      <Progress value={progressValue} />
     </div>
   );
 }
@@ -2047,6 +2649,238 @@ function getSacramentalActionIcon(type: SacramentalAction["type"]) {
     case "adoration":
       return Heart;
   }
+}
+
+function getAgendaForDate(
+  schedule: PietyScheduleEntry[],
+  completions: PietyCompletionEntry[],
+  date: string,
+  novenaItem: NovenaAgendaItem | null,
+) {
+  const pietyItems = schedule
+    .filter((entry) => isScheduleDueOnDate(entry, date))
+    .map((entry) => {
+      const piety = actsOfPiety.find((candidate) => candidate.id === entry.pietyId);
+      if (!piety) return null;
+
+      return {
+        type: "piety" as const,
+        id: `agenda-${entry.pietyId}-${date}`,
+        piety,
+        schedule: entry,
+        date,
+        completed: hasPietyCompletion(completions, entry.pietyId, date),
+      };
+    })
+    .filter((item): item is PietyAgendaItem => item !== null);
+
+  return novenaItem ? [novenaItem, ...pietyItems] : pietyItems;
+}
+
+function getCategoryMeta(category: ActOfPiety["category"]) {
+  return categoryMeta[category];
+}
+
+function getAgendaCategoryMeta(item: AgendaItem) {
+  if (item.type === "novena") {
+    return {
+      icon: CalendarDays,
+      bgClass: "bg-yellow",
+      borderClass: "border-yellow",
+      textClass: "text-yellow",
+      softClass: "bg-yellow/20",
+      labelKey: "novena",
+    } satisfies CategoryMeta;
+  }
+
+  return getCategoryMeta(item.piety.category);
+}
+
+function getCategoryDistribution(agenda: AgendaItem[]) {
+  const distribution = new Map<
+    ActOfPiety["category"],
+    { category: ActOfPiety["category"]; total: number; completed: number }
+  >();
+
+  agenda.forEach((item) => {
+    if (item.type !== "piety") return;
+
+    const current = distribution.get(item.piety.category) ?? {
+      category: item.piety.category,
+      total: 0,
+      completed: 0,
+    };
+
+    current.total += 1;
+    if (item.completed) current.completed += 1;
+    distribution.set(item.piety.category, current);
+  });
+
+  return Array.from(distribution.values()).sort((a, b) => b.total - a.total);
+}
+
+function getUpcomingAgenda(
+  schedule: PietyScheduleEntry[],
+  completions: PietyCompletionEntry[],
+  today: string,
+  novenaProgress: NovenaProgress | null,
+) {
+  const items: AgendaItem[] = [];
+
+  for (let offset = 1; offset <= 5; offset += 1) {
+    const date = toInputDate(addDays(parseInputDate(today), offset));
+    const novenaItem = getCurrentNovenaAgendaItem(novenaProgress, date);
+    items.push(...getAgendaForDate(schedule, completions, date, novenaItem));
+    if (items.length >= 4) break;
+  }
+
+  return items.slice(0, 4);
+}
+
+function getPietyDetailItem(
+  detail: Extract<SelectedDetail, { type: "piety" }>,
+  schedule: PietyScheduleEntry[],
+  completions: PietyCompletionEntry[],
+) {
+  const entry = schedule.find((candidate) => candidate.pietyId === detail.pietyId);
+  const piety = actsOfPiety.find((candidate) => candidate.id === detail.pietyId);
+
+  if (!entry || !piety) return null;
+
+  return {
+    type: "piety" as const,
+    id: `agenda-${entry.pietyId}-${detail.date}`,
+    piety,
+    schedule: entry,
+    date: detail.date,
+    completed: hasPietyCompletion(completions, entry.pietyId, detail.date),
+  };
+}
+
+function getCurrentNovenaAgendaItem(
+  progress: NovenaProgress | null,
+  date: string,
+): NovenaAgendaItem | null {
+  if (!progress || progress.status === "completed") return null;
+
+  const novena = novenas.find((candidate) => candidate.id === progress.novenaId);
+  if (!novena) return null;
+
+  const completedCount = progress.completedDays.length;
+  const currentDay = Math.min(completedCount + 1, novena.days.length);
+  const completed = progress.lastCompletedDate === date;
+
+  return {
+    type: "novena",
+    id: `novena-${progress.novenaId}-${date}`,
+    novena,
+    progress,
+    day: currentDay,
+    date,
+    completed,
+  };
+}
+
+function isScheduleDueOnDate(entry: PietyScheduleEntry, date: string) {
+  if (!entry.enabled || date < entry.startDate) return false;
+
+  const startDate = parseInputDate(entry.startDate);
+  const targetDate = parseInputDate(date);
+  const dayDifference = getDayDifference(startDate, targetDate);
+
+  switch (entry.frequency) {
+    case "daily":
+      return true;
+    case "weekly":
+      return dayDifference % 7 === 0;
+    case "monthly":
+      return targetDate.getDate() === startDate.getDate();
+    case "yearly":
+      return targetDate.getMonth() === startDate.getMonth() && targetDate.getDate() === startDate.getDate();
+  }
+}
+
+function hasPietyCompletion(completions: PietyCompletionEntry[], pietyId: string, date: string) {
+  return completions.some((entry) => entry.pietyId === pietyId && entry.date === date);
+}
+
+function getCompletionStreak(
+  completions: PietyCompletionEntry[],
+  novenaProgress: NovenaProgress | null,
+  today: string,
+) {
+  let streak = 0;
+
+  for (let offset = 0; offset < 365; offset += 1) {
+    const date = toInputDate(addDays(parseInputDate(today), -offset));
+    if (!hasAnyCompletionOnDate(completions, novenaProgress, date)) break;
+    streak += 1;
+  }
+
+  return streak;
+}
+
+function getWeekProgress(
+  completions: PietyCompletionEntry[],
+  novenaProgress: NovenaProgress | null,
+  today: string,
+  language: UiLanguage,
+) {
+  const todayDate = parseInputDate(today);
+  const start = addDays(todayDate, -todayDate.getDay());
+  const formatter = new Intl.DateTimeFormat(language === "zhHant" ? "zh-Hant" : "en", {
+    weekday: "narrow",
+  });
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = toInputDate(addDays(start, index));
+    return {
+      day: formatter.format(parseInputDate(date)),
+      done: hasAnyCompletionOnDate(completions, novenaProgress, date),
+    };
+  });
+}
+
+function hasAnyCompletionOnDate(
+  completions: PietyCompletionEntry[],
+  novenaProgress: NovenaProgress | null,
+  date: string,
+) {
+  return completions.some((entry) => entry.date === date) || novenaProgress?.lastCompletedDate === date;
+}
+
+function getDefaultFrequencyForPiety(piety?: ActOfPiety): PietyFrequency {
+  if (!piety || piety.cadence === "always") return "daily";
+  return piety.cadence;
+}
+
+function getFrequencyLabel(frequency: PietyFrequency, t: Translator) {
+  const frequencyMap: Record<PietyFrequency, TranslationKey> = {
+    daily: "frequencyDaily",
+    weekly: "frequencyWeekly",
+    monthly: "frequencyMonthly",
+    yearly: "frequencyYearly",
+  };
+
+  return t(frequencyMap[frequency]);
+}
+
+function getAgendaTitle(item: AgendaItem, language: UiLanguage) {
+  if (item.type === "novena") return item.novena.title;
+  return getPracticeText(item.piety, language).title;
+}
+
+function getAgendaDescription(item: AgendaItem, language: UiLanguage, t: Translator) {
+  if (item.type === "novena") {
+    const currentDay = item.novena.days[item.day - 1];
+    return `${t("dayOf", { day: item.day, total: item.novena.days.length })}: ${currentDay.title}`;
+  }
+
+  return getPracticeText(item.piety, language).description;
+}
+
+function getNovenaStatusLabel(status: NovenaProgress["status"], t: Translator) {
+  return status === "completed" ? t("statusCompleted") : t("statusActive");
 }
 
 function getConfessionStatus(
