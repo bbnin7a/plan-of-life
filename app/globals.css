@@ -60,6 +60,65 @@ a {
   top: calc(0.75rem + env(safe-area-inset-top));
 }
 
+.animated-fire {
+  animation: fire-bounce 1.45s ease-in-out infinite;
+  transform-origin: 50% 85%;
+}
+
+.animated-fire svg {
+  animation: fire-flicker 0.9s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 0.35rem rgba(255, 184, 0, 0.7));
+}
+
+.animated-fire-spark {
+  animation: fire-spark 1.45s ease-in-out infinite;
+  right: 12%;
+  top: 8%;
+}
+
+@keyframes fire-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  45% {
+    transform: translateY(-0.08rem) scale(1.08);
+  }
+
+  70% {
+    transform: translateY(0.03rem) scale(0.98);
+  }
+}
+
+@keyframes fire-flicker {
+  0% {
+    transform: rotate(-4deg) scaleX(0.94);
+  }
+
+  100% {
+    transform: rotate(4deg) scaleX(1.05);
+  }
+}
+
+@keyframes fire-spark {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.5);
+  }
+
+  35% {
+    opacity: 1;
+    transform: translate(0.08rem, -0.28rem) scale(1);
+  }
+
+  70% {
+    opacity: 0;
+    transform: translate(0.14rem, -0.48rem) scale(0.6);
+  }
+}
+
 html[data-density="compact"] .border-4 {
   border-width: 3px;
 }

@@ -79,6 +79,7 @@ import type {
 
 type AppStage = "welcome" | "onboarding" | "app";
 type Tab = "today" | "explore" | "prayers" | "progress" | "profile";
+type ExploreLibraryCategory = "sacramental" | "piety" | "saints";
 type SelectedDetail =
   | { type: "piety"; pietyId: string; date: string }
   | { type: "novena" };
@@ -176,10 +177,13 @@ const frequencyOptions: PietyFrequency[] = ["daily", "weekly", "monthly", "yearl
 const uiText = {
   en: {
     appTitle: "Acts of Piety",
+    loading: "Loading...",
+    preparingApp: "Preparing your plan",
     welcomeTitle: "Grow your prayer life step by step",
     welcomeSubtitle: "Build simple Catholic habits with daily acts of piety.",
     getStarted: "Get Started",
     peace: "Peace be with you",
+    friendName: "friend",
     today: "Today",
     streak: "7 day streak",
     streakValue: "{days} day streak",
@@ -224,6 +228,7 @@ const uiText = {
     library: "Library",
     spiritualLibrary: "Spiritual library",
     librarySubtitle: "Browse sacramental life, acts of piety, and saints.",
+    backToLibrary: "Back to library",
     folderSacramentalLife: "Sacramental Life",
     folderPiety: "Acts of Piety",
     folderSaints: "Saints",
@@ -347,10 +352,13 @@ const uiText = {
   },
   zhHant: {
     appTitle: "敬禮生活",
+    loading: "載入中...",
+    preparingApp: "正在準備你的計劃",
     welcomeTitle: "一步一步培養祈禱生活",
     welcomeSubtitle: "以簡單的天主教敬禮建立每日習慣。",
     getStarted: "開始",
     peace: "願平安與你同在",
+    friendName: "朋友",
     today: "今天",
     streak: "連續 7 天",
     streakValue: "連續 {days} 天",
@@ -395,6 +403,7 @@ const uiText = {
     library: "圖書館",
     spiritualLibrary: "靈修圖書館",
     librarySubtitle: "瀏覽聖事生活、敬禮行動與聖人。",
+    backToLibrary: "返回圖書館",
     folderSacramentalLife: "聖事生活",
     folderPiety: "敬禮行動",
     folderSaints: "聖人",
@@ -532,52 +541,53 @@ function makeTranslator(language: UiLanguage): Translator {
 }
 
 export default function App() {
-  const [stage, setStage] = useLocalStorageState<AppStage>(
+  const [stage, setStage, stageHydrated] = useLocalStorageState<AppStage>(
     "plan-of-life:stage",
     "welcome",
   );
   const [activeTab, setActiveTab] = useState<Tab>("today");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Partial<Record<OnboardingAnswerKey, string>>>({});
-  const [profile, setProfile] = useLocalStorageState<UserSpiritualProfile>(
+  const [profile, setProfile, profileHydrated] = useLocalStorageState<UserSpiritualProfile>(
     "plan-of-life:spiritual-profile",
     defaultProfile,
   );
-  const [personalProfile, setPersonalProfile] = useLocalStorageState<PersonalProfile>(
+  const [personalProfile, setPersonalProfile, personalProfileHydrated] = useLocalStorageState<PersonalProfile>(
     "plan-of-life:personal-profile",
     defaultPersonalProfile,
   );
-  const [preferences, setPreferences] = useLocalStorageState<AppPreferences>(
+  const [preferences, setPreferences, preferencesHydrated] = useLocalStorageState<AppPreferences>(
     "plan-of-life:preferences",
     defaultPreferences,
   );
-  const [plan, setPlan] = useLocalStorageState<DailyPlanItem[]>(
+  const [plan, setPlan, planHydrated] = useLocalStorageState<DailyPlanItem[]>(
     "plan-of-life:daily-plan",
     dailyPlan,
   );
-  const [scheduledPieties, setScheduledPieties] = useLocalStorageState<PietyScheduleEntry[]>(
+  const [scheduledPieties, setScheduledPieties, scheduledPietiesHydrated] = useLocalStorageState<PietyScheduleEntry[]>(
     "plan-of-life:piety-schedule",
     [],
   );
-  const [pietyCompletions, setPietyCompletions] = useLocalStorageState<PietyCompletionEntry[]>(
+  const [pietyCompletions, setPietyCompletions, pietyCompletionsHydrated] = useLocalStorageState<PietyCompletionEntry[]>(
     "plan-of-life:piety-completions",
     [],
   );
-  const [prayerIntentions, setPrayerIntentions] = useLocalStorageState<PrayerIntention[]>(
+  const [prayerIntentions, setPrayerIntentions, prayerIntentionsHydrated] = useLocalStorageState<PrayerIntention[]>(
     "plan-of-life:prayer-intentions",
     [],
   );
   const [selectedDetail, setSelectedDetail] = useState<SelectedDetail | null>(null);
   const [selectedPrayerId, setSelectedPrayerId] = useState<string | null>(null);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
-  const [confessionLogs, setConfessionLogs] = useLocalStorageState<ConfessionLogEntry[]>(
+  const [confessionLogs, setConfessionLogs, confessionLogsHydrated] = useLocalStorageState<ConfessionLogEntry[]>(
     "plan-of-life:confession-logs",
     [],
   );
-  const [novenaProgress, setNovenaProgress] = useLocalStorageState<NovenaProgress | null>(
+  const [novenaProgress, setNovenaProgress, novenaProgressHydrated] = useLocalStorageState<NovenaProgress | null>(
     "plan-of-life:novena-progress",
     null,
   );
+  const [showSplash, setShowSplash] = useState(true);
   const uiLanguage = preferences.uiLanguage ?? "zhHant";
   const t = useMemo(() => makeTranslator(uiLanguage), [uiLanguage]);
   const today = getTodayInputDate();
@@ -620,6 +630,22 @@ export default function App() {
   const selectedPrayer = selectedPrayerId
     ? catholicPrayers.find((prayer) => prayer.id === selectedPrayerId) ?? null
     : null;
+  const storageHydrated =
+    stageHydrated &&
+    profileHydrated &&
+    personalProfileHydrated &&
+    preferencesHydrated &&
+    planHydrated &&
+    scheduledPietiesHydrated &&
+    pietyCompletionsHydrated &&
+    prayerIntentionsHydrated &&
+    confessionLogsHydrated &&
+    novenaProgressHydrated;
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowSplash(false), 900);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const fontScale = preferences.fontScale ?? 100;
@@ -820,6 +846,14 @@ export default function App() {
     setSelectedDetail(null);
   }
 
+  if (showSplash) {
+    return <SplashScreen t={t} />;
+  }
+
+  if (!storageHydrated) {
+    return <LoadingScreen t={t} />;
+  }
+
   if (stage === "welcome") {
     return <WelcomeScreen t={t} onStart={() => setStage("onboarding")} />;
   }
@@ -862,6 +896,7 @@ export default function App() {
         ) : activeTab === "today" ? (
           <TodayScreen
             key="today"
+            personalProfile={personalProfile}
             profile={profile}
             todayAgenda={todayAgenda}
             upcomingAgenda={upcomingAgenda}
@@ -986,6 +1021,39 @@ export default function App() {
   );
 }
 
+function SplashScreen({ t }: { t: Translator }) {
+  return (
+    <main className="mx-auto grid min-h-screen min-h-[100svh] w-full max-w-md place-items-center bg-background px-6">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.88, y: 18 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 180, damping: 18 }}
+        className="text-center"
+      >
+        <div className="mx-auto mb-6 grid size-32 place-items-center rounded-full border-8 border-white bg-primary-light shadow-playful">
+          <Church className="size-16 text-primary-dark" strokeWidth={2.8} />
+        </div>
+        <h1 className="text-4xl font-black tracking-normal">{t("appTitle")}</h1>
+        <p className="mt-3 text-lg font-bold text-muted">{t("preparingApp")}</p>
+      </motion.div>
+    </main>
+  );
+}
+
+function LoadingScreen({ t }: { t: Translator }) {
+  return (
+    <main className="mx-auto grid min-h-screen min-h-[100svh] w-full max-w-md place-items-center bg-background px-6">
+      <div className="text-center">
+        <div className="mx-auto mb-5 grid size-20 animate-pulse place-items-center rounded-full bg-primary-light text-primary-dark">
+          <RefreshCw className="size-10 animate-spin" strokeWidth={2.8} />
+        </div>
+        <p className="text-2xl font-black">{t("loading")}</p>
+        <p className="mt-2 text-base font-bold text-muted">{t("preparingApp")}</p>
+      </div>
+    </main>
+  );
+}
+
 function WelcomeScreen({ t, onStart }: { t: Translator; onStart: () => void }) {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background px-6 py-8">
@@ -1088,6 +1156,7 @@ function OnboardingScreen({
 }
 
 function TodayScreen({
+  personalProfile,
   profile,
   todayAgenda,
   upcomingAgenda,
@@ -1100,6 +1169,7 @@ function TodayScreen({
   onCompletePiety,
   onCompleteNovenaDay,
 }: {
+  personalProfile: PersonalProfile;
   profile: UserSpiritualProfile;
   todayAgenda: AgendaItem[];
   upcomingAgenda: AgendaItem[];
@@ -1112,39 +1182,36 @@ function TodayScreen({
   onCompletePiety: (pietyId: string, date: string) => void;
   onCompleteNovenaDay: (day: number) => void;
 }) {
+  const [greeting] = useState(() =>
+    getTodayGreeting(personalProfile.displayName, language, t("friendName")),
+  );
+
   return (
     <ScreenMotion className="space-y-5">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-base font-black text-primary-dark">{t("peace")}</p>
+          <p className="text-base font-black text-primary-dark">{greeting}</p>
           <h1 className="text-3xl font-black tracking-normal">{t("today")}</h1>
         </div>
         <div className="flex items-center gap-2 rounded-full border-4 border-white bg-yellow px-3 py-2 text-sm font-black shadow-playful">
-          <Flame className="size-5 fill-white text-white" />
+          <AnimatedFireIcon className="size-5" />
           {t("streakValue", { days: streakDays })}
         </div>
       </header>
 
-      <Card className="border-4 border-primary-light p-5">
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-black uppercase text-muted">{t("dailyProgress")}</p>
-            <p className="text-2xl font-black">
-              {t("completeCount", { completed: completedCount, total: todayAgenda.length })}
-            </p>
-          </div>
-          <div className="grid size-16 place-items-center rounded-full bg-primary-light text-xl font-black text-primary-dark">
-            {progressValue}%
-          </div>
-        </div>
+      <MetricCard
+        label={t("dailyProgress")}
+        value={t("completeCount", { completed: completedCount, total: todayAgenda.length })}
+        badge={`${progressValue}%`}
+      >
         <Progress value={progressValue} />
         <p className="mt-4 text-base font-bold text-muted">
           {t("minuteGoal", { minutes: profile.dailyPrayerTimeMinutes })}
         </p>
-      </Card>
+      </MetricCard>
 
       <section>
-        <h2 className="mb-3 text-2xl font-black">{t("todayPlan")}</h2>
+        <SectionHeader title={t("todayPlan")} />
         <div className="space-y-4">
           {todayAgenda.length > 0 ? (
             todayAgenda.map((item, index) => (
@@ -1174,7 +1241,7 @@ function TodayScreen({
       </section>
 
       <section>
-        <h2 className="mb-3 text-2xl font-black">{t("nextDaysPreview")}</h2>
+        <SectionHeader title={t("nextDaysPreview")} />
         <div className="space-y-3">
           {upcomingAgenda.length > 0 ? (
             upcomingAgenda.map((item) => (
@@ -1269,6 +1336,59 @@ function AgendaCard({
         </div>
       </div>
     </Card>
+  );
+}
+
+function SectionHeader({
+  eyebrow,
+  title,
+}: {
+  eyebrow?: string;
+  title: string;
+}) {
+  return (
+    <div className="mb-3">
+      {eyebrow ? <p className="text-base font-black text-primary-dark">{eyebrow}</p> : null}
+      <h2 className="text-2xl font-black tracking-normal">{title}</h2>
+    </div>
+  );
+}
+
+function MetricCard({
+  badge,
+  children,
+  label,
+  value,
+}: {
+  badge?: string;
+  children?: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <Card className="border-4 border-primary-light p-5">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-black uppercase text-muted">{label}</p>
+          <p className="text-2xl font-black">{value}</p>
+        </div>
+        {badge ? (
+          <div className="grid size-16 shrink-0 place-items-center rounded-full bg-primary-light text-xl font-black text-primary-dark">
+            {badge}
+          </div>
+        ) : null}
+      </div>
+      {children}
+    </Card>
+  );
+}
+
+function AnimatedFireIcon({ className }: { className?: string }) {
+  return (
+    <span className={cn("animated-fire relative inline-grid place-items-center", className)}>
+      <Flame className="size-full fill-white text-white" strokeWidth={2.8} />
+      <span className="animated-fire-spark absolute size-1.5 rounded-full bg-white/90" />
+    </span>
   );
 }
 
@@ -1465,6 +1585,7 @@ function ExploreScreen({
     shouldToggle?: boolean,
   ) => void;
 }) {
+  const [selectedCategory, setSelectedCategory] = useState<ExploreLibraryCategory | null>(null);
   const [confessionDate, setConfessionDate] = useState(getTodayInputDate());
   const [confessionNote, setConfessionNote] = useState("");
   const confessionStatus = getConfessionStatus(confessionLogs, confessionFrequencyDays, t, language);
@@ -1486,6 +1607,45 @@ function ExploreScreen({
         <p className="text-base font-bold leading-relaxed text-muted">{t("librarySubtitle")}</p>
       </header>
 
+      {!selectedCategory ? (
+        <div className="grid gap-4">
+          <LibraryCategoryCard
+            count={sacramentalActions.length + 1}
+            description={t("readyForConfessionDetail")}
+            icon={Church}
+            title={t("folderSacramentalLife")}
+            tone="danger"
+            onOpen={() => setSelectedCategory("sacramental")}
+          />
+          <LibraryCategoryCard
+            count={recommendedPieties.length}
+            description={t("todayPlan")}
+            icon={FolderOpen}
+            title={t("folderPiety")}
+            tone="primary"
+            onOpen={() => setSelectedCategory("piety")}
+          />
+          <LibraryCategoryCard
+            count={saintProfiles.length}
+            description={t("saints")}
+            icon={UserRound}
+            title={t("folderSaints")}
+            tone="blue"
+            onOpen={() => setSelectedCategory("saints")}
+          />
+        </div>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={() => setSelectedCategory(null)}
+            className="flex w-fit items-center gap-2 rounded-full border-4 border-border bg-white px-4 py-2 text-base font-black shadow-playful active:translate-y-1 active:shadow-none"
+          >
+            <ArrowLeft className="size-5" strokeWidth={3} />
+            {t("backToLibrary")}
+          </button>
+
+      {selectedCategory === "sacramental" ? (
       <LibraryFolder
         count={sacramentalActions.length + 1}
         description={t("readyForConfessionDetail")}
@@ -1602,7 +1762,9 @@ function ExploreScreen({
           ))}
         </div>
       </LibraryFolder>
+      ) : null}
 
+      {selectedCategory === "piety" ? (
       <LibraryFolder
         count={recommendedPieties.length}
         description={t("todayPlan")}
@@ -1630,7 +1792,9 @@ function ExploreScreen({
           })}
         </div>
       </LibraryFolder>
+      ) : null}
 
+      {selectedCategory === "saints" ? (
       <LibraryFolder
         count={saintProfiles.length}
         description={t("saints")}
@@ -1644,6 +1808,9 @@ function ExploreScreen({
           ))}
         </div>
       </LibraryFolder>
+      ) : null}
+        </>
+      )}
     </ScreenMotion>
   );
 }
@@ -1705,6 +1872,74 @@ function LibraryFolder({
 
       <div className="grid gap-4">{children}</div>
     </section>
+  );
+}
+
+function LibraryCategoryCard({
+  count,
+  description,
+  icon: Icon,
+  onOpen,
+  title,
+  tone,
+}: {
+  count: number;
+  description: string;
+  icon: typeof Sun;
+  onOpen: () => void;
+  title: string;
+  tone: "primary" | "danger" | "blue";
+}) {
+  const toneClasses = {
+    primary: {
+      border: "border-primary-light",
+      bg: "bg-primary-light",
+      iconBg: "bg-primary",
+      text: "text-primary-dark",
+    },
+    danger: {
+      border: "border-danger",
+      bg: "bg-danger/10",
+      iconBg: "bg-danger",
+      text: "text-danger",
+    },
+    blue: {
+      border: "border-blue",
+      bg: "bg-blue/10",
+      iconBg: "bg-blue",
+      text: "text-blue",
+    },
+  }[tone];
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className={cn(
+        "w-full rounded-[2rem] border-4 bg-white p-4 text-left shadow-soft transition active:translate-y-1 active:shadow-none",
+        toneClasses.border,
+      )}
+    >
+      <div className={cn("rounded-[1.5rem] px-4 py-4", toneClasses.bg)}>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className={cn("grid size-14 shrink-0 place-items-center rounded-2xl text-white", toneClasses.iconBg)}>
+              <Icon className="size-7" strokeWidth={2.8} />
+            </div>
+            <div className="min-w-0">
+              <p className={cn("text-sm font-black uppercase", toneClasses.text)}>{title}</p>
+              <p className="mt-1 text-base font-bold leading-relaxed text-muted">{description}</p>
+            </div>
+          </div>
+          <div className="grid shrink-0 gap-2 text-center">
+            <span className="rounded-full bg-white px-3 py-1 text-sm font-black text-muted">
+              {count}
+            </span>
+            <ChevronRight className={cn("mx-auto size-6", toneClasses.text)} strokeWidth={3} />
+          </div>
+        </div>
+      </div>
+    </button>
   );
 }
 
@@ -2547,7 +2782,7 @@ function ProgressScreen({
       <Card className="border-4 border-yellow p-5">
         <div className="flex items-center gap-4">
           <div className="grid size-20 place-items-center rounded-full bg-yellow text-white">
-            <Flame className="size-10 fill-white" />
+            <AnimatedFireIcon className="size-10" />
           </div>
           <div>
             <p className="text-4xl font-black">{streakDays}</p>
@@ -3139,7 +3374,7 @@ function useLocalStorageState<T>(key: string, initialValue: T) {
     }
   }, [hydrated, key, value]);
 
-  return [value, setValue] as const;
+  return [value, setValue, hydrated] as const;
 }
 
 function requestAppShellRefresh(worker: ServiceWorker) {
@@ -3765,6 +4000,28 @@ function readableValue(value: string) {
     .split("_")
     .map((word) => word[0].toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function getTodayGreeting(displayName: string, language: UiLanguage, fallbackName: string) {
+  const name = displayName.trim() || fallbackName;
+  const greetings =
+    language === "zhHant"
+      ? [
+          `今天平安，${name}`,
+          `${name}，願今天充滿恩寵`,
+          `${name}，一起走今天的小步驟`,
+          `歡迎回來，${name}`,
+          `${name}，今天也與主同行`,
+        ]
+      : [
+          `Peace today, ${name}`,
+          `${name}, grace for today`,
+          `Welcome back, ${name}`,
+          `${name}, one faithful step today`,
+          `Good to see you, ${name}`,
+        ];
+
+  return greetings[Math.floor(Math.random() * greetings.length)];
 }
 
 function readableProfileValue(value: string, language: UiLanguage) {
