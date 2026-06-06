@@ -37,18 +37,25 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import {
   catholicPrayers,
+  defaultPersonalProfile,
+  defaultPreferences,
   defaultProfile,
   dailyPlan,
   getRecommendedPlan,
+  novenas,
   onboardingQuestions,
   sacramentalActions,
   weeklyProgress,
 } from "@/lib/mock-data";
 import type {
+  AppPreferences,
   CatholicPrayer,
   ConfessionLogEntry,
   DailyPlanItem,
+  Novena,
+  NovenaProgress,
   OnboardingAnswerKey,
+  PersonalProfile,
   PrayerCategory,
   PrayerLanguage,
   PracticeStatus,
@@ -80,21 +87,38 @@ const confessionFrequencyOptions = [
 ] as const;
 
 export default function App() {
-  const [stage, setStage] = useState<AppStage>("welcome");
+  const [stage, setStage] = useLocalStorageState<AppStage>(
+    "plan-of-life:stage",
+    "welcome",
+  );
   const [activeTab, setActiveTab] = useState<Tab>("today");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Partial<Record<OnboardingAnswerKey, string>>>({});
-  const [profile, setProfile] = useState<UserSpiritualProfile>(defaultProfile);
-  const [plan, setPlan] = useState<DailyPlanItem[]>(dailyPlan);
+  const [profile, setProfile] = useLocalStorageState<UserSpiritualProfile>(
+    "plan-of-life:spiritual-profile",
+    defaultProfile,
+  );
+  const [personalProfile, setPersonalProfile] = useLocalStorageState<PersonalProfile>(
+    "plan-of-life:personal-profile",
+    defaultPersonalProfile,
+  );
+  const [preferences, setPreferences] = useLocalStorageState<AppPreferences>(
+    "plan-of-life:preferences",
+    defaultPreferences,
+  );
+  const [plan, setPlan] = useLocalStorageState<DailyPlanItem[]>(
+    "plan-of-life:daily-plan",
+    dailyPlan,
+  );
   const [selectedPracticeId, setSelectedPracticeId] = useState<string | null>(null);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
-  const [confessionFrequencyDays, setConfessionFrequencyDays] = useLocalStorageState(
-    "plan-of-life:confession-frequency-days",
-    30,
-  );
   const [confessionLogs, setConfessionLogs] = useLocalStorageState<ConfessionLogEntry[]>(
     "plan-of-life:confession-logs",
     [],
+  );
+  const [novenaProgress, setNovenaProgress] = useLocalStorageState<NovenaProgress | null>(
+    "plan-of-life:novena-progress",
+    null,
   );
 
   const completedCount = plan.filter((item) => item.status === "completed").length;
@@ -147,6 +171,55 @@ export default function App() {
     setConfessionLogs((logs) => logs.filter((entry) => entry.id !== entryId));
   }
 
+  function startNovena(novenaId: string, intention: string) {
+    setNovenaProgress({
+      novenaId,
+      startedAt: getTodayInputDate(),
+      completedDays: [],
+      intention: intention.trim(),
+      status: "active",
+    });
+    setCompletionMessage("Novena started. Day 1 is ready.");
+    setTimeout(() => setCompletionMessage(null), 1800);
+  }
+
+  function completeNovenaDay(day: number) {
+    const today = getTodayInputDate();
+
+    setNovenaProgress((currentProgress) => {
+      if (!currentProgress || currentProgress.lastCompletedDate === today) {
+        return currentProgress;
+      }
+
+      const completedDays = Array.from(new Set([...currentProgress.completedDays, day])).sort(
+        (a, b) => a - b,
+      );
+
+      return {
+        ...currentProgress,
+        completedDays,
+        lastCompletedDate: today,
+        status: completedDays.length >= 9 ? "completed" : "active",
+      };
+    });
+
+    setCompletionMessage(day >= 9 ? "Novena complete." : `Novena day ${day} complete.`);
+    setTimeout(() => setCompletionMessage(null), 1800);
+  }
+
+  function quitNovena() {
+    setNovenaProgress(null);
+  }
+
+  function clearStoredAppData() {
+    if (!window.confirm("Clear all saved Plan of Life data from this device?")) {
+      return;
+    }
+
+    clearPlanOfLifeLocalStorage();
+    window.location.reload();
+  }
+
   function resetOnboarding() {
     setQuestionIndex(0);
     setAnswers({});
@@ -177,50 +250,78 @@ export default function App() {
       )}
     >
       <div className="flex-1 px-4 pb-28 pt-5">
-        <AnimatePresence mode="wait">
-          {selectedPractice ? (
-            <PracticeDetail
-              key={selectedPractice.id}
-              item={selectedPractice}
-              onBack={() => setSelectedPracticeId(null)}
-              onComplete={() => completePractice(selectedPractice.id)}
-            />
-          ) : activeTab === "today" ? (
-            <TodayScreen
-              key="today"
-              profile={profile}
-              plan={visiblePlan}
-              completedCount={completedCount}
-              progressValue={progressValue}
-              onOpenPractice={setSelectedPracticeId}
-              onComplete={completePractice}
-            />
-          ) : activeTab === "explore" ? (
-            <ExploreScreen
-              key="explore"
-              confessionFrequencyDays={confessionFrequencyDays}
-              confessionLogs={confessionLogs}
-              onAddConfessionLog={addConfessionLog}
-              onConfessionFrequencyChange={setConfessionFrequencyDays}
-              onDeleteConfessionLog={deleteConfessionLog}
-            />
-          ) : activeTab === "prayers" ? (
-            <PrayersScreen key="prayers" />
-          ) : activeTab === "progress" ? (
-            <ProgressScreen
-              key="progress"
-              completedCount={completedCount}
-              progressValue={progressValue}
-            />
-          ) : (
-            <ProfileScreen
-              key="profile"
-              profile={profile}
-              progressValue={progressValue}
-              onReset={resetOnboarding}
-            />
-          )}
-        </AnimatePresence>
+        {selectedPractice ? (
+          <PracticeDetail
+            key={selectedPractice.id}
+            item={selectedPractice}
+            onBack={() => setSelectedPracticeId(null)}
+            onComplete={() => completePractice(selectedPractice.id)}
+          />
+        ) : activeTab === "today" ? (
+          <TodayScreen
+            key="today"
+            profile={profile}
+            plan={visiblePlan}
+            completedCount={completedCount}
+            progressValue={progressValue}
+            onOpenPractice={setSelectedPracticeId}
+            onComplete={completePractice}
+          />
+        ) : activeTab === "explore" ? (
+          <ExploreScreen
+            key="explore"
+            confessionFrequencyDays={preferences.confessionFrequencyDays}
+            confessionLogs={confessionLogs}
+            onAddConfessionLog={addConfessionLog}
+            onConfessionFrequencyChange={(confessionFrequencyDays) =>
+              setPreferences((currentPreferences) => ({
+                ...currentPreferences,
+                confessionFrequencyDays,
+              }))
+            }
+            onDeleteConfessionLog={deleteConfessionLog}
+          />
+        ) : activeTab === "prayers" ? (
+          <PrayersScreen
+            key="prayers"
+            language={preferences.prayerLanguage}
+            novenaProgress={novenaProgress}
+            onCompleteNovenaDay={completeNovenaDay}
+            onLanguageChange={(prayerLanguage) =>
+              setPreferences((currentPreferences) => ({
+                ...currentPreferences,
+                prayerLanguage,
+              }))
+            }
+            onQuitNovena={quitNovena}
+            onStartNovena={startNovena}
+          />
+        ) : activeTab === "progress" ? (
+          <ProgressScreen
+            key="progress"
+            completedCount={completedCount}
+            confessionLogs={confessionLogs}
+            novenaProgress={novenaProgress}
+            progressValue={progressValue}
+          />
+        ) : (
+          <ProfileScreen
+            key="profile"
+            personalProfile={personalProfile}
+            preferences={preferences}
+            profile={profile}
+            progressValue={progressValue}
+            onClearStorage={clearStoredAppData}
+            onPersonalProfileChange={setPersonalProfile}
+            onPrayerLanguageChange={(prayerLanguage) =>
+              setPreferences((currentPreferences) => ({
+                ...currentPreferences,
+                prayerLanguage,
+              }))
+            }
+            onReset={resetOnboarding}
+          />
+        )}
       </div>
 
       <AnimatePresence>
@@ -277,65 +378,57 @@ function OnboardingScreen({
   answers: Partial<Record<OnboardingAnswerKey, string>>;
   onChoose: (key: OnboardingAnswerKey, value: string) => void;
 }) {
-  const question = onboardingQuestions[questionIndex];
-  const progress = ((questionIndex + 1) / onboardingQuestions.length) * 100;
+  const safeQuestionIndex = Math.min(questionIndex, onboardingQuestions.length - 1);
+  const question = onboardingQuestions[safeQuestionIndex];
+  const progress = ((safeQuestionIndex + 1) / onboardingQuestions.length) * 100;
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background px-5 py-6">
       <div className="mb-7 flex items-center gap-3">
         <Progress value={progress} className="h-4 flex-1" />
         <span className="text-sm font-black text-primary-dark">
-          {questionIndex + 1}/{onboardingQuestions.length}
+          {safeQuestionIndex + 1}/{onboardingQuestions.length}
         </span>
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.section
-          key={question.id}
-          initial={{ x: 56, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -56, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 190, damping: 22 }}
-          className="flex flex-1 flex-col"
-        >
-          <div className="mb-7">
-            <div className="mb-4 grid size-16 place-items-center rounded-3xl border-4 border-white bg-blue text-white shadow-playful">
-              <Sparkles className="size-8" />
-            </div>
-            <h1 className="text-3xl font-black leading-tight tracking-normal">
-              {question.title}
-            </h1>
+      <section key={question.id} className="flex flex-1 flex-col">
+        <div className="mb-7">
+          <div className="mb-4 grid size-16 place-items-center rounded-3xl border-4 border-white bg-blue text-white shadow-playful">
+            <Sparkles className="size-8" />
           </div>
+          <h1 className="text-3xl font-black leading-tight tracking-normal">
+            {question.title}
+          </h1>
+        </div>
 
-          <div className="space-y-3">
-            {question.options.map((option) => {
-              const selected = answers[question.key] === option.value;
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => onChoose(question.key, option.value)}
+        <div className="space-y-3">
+          {question.options.map((option) => {
+            const selected = answers[question.key] === option.value;
+            return (
+              <button
+                key={option.value}
+                onClick={() => onChoose(question.key, option.value)}
+                className={cn(
+                  "flex min-h-20 w-full items-center justify-between gap-4 rounded-3xl border-4 bg-card px-5 py-4 text-left text-lg font-extrabold shadow-playful transition",
+                  selected
+                    ? "border-primary bg-primary-light text-primary-dark"
+                    : "border-border text-foreground active:translate-y-1 active:shadow-none",
+                )}
+              >
+                <span>{option.label}</span>
+                <span
                   className={cn(
-                    "flex min-h-20 w-full items-center justify-between gap-4 rounded-3xl border-4 bg-card px-5 py-4 text-left text-lg font-extrabold shadow-playful transition",
-                    selected
-                      ? "border-primary bg-primary-light text-primary-dark"
-                      : "border-border text-foreground active:translate-y-1 active:shadow-none",
+                    "grid size-8 shrink-0 place-items-center rounded-full border-4",
+                    selected ? "border-primary bg-primary text-white" : "border-border",
                   )}
                 >
-                  <span>{option.label}</span>
-                  <span
-                    className={cn(
-                      "grid size-8 shrink-0 place-items-center rounded-full border-4",
-                      selected ? "border-primary bg-primary text-white" : "border-border",
-                    )}
-                  >
-                    {selected ? <Check className="size-5" strokeWidth={4} /> : null}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </motion.section>
-      </AnimatePresence>
+                  {selected ? <Check className="size-5" strokeWidth={4} /> : null}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
     </main>
   );
 }
@@ -704,8 +797,21 @@ function SacramentalActionCard({ action }: { action: SacramentalAction }) {
   );
 }
 
-function PrayersScreen() {
-  const [language, setLanguage] = useState<PrayerLanguage>("en");
+function PrayersScreen({
+  language,
+  novenaProgress,
+  onCompleteNovenaDay,
+  onLanguageChange,
+  onQuitNovena,
+  onStartNovena,
+}: {
+  language: PrayerLanguage;
+  novenaProgress: NovenaProgress | null;
+  onCompleteNovenaDay: (day: number) => void;
+  onLanguageChange: (language: PrayerLanguage) => void;
+  onQuitNovena: () => void;
+  onStartNovena: (novenaId: string, intention: string) => void;
+}) {
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLocaleLowerCase();
 
@@ -715,6 +821,11 @@ function PrayersScreen() {
     return catholicPrayers.filter((prayer) =>
       getPrayerSearchText(prayer).includes(normalizedQuery),
     );
+  }, [normalizedQuery]);
+  const visibleNovenas = useMemo(() => {
+    if (!normalizedQuery) return novenas;
+
+    return novenas.filter((novena) => getNovenaSearchText(novena).includes(normalizedQuery));
   }, [normalizedQuery]);
 
   return (
@@ -739,7 +850,7 @@ function PrayersScreen() {
                 type="button"
                 aria-label={option.label}
                 aria-pressed={active}
-                onClick={() => setLanguage(option.id)}
+                onClick={() => onLanguageChange(option.id)}
                 className={cn(
                   "flex min-h-12 items-center justify-center gap-2 rounded-full px-3 text-sm font-black leading-tight transition",
                   active ? "bg-primary text-white" : "bg-transparent text-muted",
@@ -766,10 +877,26 @@ function PrayersScreen() {
       </header>
 
       <div className="grid gap-4">
-        {visiblePrayers.length > 0 ? (
-          visiblePrayers.map((prayer) => (
-            <PrayerCard key={prayer.id} prayer={prayer} language={language} />
-          ))
+        {visiblePrayers.length > 0 || visibleNovenas.length > 0 ? (
+          <>
+            {visibleNovenas.map((novena) => (
+              <NovenaCard
+                key={novena.id}
+                novena={novena}
+                progress={novenaProgress?.novenaId === novena.id ? novenaProgress : null}
+                hasOtherActiveNovena={
+                  Boolean(novenaProgress) && novenaProgress?.novenaId !== novena.id
+                }
+                onCompleteDay={onCompleteNovenaDay}
+                onQuit={onQuitNovena}
+                onStart={onStartNovena}
+              />
+            ))}
+
+            {visiblePrayers.map((prayer) => (
+              <PrayerCard key={prayer.id} prayer={prayer} language={language} />
+            ))}
+          </>
         ) : (
           <Card className="border-4 border-border p-5 text-center">
             <ScrollText className="mx-auto mb-3 size-10 text-primary-dark" />
@@ -781,6 +908,167 @@ function PrayersScreen() {
         )}
       </div>
     </ScreenMotion>
+  );
+}
+
+function NovenaCard({
+  novena,
+  progress,
+  hasOtherActiveNovena,
+  onCompleteDay,
+  onQuit,
+  onStart,
+}: {
+  novena: Novena;
+  progress: NovenaProgress | null;
+  hasOtherActiveNovena: boolean;
+  onCompleteDay: (day: number) => void;
+  onQuit: () => void;
+  onStart: (novenaId: string, intention: string) => void;
+}) {
+  const [intention, setIntention] = useState("");
+  const completedCount = progress?.completedDays.length ?? 0;
+  const currentDayNumber = Math.min(completedCount + 1, novena.days.length);
+  const currentDay = novena.days[currentDayNumber - 1];
+  const completedToday = progress?.lastCompletedDate === getTodayInputDate();
+  const isCompleted = progress?.status === "completed";
+  const progressValue = Math.round((completedCount / novena.days.length) * 100);
+
+  function submitNovenaStart(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onStart(novena.id, intention);
+    setIntention("");
+  }
+
+  return (
+    <Card className="border-4 border-yellow p-5">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-black uppercase text-yellow">Novena</p>
+          <h2 className="text-2xl font-black tracking-normal">{novena.title}</h2>
+          <p className="mt-1 text-base font-bold leading-relaxed text-muted">
+            {novena.description}
+          </p>
+        </div>
+        <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-yellow text-white">
+          <CalendarDays className="size-6" strokeWidth={2.8} />
+        </div>
+      </div>
+
+      {progress ? (
+        <div className="space-y-4">
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="text-sm font-black uppercase text-muted">
+                {isCompleted ? "Complete" : `Day ${currentDayNumber} of ${novena.days.length}`}
+              </p>
+              <span className="rounded-full bg-background px-3 py-1 text-sm font-black text-muted">
+                {completedCount}/{novena.days.length}
+              </span>
+            </div>
+            <Progress value={progressValue} />
+          </div>
+
+          {progress.intention ? (
+            <div className="rounded-2xl bg-background px-4 py-3">
+              <p className="text-sm font-black uppercase text-muted">Intention</p>
+              <p className="break-words text-base font-bold text-foreground">
+                {progress.intention}
+              </p>
+            </div>
+          ) : null}
+
+          {isCompleted ? (
+            <div className="rounded-2xl bg-primary-light px-4 py-3">
+              <p className="text-xl font-black text-primary-dark">Novena complete</p>
+              <p className="mt-1 text-base font-bold text-muted">
+                You completed all nine days.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3 rounded-2xl border-4 border-border bg-white p-4">
+              <div>
+                <p className="text-sm font-black uppercase text-muted">
+                  Day {currentDay.day}
+                </p>
+                <h3 className="text-2xl font-black tracking-normal">{currentDay.title}</h3>
+              </div>
+              <p className="text-base font-bold leading-relaxed text-muted">
+                {currentDay.reflection}
+              </p>
+              <p className="whitespace-pre-line text-lg font-bold leading-relaxed text-foreground">
+                {currentDay.prayer}
+              </p>
+              <div className="rounded-2xl bg-background px-4 py-3">
+                <p className="text-sm font-black uppercase text-muted">Action</p>
+                <p className="text-base font-black text-foreground">{currentDay.action}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-9 gap-1">
+            {novena.days.map((day) => {
+              const done = progress.completedDays.includes(day.day);
+
+              return (
+                <div
+                  key={day.day}
+                  className={cn(
+                    "grid aspect-square place-items-center rounded-full border-4 text-xs font-black",
+                    done
+                      ? "border-primary bg-primary text-white"
+                      : day.day === currentDayNumber && !isCompleted
+                        ? "border-yellow bg-yellow text-white"
+                        : "border-border bg-white text-muted",
+                  )}
+                >
+                  {done ? <Check className="size-4" strokeWidth={4} /> : day.day}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="grid grid-cols-[1fr_auto] gap-2">
+            <Button
+              type="button"
+              size="lg"
+              className="w-full"
+              disabled={isCompleted || completedToday}
+              onClick={() => onCompleteDay(currentDayNumber)}
+            >
+              {completedToday ? "Continue Tomorrow" : "Complete Day"}
+              <Check className="size-5" />
+            </Button>
+            <Button type="button" size="lg" variant="danger" onClick={onQuit}>
+              Quit
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={submitNovenaStart} className="space-y-3">
+          <label className="grid gap-2">
+            <span className="text-sm font-black uppercase text-muted">Intention</span>
+            <input
+              type="text"
+              value={intention}
+              onChange={(event) => setIntention(event.target.value)}
+              placeholder={novena.intentionPrompt}
+              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-yellow"
+            />
+          </label>
+
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={hasOtherActiveNovena}
+          >
+            {hasOtherActiveNovena ? "Novena Active" : "Start Novena"}
+            <CalendarPlus className="size-5" />
+          </Button>
+        </form>
+      )}
+    </Card>
   );
 }
 
@@ -835,11 +1123,17 @@ function PrayerCard({
 
 function ProgressScreen({
   completedCount,
+  confessionLogs,
+  novenaProgress,
   progressValue,
 }: {
   completedCount: number;
+  confessionLogs: ConfessionLogEntry[];
+  novenaProgress: NovenaProgress | null;
   progressValue: number;
 }) {
+  const novenaCompletedCount = novenaProgress?.completedDays.length ?? 0;
+
   return (
     <ScreenMotion className="space-y-5">
       <header>
@@ -895,17 +1189,45 @@ function ProgressScreen({
           Keep showing up. Your next badge is close.
         </p>
       </Card>
+
+      <Card className="border-4 border-border p-5">
+        <div className="mb-4 flex items-center gap-3">
+          <ClipboardList className="size-9 text-primary-dark" />
+          <h2 className="text-2xl font-black">Saved tracks</h2>
+        </div>
+        <div className="grid gap-3">
+          <TrackSummaryRow label="Confessions logged" value={`${confessionLogs.length}`} />
+          <TrackSummaryRow
+            label="Novena progress"
+            value={
+              novenaProgress
+                ? `${novenaCompletedCount}/9 ${novenaProgress.status}`
+                : "No active novena"
+            }
+          />
+        </div>
+      </Card>
     </ScreenMotion>
   );
 }
 
 function ProfileScreen({
+  personalProfile,
+  preferences,
   profile,
   progressValue,
+  onClearStorage,
+  onPersonalProfileChange,
+  onPrayerLanguageChange,
   onReset,
 }: {
+  personalProfile: PersonalProfile;
+  preferences: AppPreferences;
   profile: UserSpiritualProfile;
   progressValue: number;
+  onClearStorage: () => void;
+  onPersonalProfileChange: (profile: PersonalProfile) => void;
+  onPrayerLanguageChange: (language: PrayerLanguage) => void;
   onReset: () => void;
 }) {
   return (
@@ -923,6 +1245,97 @@ function ProfileScreen({
         <p className="text-base font-bold text-muted">{progressValue}% of today&apos;s plan complete</p>
       </Card>
 
+      <Card className="border-4 border-primary-light p-5">
+        <div className="mb-4 flex items-center gap-3">
+          <UserRound className="size-9 text-primary-dark" />
+          <h2 className="text-2xl font-black">Personal profile</h2>
+        </div>
+
+        <div className="grid gap-3">
+          <label className="grid gap-2">
+            <span className="text-sm font-black uppercase text-muted">Name</span>
+            <input
+              type="text"
+              value={personalProfile.displayName}
+              onChange={(event) =>
+                onPersonalProfileChange({
+                  ...personalProfile,
+                  displayName: event.target.value,
+                })
+              }
+              placeholder="Your name"
+              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
+            />
+          </label>
+
+          <label className="grid gap-2">
+            <span className="text-sm font-black uppercase text-muted">Parish</span>
+            <input
+              type="text"
+              value={personalProfile.parish}
+              onChange={(event) =>
+                onPersonalProfileChange({
+                  ...personalProfile,
+                  parish: event.target.value,
+                })
+              }
+              placeholder="Parish name"
+              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
+            />
+          </label>
+
+          <label className="grid gap-2">
+            <span className="text-sm font-black uppercase text-muted">Patron saint</span>
+            <input
+              type="text"
+              value={personalProfile.patronSaint}
+              onChange={(event) =>
+                onPersonalProfileChange({
+                  ...personalProfile,
+                  patronSaint: event.target.value,
+                })
+              }
+              placeholder="St. Joseph"
+              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
+            />
+          </label>
+        </div>
+      </Card>
+
+      <Card className="border-4 border-blue p-5">
+        <div className="mb-4 flex items-center gap-3">
+          <Languages className="size-9 text-blue" />
+          <h2 className="text-2xl font-black">Preferences</h2>
+        </div>
+
+        <div
+          role="group"
+          aria-label="Default prayer language"
+          className="grid grid-cols-2 gap-1 rounded-full border-4 border-white bg-white p-1 shadow-soft"
+        >
+          {prayerLanguageOptions.map((option) => {
+            const active = preferences.prayerLanguage === option.id;
+
+            return (
+              <button
+                key={option.id}
+                type="button"
+                aria-label={option.label}
+                aria-pressed={active}
+                onClick={() => onPrayerLanguageChange(option.id)}
+                className={cn(
+                  "flex min-h-12 items-center justify-center gap-2 rounded-full px-3 text-sm font-black leading-tight transition",
+                  active ? "bg-blue text-white" : "bg-transparent text-muted",
+                )}
+              >
+                <Languages className="size-4" strokeWidth={3} />
+                <span>{option.id === "zhHant" ? option.shortLabel : option.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
       <div className="space-y-3">
         <ProfileRow label="Experience" value={readableValue(profile.experienceLevel)} />
         <ProfileRow label="Prayer time" value={readableValue(profile.preferredPrayerTime)} />
@@ -936,6 +1349,11 @@ function ProfileScreen({
         <RotateCcw className="size-5" />
         Reset onboarding
       </Button>
+
+      <Button size="lg" variant="danger" className="w-full" onClick={onClearStorage}>
+        <Trash2 className="size-5" />
+        Clear Storage
+      </Button>
     </ScreenMotion>
   );
 }
@@ -946,6 +1364,15 @@ function ProfileRow({ label, value }: { label: string; value: string }) {
       <p className="text-sm font-black uppercase text-muted">{label}</p>
       <p className="text-xl font-black">{value}</p>
     </Card>
+  );
+}
+
+function TrackSummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-background px-4 py-3">
+      <p className="text-sm font-black uppercase text-muted">{label}</p>
+      <p className="text-xl font-black text-foreground">{value}</p>
+    </div>
   );
 }
 
@@ -1113,7 +1540,7 @@ function useLocalStorageState<T>(key: string, initialValue: T) {
   useEffect(() => {
     try {
       const storedValue = window.localStorage.getItem(key);
-      if (storedValue) {
+      if (storedValue !== null) {
         setValue(JSON.parse(storedValue) as T);
       }
     } catch {
@@ -1126,7 +1553,11 @@ function useLocalStorageState<T>(key: string, initialValue: T) {
   useEffect(() => {
     if (!hydrated) return;
 
-    window.localStorage.setItem(key, JSON.stringify(value));
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // Browsers can block storage; keep the current session usable.
+    }
   }, [hydrated, key, value]);
 
   return [value, setValue] as const;
@@ -1170,6 +1601,16 @@ async function clearAppCaches() {
       .filter((key) => key.startsWith("acts-of-piety"))
       .map((key) => window.caches.delete(key)),
   );
+}
+
+function clearPlanOfLifeLocalStorage() {
+  try {
+    Object.keys(window.localStorage)
+      .filter((key) => key.startsWith("plan-of-life:"))
+      .forEach((key) => window.localStorage.removeItem(key));
+  } catch {
+    // Leave the app running if storage is unavailable in the current browser.
+  }
 }
 
 function getSacramentalActionIcon(type: SacramentalAction["type"]) {
@@ -1299,6 +1740,17 @@ function getPrayerSearchText(prayer: CatholicPrayer) {
       translation.subtitle ?? "",
       translation.text,
     ]),
+  ]
+    .join(" ")
+    .toLocaleLowerCase();
+}
+
+function getNovenaSearchText(novena: Novena) {
+  return [
+    novena.title,
+    novena.description,
+    novena.intentionPrompt,
+    ...novena.days.flatMap((day) => [day.title, day.reflection, day.prayer, day.action]),
   ]
     .join(" ")
     .toLocaleLowerCase();

@@ -44,6 +44,17 @@ export type UserSpiritualProfile = {
   spiritualGoal: string;
 };
 
+export type PersonalProfile = {
+  displayName: string;
+  parish: string;
+  patronSaint: string;
+};
+
+export type AppPreferences = {
+  prayerLanguage: PrayerLanguage;
+  confessionFrequencyDays: number;
+};
+
 export type DailyPlanItem = {
   id: string;
   practice: ActOfPiety;
@@ -78,6 +89,31 @@ export type ConfessionLogEntry = {
   id: string;
   date: string;
   note: string;
+};
+
+export type NovenaDay = {
+  day: number;
+  title: string;
+  reflection: string;
+  prayer: string;
+  action: string;
+};
+
+export type Novena = {
+  id: string;
+  title: string;
+  description: string;
+  intentionPrompt: string;
+  days: NovenaDay[];
+};
+
+export type NovenaProgress = {
+  novenaId: string;
+  startedAt: string;
+  completedDays: number[];
+  lastCompletedDate?: string;
+  intention: string;
+  status: "active" | "completed";
 };
 
 export type OnboardingAnswerKey =

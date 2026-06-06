@@ -1,10 +1,13 @@
 import type {
   ActOfPiety,
+  AppPreferences,
   CatholicPrayer,
   ContentCategory,
-  SacramentalAction,
   DailyPlanItem,
+  Novena,
   OnboardingAnswerKey,
+  PersonalProfile,
+  SacramentalAction,
   UserSpiritualProfile,
 } from "@/lib/types";
 
@@ -14,6 +17,17 @@ export const defaultProfile: UserSpiritualProfile = {
   preferredDevotions: ["I’m open to exploring"],
   preferredPrayerTime: "morning",
   spiritualGoal: "Building a daily prayer habit",
+};
+
+export const defaultPersonalProfile: PersonalProfile = {
+  displayName: "",
+  parish: "",
+  patronSaint: "",
+};
+
+export const defaultPreferences: AppPreferences = {
+  prayerLanguage: "en",
+  confessionFrequencyDays: 30,
 };
 
 export const actsOfPiety: ActOfPiety[] = [
@@ -377,5 +391,98 @@ export const catholicPrayers: CatholicPrayer[] = [
         text: "我的護守天使，天主既使你照顧我，求你常保護我，指引我，管理我。阿們。",
       },
     },
+  },
+];
+
+export const novenas: Novena[] = [
+  {
+    id: "daily-work",
+    title: "Novena for Daily Work",
+    description:
+      "Nine days of prayer to offer ordinary work to God with faith, order, service, and love.",
+    intentionPrompt: "What work, vocation, or responsibility are you entrusting to God?",
+    days: [
+      {
+        day: 1,
+        title: "Offer the Work",
+        reflection:
+          "Begin by placing your tasks before God. Ordinary duties can become prayer when they are offered with love.",
+        prayer:
+          "Lord Jesus, receive the work of my hands and mind today. Teach me to begin with humility, to work with patience, and to offer each task for your glory. Amen.",
+        action: "Name one task today and offer it before you begin.",
+      },
+      {
+        day: 2,
+        title: "Serve Through Work",
+        reflection:
+          "Work is not only productivity. It is a concrete way to serve family, neighbors, colleagues, and the common good.",
+        prayer:
+          "Father, help me see the people served by my work. Free me from selfishness, and make my effort generous, honest, and attentive to others. Amen.",
+        action: "Choose one person who benefits from your work and pray for them.",
+      },
+      {
+        day: 3,
+        title: "Work With Love",
+        reflection:
+          "Small tasks gain spiritual weight when they are done with love. Nothing offered to God is wasted.",
+        prayer:
+          "Holy Spirit, fill small duties with great love. When work feels hidden or repetitive, keep my heart awake to your presence. Amen.",
+        action: "Do one ordinary task carefully without rushing.",
+      },
+      {
+        day: 4,
+        title: "Order and Constancy",
+        reflection:
+          "A stable rhythm protects prayer, family, rest, and responsibility. Order makes room for grace.",
+        prayer:
+          "Lord, give me the grace to use time well. Help me order my day with peace, keep my commitments, and return to you when I lose focus. Amen.",
+        action: "Write the next three concrete tasks for today.",
+      },
+      {
+        day: 5,
+        title: "Work Well",
+        reflection:
+          "Careful work can be an act of reverence. God is honored by honest effort and attention to detail.",
+        prayer:
+          "Creator God, help me work with diligence and integrity. Let my effort be worthy of the gifts you have entrusted to me. Amen.",
+        action: "Improve one detail in a task you might normally overlook.",
+      },
+      {
+        day: 6,
+        title: "Accept Limits",
+        reflection:
+          "Not every task goes as planned. Limits can become invitations to humility, perseverance, and trust.",
+        prayer:
+          "Jesus, when my work is difficult or incomplete, keep me from discouragement. Help me do what I can and entrust the rest to you. Amen.",
+        action: "Pause for one minute before reacting to a frustration.",
+      },
+      {
+        day: 7,
+        title: "Witness With Joy",
+        reflection:
+          "A Christian spirit at work is often shown through patience, fairness, gratitude, and quiet joy.",
+        prayer:
+          "Lord, make my conduct a peaceful witness. Let my words, decisions, and attitude reflect the hope I have in you. Amen.",
+        action: "Offer one encouraging word today.",
+      },
+      {
+        day: 8,
+        title: "Seek God in the Ordinary",
+        reflection:
+          "God meets us in ordinary places. Work, home, study, and service can all become places of encounter.",
+        prayer:
+          "Father, open my eyes to meet you in the ordinary. Help me find you in the people, duties, and interruptions of this day. Amen.",
+        action: "Pray a short aspiration before changing tasks.",
+      },
+      {
+        day: 9,
+        title: "Give Thanks and Continue",
+        reflection:
+          "A novena ends by giving thanks and taking one next faithful step. Grace continues in daily life.",
+        prayer:
+          "Lord, thank you for walking with me through these nine days. Strengthen my vocation, bless my work, and help me continue with faith, hope, and love. Amen.",
+        action: "Write one grace received and one habit to continue.",
+      },
+    ],
   },
 ];
