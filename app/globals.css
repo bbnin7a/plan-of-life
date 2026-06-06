@@ -60,6 +60,14 @@ a {
   top: calc(0.75rem + env(safe-area-inset-top));
 }
 
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 .animated-fire {
   animation: fire-bounce 1.45s ease-in-out infinite;
   transform-origin: 50% 85%;

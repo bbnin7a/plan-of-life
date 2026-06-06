@@ -80,6 +80,7 @@ import type {
 
 type AppStage = "welcome" | "onboarding" | "app";
 type Tab = "today" | "explore" | "prayers" | "progress" | "profile";
+type PrayerTab = "intentions" | "prayers" | "favorites";
 type ExploreLibraryCategory = "sacramental" | "piety" | "saints";
 type SelectedDetail =
   | { type: "piety"; pietyId: string; date: string }
@@ -257,7 +258,25 @@ const uiText = {
     noConfession: "No confession logged yet.",
     prayers: "Prayers",
     commonPrayers: "Common Catholic prayers",
+    prayerTabIntentions: "Prayer intention",
+    prayerTabPrayers: "Prayers",
+    prayerTabFavorites: "My prayers",
+    myPrayers: "My prayers",
+    favoritePrayer: "Favorite prayer",
+    unfavoritePrayer: "Remove favorite",
+    noFavoritePrayers: "No favorite prayers yet.",
+    noFavoritePrayersHint: "Mark prayers with the heart button to save them here.",
     viewPrayer: "View prayer",
+    openCards: "Open cards",
+    flipCard: "Flip card",
+    cardFront: "Card front",
+    cardBack: "Prayer text",
+    browseAllCards: "Browse all cards",
+    currentCard: "Current card",
+    typePrayers: "Prayers",
+    typeNovena: "Novena",
+    typeLitany: "Litany",
+    typeRosary: "Rosary",
     close: "Close",
     prayerLanguage: "Prayer language",
     searchPrayers: "Search prayers",
@@ -445,7 +464,25 @@ const uiText = {
     noConfession: "尚未紀錄告解。",
     prayers: "經文",
     commonPrayers: "常用天主教經文",
+    prayerTabIntentions: "祈禱意向",
+    prayerTabPrayers: "經文",
+    prayerTabFavorites: "我的經文",
+    myPrayers: "我的經文",
+    favoritePrayer: "加入最愛經文",
+    unfavoritePrayer: "移除最愛",
+    noFavoritePrayers: "尚未加入最愛經文。",
+    noFavoritePrayersHint: "按下心形按鈕，就可把經文儲存在這裡。",
     viewPrayer: "查看經文",
+    openCards: "打開卡牌",
+    flipCard: "翻牌",
+    cardFront: "卡牌正面",
+    cardBack: "經文內容",
+    browseAllCards: "瀏覽全部卡牌",
+    currentCard: "目前卡牌",
+    typePrayers: "經文",
+    typeNovena: "九日敬禮",
+    typeLitany: "連禱",
+    typeRosary: "玫瑰經",
     close: "關閉",
     prayerLanguage: "經文語言",
     searchPrayers: "搜尋經文",
@@ -603,8 +640,13 @@ export default function App() {
     "plan-of-life:prayer-intentions",
     [],
   );
+  const [favoritePrayerIds, setFavoritePrayerIds, favoritePrayerIdsHydrated] = useLocalStorageState<string[]>(
+    "plan-of-life:favorite-prayers",
+    [],
+  );
   const [selectedDetail, setSelectedDetail] = useState<SelectedDetail | null>(null);
   const [selectedPrayerId, setSelectedPrayerId] = useState<string | null>(null);
+  const [selectedNovenaId, setSelectedNovenaId] = useState<string | null>(null);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
   const [confessionLogs, setConfessionLogs, confessionLogsHydrated] = useLocalStorageState<ConfessionLogEntry[]>(
     "plan-of-life:confession-logs",
@@ -664,6 +706,9 @@ export default function App() {
   const selectedPrayer = selectedPrayerId
     ? catholicPrayers.find((prayer) => prayer.id === selectedPrayerId) ?? null
     : null;
+  const selectedNovena = selectedNovenaId
+    ? novenas.find((novena) => novena.id === selectedNovenaId) ?? null
+    : null;
   const storageHydrated =
     stageHydrated &&
     profileHydrated &&
@@ -673,6 +718,7 @@ export default function App() {
     scheduledPietiesHydrated &&
     pietyCompletionsHydrated &&
     prayerIntentionsHydrated &&
+    favoritePrayerIdsHydrated &&
     confessionLogsHydrated &&
     novenaProgressHydrated;
 
@@ -818,6 +864,12 @@ export default function App() {
       intentions.map((intention) =>
         intention.id === intentionId ? { ...intention, archived: true } : intention,
       ),
+    );
+  }
+
+  function toggleFavoritePrayer(prayerId: string) {
+    setFavoritePrayerIds((ids) =>
+      ids.includes(prayerId) ? ids.filter((id) => id !== prayerId) : [prayerId, ...ids],
     );
   }
 
@@ -974,6 +1026,7 @@ export default function App() {
           <PrayersScreen
             key="prayers"
             language={preferences.prayerLanguage}
+            favoritePrayerIds={favoritePrayerIds}
             prayerIntentions={prayerIntentions}
             t={t}
             uiLanguage={uiLanguage}
@@ -982,8 +1035,10 @@ export default function App() {
             onArchivePrayerIntention={archivePrayerIntention}
             onCompleteNovenaDay={completeNovenaDay}
             onQuitNovena={quitNovena}
+            onOpenNovena={setSelectedNovenaId}
             onOpenPrayer={setSelectedPrayerId}
             onStartNovena={startNovena}
+            onToggleFavoritePrayer={toggleFavoritePrayer}
           />
         ) : activeTab === "progress" ? (
           <ProgressScreen
@@ -1040,12 +1095,25 @@ export default function App() {
 
       <AnimatePresence>
         {selectedPrayer ? (
-          <PrayerDetailDialog
+          <PrayerCardGameDialog
             key={selectedPrayer.id}
             language={preferences.prayerLanguage}
             prayer={selectedPrayer}
             t={t}
             onClose={() => setSelectedPrayerId(null)}
+          />
+        ) : null}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedNovena ? (
+          <NovenaCardGameDialog
+            key={selectedNovena.id}
+            novena={selectedNovena}
+            progress={novenaProgress?.novenaId === selectedNovena.id ? novenaProgress : null}
+            t={t}
+            onClose={() => setSelectedNovenaId(null)}
+            onCompleteDay={completeNovenaDay}
           />
         ) : null}
       </AnimatePresence>
@@ -2568,6 +2636,7 @@ function SacramentalActionCard({
 }
 
 function PrayersScreen({
+  favoritePrayerIds,
   language,
   prayerIntentions,
   t,
@@ -2577,9 +2646,12 @@ function PrayersScreen({
   onArchivePrayerIntention,
   onCompleteNovenaDay,
   onQuitNovena,
+  onOpenNovena,
   onOpenPrayer,
   onStartNovena,
+  onToggleFavoritePrayer,
 }: {
+  favoritePrayerIds: string[];
   language: PrayerLanguage;
   prayerIntentions: PrayerIntention[];
   t: Translator;
@@ -2589,27 +2661,44 @@ function PrayersScreen({
   onArchivePrayerIntention: (intentionId: string) => void;
   onCompleteNovenaDay: (day: number) => void;
   onQuitNovena: () => void;
+  onOpenNovena: (novenaId: string) => void;
   onOpenPrayer: (prayerId: string) => void;
   onStartNovena: (novenaId: string, intention: string) => void;
+  onToggleFavoritePrayer: (prayerId: string) => void;
 }) {
+  const [activePrayerTab, setActivePrayerTab] = useState<PrayerTab>("intentions");
   const [query, setQuery] = useState("");
   const [intentionTitle, setIntentionTitle] = useState("");
   const [intentionNote, setIntentionNote] = useState("");
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const activeIntentions = prayerIntentions.filter((intention) => !intention.archived);
+  const favoritePrayers = useMemo(
+    () =>
+      favoritePrayerIds
+        .map((id) => catholicPrayers.find((prayer) => prayer.id === id))
+        .filter((prayer): prayer is CatholicPrayer => Boolean(prayer)),
+    [favoritePrayerIds],
+  );
+  const prayerTabs: Array<{ id: PrayerTab; label: string; icon: typeof Heart }> = [
+    { id: "intentions", label: t("prayerTabIntentions"), icon: Heart },
+    { id: "prayers", label: t("prayerTabPrayers"), icon: ScrollText },
+    { id: "favorites", label: t("prayerTabFavorites"), icon: Star },
+  ];
 
   const visiblePrayers = useMemo(() => {
-    if (!normalizedQuery) return catholicPrayers;
+    const source = activePrayerTab === "favorites" ? favoritePrayers : catholicPrayers;
+    if (!normalizedQuery) return source;
 
-    return catholicPrayers.filter((prayer) =>
+    return source.filter((prayer) =>
       getPrayerSearchText(prayer).includes(normalizedQuery),
     );
-  }, [normalizedQuery]);
+  }, [activePrayerTab, favoritePrayers, normalizedQuery]);
   const visibleNovenas = useMemo(() => {
+    if (activePrayerTab !== "prayers") return [];
     if (!normalizedQuery) return novenas;
 
     return novenas.filter((novena) => getNovenaSearchText(novena).includes(normalizedQuery));
-  }, [normalizedQuery]);
+  }, [activePrayerTab, normalizedQuery]);
 
   function submitPrayerIntention(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -2626,97 +2715,133 @@ function PrayersScreen({
           <h1 className="text-3xl font-black tracking-normal">{t("commonPrayers")}</h1>
         </div>
 
-        <label className="relative block">
-          <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted" />
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            aria-label={t("searchPrayers")}
-            placeholder={t("searchPrayers")}
-            className="min-h-14 w-full rounded-full border-4 border-border bg-white py-3 pl-12 pr-4 text-base font-black text-foreground shadow-playful outline-none placeholder:text-muted focus:border-primary"
-          />
-        </label>
-      </header>
+        <div className="grid grid-cols-3 gap-2 rounded-[1.75rem] border-4 border-white bg-white p-1 shadow-soft">
+          {prayerTabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = activePrayerTab === tab.id;
 
-      <Card className="border-4 border-primary-light p-5">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="grid size-11 place-items-center rounded-2xl bg-primary-light text-primary-dark">
-            <Heart className="size-6" strokeWidth={2.8} />
-          </div>
-          <h2 className="text-2xl font-black">{t("prayerIntentions")}</h2>
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setActivePrayerTab(tab.id)}
+                className={cn(
+                  "grid min-h-16 place-items-center rounded-3xl px-2 py-2 text-center text-xs font-black leading-tight transition",
+                  active ? "bg-primary text-white shadow-soft" : "text-muted",
+                )}
+              >
+                <Icon className="mb-1 size-5" strokeWidth={2.8} />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        <form onSubmit={submitPrayerIntention} className="grid gap-3">
-          <label className="grid gap-2">
-            <span className="text-sm font-black uppercase text-muted">{t("intentionTitle")}</span>
+        {activePrayerTab !== "intentions" ? (
+          <label className="relative block">
+            <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted" />
             <input
-              type="text"
-              value={intentionTitle}
-              onChange={(event) => setIntentionTitle(event.target.value)}
-              placeholder={t("intentionTitlePlaceholder")}
-              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              aria-label={t("searchPrayers")}
+              placeholder={t("searchPrayers")}
+              className="min-h-14 w-full rounded-full border-4 border-border bg-white py-3 pl-12 pr-4 text-base font-black text-foreground shadow-playful outline-none placeholder:text-muted focus:border-primary"
             />
           </label>
-          <div className="grid grid-cols-[1fr_auto] gap-2">
-            <input
-              type="text"
-              value={intentionNote}
-              onChange={(event) => setIntentionNote(event.target.value)}
-              placeholder={t("intentionNotePlaceholder")}
-              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
-            />
-            <Button
-              type="submit"
-              size="sm"
-              aria-label={t("addIntention")}
-              title={t("addIntention")}
-              disabled={!intentionTitle.trim() && !intentionNote.trim()}
-              className="size-12 min-h-12 px-0 py-0"
-            >
-              <Plus className="size-5" strokeWidth={3} />
-            </Button>
+        ) : null}
+      </header>
+
+      {activePrayerTab === "intentions" ? (
+        <Card className="border-4 border-primary-light p-5">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="grid size-11 place-items-center rounded-2xl bg-primary-light text-primary-dark">
+              <Heart className="size-6" strokeWidth={2.8} />
+            </div>
+            <h2 className="text-2xl font-black">{t("prayerIntentions")}</h2>
           </div>
-        </form>
 
-        <div className="mt-4 grid gap-2">
-          {activeIntentions.length > 0 ? (
-            activeIntentions.map((intention) => (
-              <div
-                key={intention.id}
-                className="grid grid-cols-[1fr_auto] gap-3 rounded-2xl bg-background px-4 py-3"
+          <form onSubmit={submitPrayerIntention} className="grid gap-3">
+            <label className="grid gap-2">
+              <span className="text-sm font-black uppercase text-muted">{t("intentionTitle")}</span>
+              <input
+                type="text"
+                value={intentionTitle}
+                onChange={(event) => setIntentionTitle(event.target.value)}
+                placeholder={t("intentionTitlePlaceholder")}
+                className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
+              />
+            </label>
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+              <input
+                type="text"
+                value={intentionNote}
+                onChange={(event) => setIntentionNote(event.target.value)}
+                placeholder={t("intentionNotePlaceholder")}
+                className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
+              />
+              <Button
+                type="submit"
+                size="sm"
+                aria-label={t("addIntention")}
+                title={t("addIntention")}
+                disabled={!intentionTitle.trim() && !intentionNote.trim()}
+                className="size-12 min-h-12 px-0 py-0"
               >
-                <div className="min-w-0">
-                  <p className="break-words text-base font-black text-foreground">
-                    {intention.title}
-                  </p>
-                  {intention.note ? (
-                    <p className="mt-1 break-words text-sm font-bold leading-relaxed text-muted">
-                      {intention.note}
-                    </p>
-                  ) : null}
-                </div>
-                <button
-                  type="button"
-                  aria-label={t("archiveIntention")}
-                  title={t("archiveIntention")}
-                  onClick={() => onArchivePrayerIntention(intention.id)}
-                  className="grid size-10 shrink-0 place-items-center rounded-full border-4 border-border bg-white text-danger shadow-soft transition active:translate-y-1 active:shadow-none"
-                >
-                  <Trash2 className="size-5" strokeWidth={2.8} />
-                </button>
-              </div>
-            ))
-          ) : (
-            <p className="rounded-2xl bg-background px-4 py-3 text-base font-bold text-muted">
-              {t("noPrayerIntentions")}
-            </p>
-          )}
-        </div>
-      </Card>
+                <Plus className="size-5" strokeWidth={3} />
+              </Button>
+            </div>
+          </form>
 
-      <div className="grid gap-4">
-        {visiblePrayers.length > 0 || visibleNovenas.length > 0 ? (
+          <div className="mt-4 grid gap-2">
+            {activeIntentions.length > 0 ? (
+              activeIntentions.map((intention) => (
+                <div
+                  key={intention.id}
+                  className="grid grid-cols-[1fr_auto] gap-3 rounded-2xl bg-background px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="break-words text-base font-black text-foreground">
+                      {intention.title}
+                    </p>
+                    {intention.note ? (
+                      <p className="mt-1 break-words text-sm font-bold leading-relaxed text-muted">
+                        {intention.note}
+                      </p>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={t("archiveIntention")}
+                    title={t("archiveIntention")}
+                    onClick={() => onArchivePrayerIntention(intention.id)}
+                    className="grid size-10 shrink-0 place-items-center rounded-full border-4 border-border bg-white text-danger shadow-soft transition active:translate-y-1 active:shadow-none"
+                  >
+                    <Trash2 className="size-5" strokeWidth={2.8} />
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="rounded-2xl bg-background px-4 py-3 text-base font-bold text-muted">
+                {t("noPrayerIntentions")}
+              </p>
+            )}
+          </div>
+        </Card>
+      ) : null}
+
+      {activePrayerTab !== "intentions" ? (
+        <div className="grid gap-4">
+          {activePrayerTab === "favorites" && favoritePrayers.length === 0 ? (
+            <Card className="border-4 border-yellow p-5 text-center">
+              <Star className="mx-auto mb-3 size-10 text-yellow" />
+              <h2 className="text-2xl font-black">{t("noFavoritePrayers")}</h2>
+              <p className="mt-2 text-base font-bold text-muted">
+                {t("noFavoritePrayersHint")}
+              </p>
+            </Card>
+          ) : visiblePrayers.length > 0 || visibleNovenas.length > 0 ? (
           <>
             {visibleNovenas.map((novena) => (
               <NovenaCard
@@ -2730,6 +2855,7 @@ function PrayersScreen({
                 uiLanguage={uiLanguage}
                 onCompleteDay={onCompleteNovenaDay}
                 onQuit={onQuitNovena}
+                onOpenCards={() => onOpenNovena(novena.id)}
                 onStart={onStartNovena}
               />
             ))}
@@ -2739,8 +2865,10 @@ function PrayersScreen({
                 key={prayer.id}
                 prayer={prayer}
                 language={language}
+                isFavorite={favoritePrayerIds.includes(prayer.id)}
                 t={t}
                 onOpen={() => onOpenPrayer(prayer.id)}
+                onToggleFavorite={() => onToggleFavoritePrayer(prayer.id)}
               />
             ))}
           </>
@@ -2752,8 +2880,9 @@ function PrayersScreen({
               {t("noPrayersHint")}
             </p>
           </Card>
-        )}
-      </div>
+          )}
+        </div>
+      ) : null}
     </ScreenMotion>
   );
 }
@@ -2766,6 +2895,7 @@ function NovenaCard({
   uiLanguage,
   onCompleteDay,
   onQuit,
+  onOpenCards,
   onStart,
 }: {
   novena: Novena;
@@ -2775,6 +2905,7 @@ function NovenaCard({
   uiLanguage: UiLanguage;
   onCompleteDay: (day: number) => void;
   onQuit: () => void;
+  onOpenCards: () => void;
   onStart: (novenaId: string, intention: string) => void;
 }) {
   const [intention, setIntention] = useState("");
@@ -2889,6 +3020,10 @@ function NovenaCard({
               {t("quit")}
             </Button>
           </div>
+          <Button type="button" size="lg" variant="secondary" className="w-full" onClick={onOpenCards}>
+            {t("currentCard")}
+            <Sparkles className="size-5" />
+          </Button>
         </div>
       ) : (
         <form onSubmit={submitNovenaStart} className="space-y-3">
@@ -2912,6 +3047,10 @@ function NovenaCard({
             {hasOtherActiveNovena ? t("novenaActive") : t("startNovena")}
             <CalendarPlus className="size-5" />
           </Button>
+          <Button type="button" size="lg" variant="secondary" className="w-full" onClick={onOpenCards}>
+            {t("browseAllCards")}
+            <Sparkles className="size-5" />
+          </Button>
         </form>
       )}
     </Card>
@@ -2919,15 +3058,19 @@ function NovenaCard({
 }
 
 function PrayerCard({
+  isFavorite,
   prayer,
   language,
   t,
   onOpen,
+  onToggleFavorite,
 }: {
+  isFavorite: boolean;
   prayer: CatholicPrayer;
   language: PrayerLanguage;
   t: Translator;
   onOpen: () => void;
+  onToggleFavorite: () => void;
 }) {
   const translation = prayer.languages[language];
 
@@ -2940,15 +3083,32 @@ function PrayerCard({
           </p>
           <h2 className="text-2xl font-black tracking-normal">{translation.title}</h2>
         </div>
-        <button
-          type="button"
-          aria-label={t("viewPrayer")}
-          title={t("viewPrayer")}
-          onClick={onOpen}
-          className="grid size-11 shrink-0 place-items-center rounded-2xl border-4 border-primary-light bg-primary-light text-primary-dark shadow-soft transition active:translate-y-1 active:shadow-none"
-        >
-          <ScrollText className="size-6" strokeWidth={2.8} />
-        </button>
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            aria-pressed={isFavorite}
+            aria-label={isFavorite ? t("unfavoritePrayer") : t("favoritePrayer")}
+            title={isFavorite ? t("unfavoritePrayer") : t("favoritePrayer")}
+            onClick={onToggleFavorite}
+            className={cn(
+              "grid size-11 place-items-center rounded-2xl border-4 shadow-soft transition active:translate-y-1 active:shadow-none",
+              isFavorite
+                ? "border-yellow bg-yellow text-white"
+                : "border-border bg-white text-muted",
+            )}
+          >
+            <Heart className={cn("size-5", isFavorite ? "fill-current" : "")} strokeWidth={2.8} />
+          </button>
+          <button
+            type="button"
+            aria-label={t("viewPrayer")}
+            title={t("viewPrayer")}
+            onClick={onOpen}
+            className="grid size-11 place-items-center rounded-2xl border-4 border-primary-light bg-primary-light text-primary-dark shadow-soft transition active:translate-y-1 active:shadow-none"
+          >
+            <Sparkles className="size-5" strokeWidth={2.8} />
+          </button>
+        </div>
       </div>
 
       <p className="text-base font-bold leading-relaxed text-muted">
@@ -2971,7 +3131,7 @@ function PrayerCard({
   );
 }
 
-function PrayerDetailDialog({
+function PrayerCardGameDialog({
   language,
   prayer,
   t,
@@ -2985,8 +3145,111 @@ function PrayerDetailDialog({
   const translation = prayer.languages[language];
 
   return (
+    <FlipCardDialogShell t={t} onClose={onClose}>
+      <PrayerFlipCard
+        backLabel={t("cardBack")}
+        frontLabel={t("cardFront")}
+        metadata={translation.subtitle ?? readablePrayerCategory(prayer.category, t)}
+        prayerText={translation.text}
+        textLanguage={language}
+        title={translation.title}
+        typeLabel={getPrayerCardTypeLabel(prayer, t)}
+        t={t}
+      />
+    </FlipCardDialogShell>
+  );
+}
+
+function NovenaCardGameDialog({
+  novena,
+  progress,
+  t,
+  onClose,
+  onCompleteDay,
+}: {
+  novena: Novena;
+  progress: NovenaProgress | null;
+  t: Translator;
+  onClose: () => void;
+  onCompleteDay: (day: number) => void;
+}) {
+  const completedCount = progress?.completedDays.length ?? 0;
+  const currentDayNumber = Math.min(completedCount + 1, novena.days.length);
+  const initialIndex = progress?.status === "active" ? currentDayNumber - 1 : 0;
+  const [selectedIndex, setSelectedIndex] = useState(initialIndex);
+  const selectedDay = novena.days[selectedIndex];
+  const isActiveDay = progress?.status === "active" && selectedDay.day === currentDayNumber;
+  const completedToday = progress?.lastCompletedDate === getTodayInputDate();
+  const canComplete = Boolean(progress) && isActiveDay && !completedToday;
+
+  return (
+    <FlipCardDialogShell t={t} onClose={onClose}>
+      <div className="space-y-4">
+        <div className="scrollbar-none -mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1">
+          {novena.days.map((day, index) => {
+            const active = index === selectedIndex;
+            const done = progress?.completedDays.includes(day.day);
+
+            return (
+              <button
+                key={day.day}
+                type="button"
+                onClick={() => setSelectedIndex(index)}
+                className={cn(
+                  "grid size-11 shrink-0 snap-start place-items-center rounded-2xl border-4 text-sm font-black shadow-soft transition active:translate-y-1 active:shadow-none",
+                  active
+                    ? "border-yellow bg-yellow text-white"
+                    : done
+                      ? "border-primary bg-primary text-white"
+                      : "border-border bg-white text-muted",
+                )}
+              >
+                {done ? <Check className="size-5" strokeWidth={4} /> : day.day}
+              </button>
+            );
+          })}
+        </div>
+
+        <PrayerFlipCard
+          backLabel={t("cardBack")}
+          frontLabel={t("cardFront")}
+          metadata={t("dayOf", { day: selectedDay.day, total: novena.days.length })}
+          prayerText={`${selectedDay.reflection}\n\n${selectedDay.prayer}\n\n${t("action")}: ${selectedDay.action}`}
+          textLanguage="en"
+          title={selectedDay.title}
+          typeLabel={t("typeNovena")}
+          t={t}
+        />
+
+        {progress ? (
+          <Button
+            type="button"
+            size="lg"
+            className="w-full"
+            disabled={!canComplete}
+            onClick={() => onCompleteDay(selectedDay.day)}
+          >
+            {completedToday ? t("continueTomorrow") : t("completeDay")}
+            <Check className="size-5" />
+          </Button>
+        ) : null}
+      </div>
+    </FlipCardDialogShell>
+  );
+}
+
+function FlipCardDialogShell({
+  children,
+  t,
+  onClose,
+}: {
+  children: React.ReactNode;
+  t: Translator;
+  onClose: () => void;
+}) {
+  return (
     <motion.div
-      className="fixed inset-0 z-40 grid place-items-center bg-foreground/40 px-4 py-8"
+      className="fixed inset-0 z-40 grid place-items-center bg-foreground/50 px-4 py-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -2998,37 +3261,101 @@ function PrayerDetailDialog({
         exit={{ opacity: 0, scale: 0.96, y: 10 }}
         transition={{ type: "spring", stiffness: 230, damping: 20 }}
       >
-        <Card className="max-h-[82vh] w-full overflow-y-auto border-4 border-primary-light p-5 shadow-soft">
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-black uppercase text-primary-dark">
-                {readablePrayerCategory(prayer.category, t)}
-              </p>
-              <h2 className="text-3xl font-black tracking-normal">{translation.title}</h2>
-            </div>
-            <button
-              type="button"
-              aria-label={t("close")}
-              onClick={onClose}
-              className="grid size-10 shrink-0 place-items-center rounded-full bg-background text-xl font-black text-muted"
-            >
-              ×
-            </button>
-          </div>
-          <p
-            className={cn(
-              "whitespace-pre-line font-bold leading-relaxed text-foreground",
-              language === "zhHant" ? "text-xl" : "text-lg",
-            )}
+        <div className="mb-3 flex justify-end">
+          <button
+            type="button"
+            aria-label={t("close")}
+            onClick={onClose}
+            className="grid size-11 place-items-center rounded-full border-4 border-white bg-white text-xl font-black text-muted shadow-soft"
           >
-            {translation.text}
-          </p>
-          <Button type="button" size="lg" className="mt-5 w-full" onClick={onClose}>
-            {t("close")}
-          </Button>
-        </Card>
+            ×
+          </button>
+        </div>
+        {children}
       </motion.div>
     </motion.div>
+  );
+}
+
+function PrayerFlipCard({
+  backLabel,
+  frontLabel,
+  metadata,
+  prayerText,
+  textLanguage,
+  title,
+  typeLabel,
+  t,
+}: {
+  backLabel: string;
+  frontLabel: string;
+  metadata: string;
+  prayerText: string;
+  textLanguage: PrayerLanguage;
+  title: string;
+  typeLabel: string;
+  t: Translator;
+}) {
+  const [flipped, setFlipped] = useState(false);
+
+  return (
+    <div className="[perspective:1400px]">
+      <motion.div
+        className="relative min-h-[34rem] [transform-style:preserve-3d]"
+        animate={{ rotateY: flipped ? 180 : 0 }}
+        transition={{ type: "spring", stiffness: 170, damping: 22 }}
+      >
+        <Card className="absolute inset-0 overflow-hidden border-4 border-yellow bg-yellow p-3 shadow-playful [backface-visibility:hidden]">
+          <div className="flex h-full flex-col rounded-[1.35rem] border-4 border-white bg-white p-4">
+            <div className="rounded-2xl bg-primary-light px-4 py-2 text-center">
+              <p className="text-sm font-black uppercase text-primary-dark">{frontLabel}</p>
+            </div>
+            <div className="my-4 grid place-items-center rounded-[1.5rem] border-4 border-yellow bg-background px-4 py-8 text-center">
+              <div className="mb-4 grid size-24 place-items-center rounded-full border-4 border-white bg-yellow text-white shadow-soft">
+                <Sparkles className="size-12" strokeWidth={2.8} />
+              </div>
+              <p className="text-base font-black uppercase text-yellow">{typeLabel}</p>
+              <h2 className="mt-2 text-4xl font-black tracking-normal text-foreground">{title}</h2>
+              <p className="mt-3 text-base font-bold leading-relaxed text-muted">{metadata}</p>
+            </div>
+            <Button type="button" size="lg" className="mt-auto w-full" onClick={() => setFlipped(true)}>
+              {t("flipCard")}
+              <RefreshCw className="size-5" />
+            </Button>
+          </div>
+        </Card>
+
+        <Card className="absolute inset-0 overflow-hidden border-4 border-primary bg-primary p-3 shadow-playful [backface-visibility:hidden] [transform:rotateY(180deg)]">
+          <div className="flex h-full flex-col rounded-[1.35rem] border-4 border-white bg-white p-4">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-black uppercase text-primary-dark">{backLabel}</p>
+                <h2 className="text-2xl font-black tracking-normal">{title}</h2>
+              </div>
+              <button
+                type="button"
+                aria-label={t("flipCard")}
+                title={t("flipCard")}
+                onClick={() => setFlipped(false)}
+                className="grid size-11 shrink-0 place-items-center rounded-2xl border-4 border-primary-light bg-primary-light text-primary-dark shadow-soft"
+              >
+                <RefreshCw className="size-5" strokeWidth={2.8} />
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto rounded-2xl bg-background px-4 py-3">
+              <p
+                className={cn(
+                  "whitespace-pre-line font-bold leading-relaxed text-foreground",
+                  textLanguage === "zhHant" ? "text-xl" : "text-lg",
+                )}
+              >
+                {prayerText}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+    </div>
   );
 }
 
@@ -4186,6 +4513,11 @@ function readablePrayerCategory(category: PrayerCategory, t: Translator) {
   };
 
   return t(categoryMap[category]);
+}
+
+function getPrayerCardTypeLabel(prayer: CatholicPrayer, t: Translator) {
+  if (prayer.category === "rosary") return t("typeRosary");
+  return t("typePrayers");
 }
 
 function getPrayerSearchText(prayer: CatholicPrayer) {
