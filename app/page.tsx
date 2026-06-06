@@ -4286,14 +4286,11 @@ function AppUpdateCard({
   }, []);
 
   async function updateApp() {
-    if (hasNewVersion) {
-      onAcknowledgeVersionUpdate();
-      setStatus("alreadyLatest");
-      return;
-    }
-
     if (!("serviceWorker" in navigator) || process.env.NODE_ENV !== "production") {
       setStatus("alreadyLatest");
+      if (hasNewVersion) {
+        onAcknowledgeVersionUpdate();
+      }
       return;
     }
 
@@ -4318,12 +4315,21 @@ function AppUpdateCard({
       if (registration.waiting) {
         navigator.serviceWorker.addEventListener("controllerchange", reloadApp, { once: true });
         registration.waiting.postMessage({ type: "SKIP_WAITING" });
+        onAcknowledgeVersionUpdate();
         window.setTimeout(reloadApp, 1200);
         return;
       }
 
-      setStatus("alreadyLatest");
-      setIsUpdating(false);
+      if (registration.active) {
+        await requestAppShellRefresh(registration.active);
+        onAcknowledgeVersionUpdate();
+        reloadApp();
+        return;
+      }
+
+      await clearAppCaches();
+      onAcknowledgeVersionUpdate();
+      reloadApp();
     } catch {
       setStatus("updateFailed");
       setIsUpdating(false);
@@ -4362,7 +4368,7 @@ function AppUpdateCard({
         onClick={updateApp}
         disabled={isUpdating}
       >
-        {isUpdating ? t("updating") : hasNewVersion ? t("acknowledgeUpdate") : t("updateApp")}
+        {isUpdating ? t("updating") : t("updateApp")}
         <RefreshCw className={cn("size-5", isUpdating ? "animate-spin" : "")} />
       </Button>
     </Card>
