@@ -1,5 +1,6 @@
 import type {
   ActOfPiety,
+  CatholicPrayer,
   ContentCategory,
   DailyPlanItem,
   OnboardingAnswerKey,
@@ -216,4 +217,109 @@ export const weeklyProgress = [
   { day: "F", done: false },
   { day: "S", done: false },
   { day: "S", done: false },
+];
+
+export const catholicPrayers: CatholicPrayer[] = [
+  {
+    id: "sign-of-the-cross",
+    category: "foundational",
+    tags: ["cross", "trinity", "beginning", "聖號經", "十字聖號"],
+    languages: {
+      en: {
+        title: "Sign of the Cross",
+        subtitle: "A brief prayer to begin and end prayer.",
+        text: "In the name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+      },
+      zhHant: {
+        title: "聖號經",
+        subtitle: "開始和結束祈禱的短經。",
+        text: "因父、及子、及聖神之名。阿們。",
+      },
+    },
+  },
+  {
+    id: "our-father",
+    category: "foundational",
+    tags: ["lord's prayer", "our father", "天主經", "主禱文"],
+    languages: {
+      en: {
+        title: "Our Father",
+        subtitle: "The prayer Jesus taught his disciples.",
+        text: "Our Father, who art in heaven,\nhallowed be thy name.\nThy kingdom come.\nThy will be done on earth, as it is in heaven.\nGive us this day our daily bread,\nand forgive us our trespasses,\nas we forgive those who trespass against us,\nand lead us not into temptation,\nbut deliver us from evil. Amen.",
+      },
+      zhHant: {
+        title: "天主經",
+        subtitle: "耶穌教導門徒的祈禱。",
+        text: "我們的天父，\n願祢的名受顯揚；\n願祢的國來臨；\n願祢的旨意奉行在人間，\n如同在天上。\n求祢今天賞給我們日用的食糧；\n求祢寬恕我們的罪過，\n如同我們寬恕別人一樣；\n不要讓我們陷於誘惑；\n但救我們免於兇惡。阿們。",
+      },
+    },
+  },
+  {
+    id: "hail-mary",
+    category: "marian",
+    tags: ["hail mary", "mary", "rosary", "聖母經", "瑪利亞", "玫瑰經"],
+    languages: {
+      en: {
+        title: "Hail Mary",
+        subtitle: "A Marian prayer used throughout the Rosary.",
+        text: "Hail Mary, full of grace,\nthe Lord is with thee.\nBlessed art thou among women,\nand blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God,\npray for us sinners,\nnow and at the hour of our death. Amen.",
+      },
+      zhHant: {
+        title: "聖母經",
+        subtitle: "玫瑰經中常誦的聖母祈禱。",
+        text: "萬福瑪利亞，妳充滿聖寵，\n主與妳同在，\n妳在婦女中受讚頌，\n妳的親子耶穌同受讚頌。\n天主聖母瑪利亞，\n求妳現在和我們臨終時，\n為我們罪人祈求天主。阿們。",
+      },
+    },
+  },
+  {
+    id: "glory-be",
+    category: "rosary",
+    tags: ["glory be", "doxology", "trinity", "rosary", "聖三光榮頌", "聖三"],
+    languages: {
+      en: {
+        title: "Glory Be",
+        subtitle: "A short doxology of praise to the Trinity.",
+        text: "Glory be to the Father,\nand to the Son,\nand to the Holy Spirit,\nas it was in the beginning,\nis now, and ever shall be,\nworld without end. Amen.",
+      },
+      zhHant: {
+        title: "聖三光榮頌",
+        subtitle: "讚美聖三的短頌。",
+        text: "願光榮歸於父、及子、及聖神；\n起初如何，\n今日亦然，\n直到永遠。阿們。",
+      },
+    },
+  },
+  {
+    id: "apostles-creed",
+    category: "foundational",
+    tags: ["apostles creed", "creed", "belief", "faith", "宗徒信經", "信經"],
+    languages: {
+      en: {
+        title: "Apostles' Creed",
+        subtitle: "A concise profession of Christian faith.",
+        text: "I believe in God, the Father almighty,\nCreator of heaven and earth,\nand in Jesus Christ, his only Son, our Lord,\nwho was conceived by the Holy Spirit,\nborn of the Virgin Mary,\nsuffered under Pontius Pilate,\nwas crucified, died, and was buried;\nhe descended into hell;\non the third day he rose again from the dead;\nhe ascended into heaven,\nand is seated at the right hand of God the Father almighty;\nfrom there he will come to judge the living and the dead.\nI believe in the Holy Spirit,\nthe holy Catholic Church,\nthe communion of saints,\nthe forgiveness of sins,\nthe resurrection of the body,\nand life everlasting. Amen.",
+      },
+      zhHant: {
+        title: "宗徒信經",
+        subtitle: "基督信仰的簡要宣認。",
+        text: "我信全能的天主父，天地萬物的創造者。\n我信父的唯一子，我們的主耶穌基督，祂因聖神降孕，由童貞瑪利亞誕生；祂在比拉多執政時蒙難，被釘在十字架上，死而安葬，祂下降陰府，第三日從死者中復活；祂升了天，坐在全能天主父的右邊，祂要從天降來，審判生者死者。\n我信聖神。我信聖而公教會，諸聖的相通。罪過的赦免。肉身的復活。永恆的生命。阿們。",
+      },
+    },
+  },
+  {
+    id: "guardian-angel",
+    category: "daily",
+    tags: ["guardian angel", "angel", "protection", "daily", "護守天使", "天使"],
+    languages: {
+      en: {
+        title: "Guardian Angel Prayer",
+        subtitle: "A daily prayer for angelic care and guidance.",
+        text: "Angel of God,\nmy guardian dear,\nto whom God's love commits me here,\never this day be at my side,\nto light and guard,\nto rule and guide. Amen.",
+      },
+      zhHant: {
+        title: "求護守天使頌",
+        subtitle: "求護守天使保護和引導的日用短經。",
+        text: "我的護守天使，天主既使你照顧我，求你常保護我，指引我，管理我。阿們。",
+      },
+    },
+  },
 ];

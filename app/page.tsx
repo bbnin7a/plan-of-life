@@ -13,9 +13,12 @@ import {
   Flame,
   Heart,
   Home,
+  Languages,
   Medal,
   Moon,
   RotateCcw,
+  ScrollText,
+  Search,
   ShieldCheck,
   Sparkles,
   Star,
@@ -29,6 +32,7 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import {
   categoryCards,
+  catholicPrayers,
   defaultProfile,
   dailyPlan,
   getRecommendedPlan,
@@ -36,23 +40,31 @@ import {
   weeklyProgress,
 } from "@/lib/mock-data";
 import type {
+  CatholicPrayer,
   DailyPlanItem,
   OnboardingAnswerKey,
+  PrayerCategory,
+  PrayerLanguage,
   PracticeStatus,
   UserSpiritualProfile,
 } from "@/lib/types";
 
 type AppStage = "welcome" | "onboarding" | "app";
-type Tab = "today" | "explore" | "progress" | "profile";
+type Tab = "today" | "explore" | "prayers" | "progress" | "profile";
 
 const tabItems = [
   { id: "today", label: "Today", icon: Home },
   { id: "explore", label: "Explore", icon: Compass },
+  { id: "prayers", label: "Prayers", icon: ScrollText },
   { id: "progress", label: "Progress", icon: Award },
   { id: "profile", label: "Profile", icon: UserRound },
 ] as const;
 
 const practiceIcons = [Sun, BookOpen, Heart, Church, Moon];
+const prayerLanguageOptions: Array<{ id: PrayerLanguage; label: string; shortLabel: string }> = [
+  { id: "en", label: "English", shortLabel: "EN" },
+  { id: "zhHant", label: "Traditional Chinese", shortLabel: "繁中" },
+];
 
 export default function App() {
   const [stage, setStage] = useState<AppStage>("welcome");
@@ -121,7 +133,12 @@ export default function App() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background">
+    <main
+      className={cn(
+        "mx-auto flex min-h-screen w-full max-w-md flex-col bg-background",
+        selectedPractice ? "overflow-visible" : "overflow-hidden",
+      )}
+    >
       <div className="flex-1 px-4 pb-28 pt-5">
         <AnimatePresence mode="wait">
           {selectedPractice ? (
@@ -143,6 +160,8 @@ export default function App() {
             />
           ) : activeTab === "explore" ? (
             <ExploreScreen key="explore" />
+          ) : activeTab === "prayers" ? (
+            <PrayersScreen key="prayers" />
           ) : activeTab === "progress" ? (
             <ProgressScreen
               key="progress"
@@ -421,7 +440,7 @@ function PracticeDetail({
     <ScreenMotion className="flex min-h-[calc(100vh-2.5rem)] flex-col space-y-5">
       <button
         onClick={onBack}
-        className="w-fit rounded-full border-4 border-border bg-white px-4 py-2 text-base font-black shadow-playful active:translate-y-1 active:shadow-none"
+        className="sticky top-3 z-30 w-fit rounded-full border-4 border-border bg-white px-4 py-2 text-base font-black shadow-playful active:translate-y-1 active:shadow-none"
       >
         Back
       </button>
@@ -495,6 +514,135 @@ function ExploreScreen() {
         })}
       </div>
     </ScreenMotion>
+  );
+}
+
+function PrayersScreen() {
+  const [language, setLanguage] = useState<PrayerLanguage>("en");
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+
+  const visiblePrayers = useMemo(() => {
+    if (!normalizedQuery) return catholicPrayers;
+
+    return catholicPrayers.filter((prayer) =>
+      getPrayerSearchText(prayer).includes(normalizedQuery),
+    );
+  }, [normalizedQuery]);
+
+  return (
+    <ScreenMotion className="space-y-5">
+      <header className="space-y-4">
+        <div>
+          <p className="text-base font-black text-primary-dark">Prayers</p>
+          <h1 className="text-3xl font-black tracking-normal">Common Catholic prayers</h1>
+        </div>
+
+        <div
+          role="group"
+          aria-label="Prayer language"
+          className="grid grid-cols-2 gap-1 rounded-full border-4 border-white bg-white p-1 shadow-soft"
+        >
+          {prayerLanguageOptions.map((option) => {
+            const active = language === option.id;
+
+            return (
+              <button
+                key={option.id}
+                type="button"
+                aria-label={option.label}
+                aria-pressed={active}
+                onClick={() => setLanguage(option.id)}
+                className={cn(
+                  "flex min-h-12 items-center justify-center gap-2 rounded-full px-3 text-sm font-black leading-tight transition",
+                  active ? "bg-primary text-white" : "bg-transparent text-muted",
+                )}
+              >
+                <Languages className="size-4" strokeWidth={3} />
+                <span>{option.id === "zhHant" ? option.shortLabel : option.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <label className="relative block">
+          <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted" />
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            aria-label="Search prayers"
+            placeholder={language === "en" ? "Search prayers" : "搜尋經文"}
+            className="min-h-14 w-full rounded-full border-4 border-border bg-white py-3 pl-12 pr-4 text-base font-black text-foreground shadow-playful outline-none placeholder:text-muted focus:border-primary"
+          />
+        </label>
+      </header>
+
+      <div className="grid gap-4">
+        {visiblePrayers.length > 0 ? (
+          visiblePrayers.map((prayer) => (
+            <PrayerCard key={prayer.id} prayer={prayer} language={language} />
+          ))
+        ) : (
+          <Card className="border-4 border-border p-5 text-center">
+            <ScrollText className="mx-auto mb-3 size-10 text-primary-dark" />
+            <h2 className="text-2xl font-black">No prayers found</h2>
+            <p className="mt-2 text-base font-bold text-muted">
+              Try another title, devotion, or keyword.
+            </p>
+          </Card>
+        )}
+      </div>
+    </ScreenMotion>
+  );
+}
+
+function PrayerCard({
+  prayer,
+  language,
+}: {
+  prayer: CatholicPrayer;
+  language: PrayerLanguage;
+}) {
+  const translation = prayer.languages[language];
+
+  return (
+    <Card className="border-4 border-border p-5">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="mb-1 text-sm font-black uppercase text-primary-dark">
+            {readablePrayerCategory(prayer.category)}
+          </p>
+          <h2 className="text-2xl font-black tracking-normal">{translation.title}</h2>
+          {translation.subtitle ? (
+            <p className="mt-1 text-base font-bold text-muted">{translation.subtitle}</p>
+          ) : null}
+        </div>
+        <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary-light text-primary-dark">
+          <ScrollText className="size-6" strokeWidth={2.8} />
+        </div>
+      </div>
+
+      <p
+        className={cn(
+          "whitespace-pre-line font-bold leading-relaxed text-foreground",
+          language === "zhHant" ? "text-xl" : "text-lg",
+        )}
+      >
+        {translation.text}
+      </p>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {prayer.tags.slice(0, 3).map((tag) => (
+          <span
+            key={tag}
+            className="rounded-full bg-primary-light px-3 py-1 text-xs font-black text-primary-dark"
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+    </Card>
   );
 }
 
@@ -621,7 +769,7 @@ function BottomNav({
 }) {
   return (
     <nav className="safe-bottom fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md px-4 pb-3">
-      <div className="grid grid-cols-4 gap-1 rounded-[2rem] border-4 border-white bg-white p-2 shadow-soft">
+      <div className="grid grid-cols-5 gap-1 rounded-[2rem] border-4 border-white bg-white p-2 shadow-soft">
         {tabItems.map((item) => {
           const Icon = item.icon;
           const active = activeTab === item.id;
@@ -630,7 +778,7 @@ function BottomNav({
               key={item.id}
               onClick={() => onChange(item.id)}
               className={cn(
-                "flex min-h-16 flex-col items-center justify-center gap-1 rounded-3xl text-xs font-black transition",
+                "flex min-h-16 flex-col items-center justify-center gap-1 rounded-3xl text-[0.68rem] font-black leading-tight transition",
                 active ? "bg-primary-light text-primary-dark" : "text-muted",
               )}
             >
@@ -696,6 +844,27 @@ function readableCategory(category: string) {
     .split("_")
     .map((word) => word[0].toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function readablePrayerCategory(category: PrayerCategory) {
+  return category
+    .split("_")
+    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function getPrayerSearchText(prayer: CatholicPrayer) {
+  return [
+    prayer.category,
+    ...prayer.tags,
+    ...Object.values(prayer.languages).flatMap((translation) => [
+      translation.title,
+      translation.subtitle ?? "",
+      translation.text,
+    ]),
+  ]
+    .join(" ")
+    .toLocaleLowerCase();
 }
 
 function readableValue(value: string) {

@@ -13,6 +13,10 @@ export type ContentCategory =
   | "formation"
   | "sacramental_life";
 
+export type PrayerLanguage = "en" | "zhHant";
+
+export type PrayerCategory = "foundational" | "marian" | "rosary" | "daily";
+
 export type PracticeStatus = "pending" | "completed" | "skipped";
 
 export type ActOfPiety = {
@@ -39,6 +43,20 @@ export type DailyPlanItem = {
   practice: ActOfPiety;
   status: PracticeStatus;
   recommendedOrder: number;
+};
+
+export type CatholicPrayer = {
+  id: string;
+  category: PrayerCategory;
+  tags: string[];
+  languages: Record<
+    PrayerLanguage,
+    {
+      title: string;
+      subtitle?: string;
+      text: string;
+    }
+  >;
 };
 
 export type OnboardingAnswerKey =
