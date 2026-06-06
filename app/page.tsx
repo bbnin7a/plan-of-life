@@ -60,6 +60,7 @@ import type {
   PrayerLanguage,
   PracticeStatus,
   SacramentalAction,
+  UiLanguage,
   UserSpiritualProfile,
 } from "@/lib/types";
 
@@ -67,11 +68,11 @@ type AppStage = "welcome" | "onboarding" | "app";
 type Tab = "today" | "explore" | "prayers" | "progress" | "profile";
 
 const tabItems = [
-  { id: "today", label: "Today", icon: Home },
-  { id: "explore", label: "Explore", icon: Compass },
-  { id: "prayers", label: "Prayers", icon: ScrollText },
-  { id: "progress", label: "Progress", icon: Award },
-  { id: "profile", label: "Profile", icon: UserRound },
+  { id: "today", labelKey: "tabToday", icon: Home },
+  { id: "explore", labelKey: "tabExplore", icon: Compass },
+  { id: "prayers", labelKey: "tabPrayers", icon: ScrollText },
+  { id: "progress", labelKey: "tabProgress", icon: Award },
+  { id: "profile", labelKey: "tabProfile", icon: UserRound },
 ] as const;
 
 const practiceIcons = [Sun, BookOpen, Heart, Church, Moon];
@@ -79,12 +80,274 @@ const prayerLanguageOptions: Array<{ id: PrayerLanguage; label: string; shortLab
   { id: "en", label: "English", shortLabel: "EN" },
   { id: "zhHant", label: "Traditional Chinese", shortLabel: "繁中" },
 ];
+const uiLanguageOptions: Array<{ id: UiLanguage; label: string; shortLabel: string }> = [
+  { id: "zhHant", label: "Traditional Chinese", shortLabel: "繁中" },
+  { id: "en", label: "English", shortLabel: "EN" },
+];
+const fontScaleOptions = [
+  { value: 90, labelKey: "fontSmall" },
+  { value: 100, labelKey: "fontNormal" },
+  { value: 110, labelKey: "fontLarge" },
+  { value: 120, labelKey: "fontExtraLarge" },
+] as const;
 const confessionFrequencyOptions = [
   { days: 14, label: "2 weeks" },
   { days: 30, label: "1 month" },
   { days: 60, label: "2 months" },
   { days: 90, label: "3 months" },
 ] as const;
+
+const uiText = {
+  en: {
+    appTitle: "Acts of Piety",
+    welcomeTitle: "Grow your prayer life step by step",
+    welcomeSubtitle: "Build simple Catholic habits with daily acts of piety.",
+    getStarted: "Get Started",
+    peace: "Peace be with you",
+    today: "Today",
+    streak: "7 day streak",
+    dailyProgress: "Daily progress",
+    completeCount: "{completed} of {total} complete",
+    minuteGoal: "Your {minutes}-minute goal is ready in small steps.",
+    todayPlan: "Today's Spiritual Plan",
+    open: "Open",
+    done: "Done",
+    complete: "Complete",
+    back: "Back",
+    prayer: "Prayer",
+    completed: "Completed",
+    markCompleted: "Mark as Completed",
+    sacramentalLife: "Sacramental life",
+    confessionRhythm: "Confession rhythm",
+    date: "Date",
+    note: "Note",
+    confessionNotePlaceholder: "Grace, counsel, next step",
+    addConfession: "Add Confession",
+    confessionLog: "Confession log",
+    deleteConfession: "Delete confession log from {date}",
+    noConfession: "No confession logged yet.",
+    prayers: "Prayers",
+    commonPrayers: "Common Catholic prayers",
+    prayerLanguage: "Prayer language",
+    searchPrayers: "Search prayers",
+    noPrayersFound: "No prayers found",
+    noPrayersHint: "Try another title, devotion, or keyword.",
+    novena: "Novena",
+    dayOf: "Day {day} of {total}",
+    intention: "Intention",
+    action: "Action",
+    novenaComplete: "Novena complete",
+    novenaCompleteDetail: "You completed all nine days.",
+    continueTomorrow: "Continue Tomorrow",
+    completeDay: "Complete Day",
+    quit: "Quit",
+    novenaActive: "Novena Active",
+    startNovena: "Start Novena",
+    progress: "Progress",
+    progressTitle: "Small steps add up",
+    prayerStreak: "day prayer streak",
+    thisWeek: "This week",
+    completedCount: "{count} completed",
+    gracePoints: "Grace Points",
+    badgeHint: "Keep showing up. Your next badge is close.",
+    savedTracks: "Saved tracks",
+    confessionsLogged: "Confessions logged",
+    novenaProgress: "Novena progress",
+    noActiveNovena: "No active novena",
+    profile: "Profile",
+    prayerPath: "Your prayer path",
+    growing: "Growing step by step",
+    planComplete: "{progress}% of today's plan complete",
+    personalProfile: "Personal profile",
+    name: "Name",
+    namePlaceholder: "Your name",
+    parish: "Parish",
+    parishPlaceholder: "Parish name",
+    patronSaint: "Patron saint",
+    patronSaintPlaceholder: "St. Joseph",
+    preferences: "Preferences",
+    uiLanguage: "UI language",
+    defaultPrayerLanguage: "Default prayer language",
+    fontSize: "Font size",
+    fontSmall: "Small",
+    fontNormal: "Normal",
+    fontLarge: "Large",
+    fontExtraLarge: "XL",
+    experience: "Experience",
+    prayerTime: "Prayer time",
+    preferredDevotion: "Preferred devotion",
+    dailyGoal: "Daily goal",
+    appUpdate: "App update",
+    updateReady: "Ready",
+    updateInstall: "Available after install",
+    updating: "Updating...",
+    updatedRestarting: "Updated. Restarting...",
+    updateFailed: "Update failed",
+    updateApp: "Update App",
+    resetOnboarding: "Reset onboarding",
+    clearStorage: "Clear Storage",
+    clearStorageConfirm: "Clear all saved Plan of Life data from this device?",
+    tabToday: "Today",
+    tabExplore: "Explore",
+    tabPrayers: "Prayers",
+    tabProgress: "Progress",
+    tabProfile: "Profile",
+    readyForConfession: "Ready for Confession",
+    readyForConfessionDetail: "Set a rhythm and record the next confession.",
+    confessionDueNow: "Confession due now",
+    confessionDueToday: "Confession due today",
+    nextConfession: "Next confession in {days} {unit}",
+    targetLast: "Target: {target}. Last: {last}.",
+    targetWasLast: "Target was {target}. Last: {last}.",
+    lastConfession: "Last confession: {last}.",
+    daySingular: "day",
+    dayPlural: "days",
+    categoryDailyPractices: "Daily Practices",
+    categoryDevotions: "Devotions",
+    categoryFormation: "Formation",
+    categorySacramentalLife: "Sacramental Life",
+    categoryFoundational: "Foundational",
+    categoryMarian: "Marian",
+    categoryRosary: "Rosary",
+    categoryDaily: "Daily",
+    practiceCompleteToast: "{title} complete. +10 Grace Points",
+    genericPractice: "Practice",
+    novenaStartedToast: "Novena started. Day 1 is ready.",
+    novenaCompleteToast: "Novena complete.",
+    novenaDayCompleteToast: "Novena day {day} complete.",
+  },
+  zhHant: {
+    appTitle: "敬禮生活",
+    welcomeTitle: "一步一步培養祈禱生活",
+    welcomeSubtitle: "以簡單的天主教敬禮建立每日習慣。",
+    getStarted: "開始",
+    peace: "願平安與你同在",
+    today: "今天",
+    streak: "連續 7 天",
+    dailyProgress: "今日進度",
+    completeCount: "已完成 {completed} / {total}",
+    minuteGoal: "你的 {minutes} 分鐘目標已拆成小步驟。",
+    todayPlan: "今日靈修計劃",
+    open: "開啟",
+    done: "完成",
+    complete: "完成",
+    back: "返回",
+    prayer: "祈禱",
+    completed: "已完成",
+    markCompleted: "標記為完成",
+    sacramentalLife: "聖事生活",
+    confessionRhythm: "告解節奏",
+    date: "日期",
+    note: "備註",
+    confessionNotePlaceholder: "恩寵、指導、下一步",
+    addConfession: "新增告解",
+    confessionLog: "告解紀錄",
+    deleteConfession: "刪除 {date} 的告解紀錄",
+    noConfession: "尚未紀錄告解。",
+    prayers: "經文",
+    commonPrayers: "常用天主教經文",
+    prayerLanguage: "經文語言",
+    searchPrayers: "搜尋經文",
+    noPrayersFound: "找不到經文",
+    noPrayersHint: "請嘗試其他標題、敬禮或關鍵字。",
+    novena: "九日敬禮",
+    dayOf: "第 {day} 天 / 共 {total} 天",
+    intention: "意向",
+    action: "行動",
+    novenaComplete: "九日敬禮完成",
+    novenaCompleteDetail: "你已完成全部九天。",
+    continueTomorrow: "明天繼續",
+    completeDay: "完成今天",
+    quit: "退出",
+    novenaActive: "已有九日敬禮",
+    startNovena: "開始九日敬禮",
+    progress: "進度",
+    progressTitle: "小步驟會累積",
+    prayerStreak: "天祈禱連續紀錄",
+    thisWeek: "本週",
+    completedCount: "已完成 {count}",
+    gracePoints: "恩寵點數",
+    badgeHint: "持續前進。下一個徽章已經接近。",
+    savedTracks: "已儲存追蹤",
+    confessionsLogged: "告解紀錄",
+    novenaProgress: "九日敬禮進度",
+    noActiveNovena: "沒有進行中的九日敬禮",
+    profile: "個人",
+    prayerPath: "你的祈禱道路",
+    growing: "一步一步成長",
+    planComplete: "今日計劃完成 {progress}%",
+    personalProfile: "個人資料",
+    name: "姓名",
+    namePlaceholder: "你的名字",
+    parish: "堂區",
+    parishPlaceholder: "堂區名稱",
+    patronSaint: "主保聖人",
+    patronSaintPlaceholder: "聖若瑟",
+    preferences: "偏好設定",
+    uiLanguage: "介面語言",
+    defaultPrayerLanguage: "預設經文語言",
+    fontSize: "字體大小",
+    fontSmall: "小",
+    fontNormal: "正常",
+    fontLarge: "大",
+    fontExtraLarge: "特大",
+    experience: "經驗",
+    prayerTime: "祈禱時間",
+    preferredDevotion: "偏好敬禮",
+    dailyGoal: "每日目標",
+    appUpdate: "應用程式更新",
+    updateReady: "準備就緒",
+    updateInstall: "安裝後可使用",
+    updating: "更新中...",
+    updatedRestarting: "已更新，正在重新啟動...",
+    updateFailed: "更新失敗",
+    updateApp: "更新應用程式",
+    resetOnboarding: "重設引導",
+    clearStorage: "清除儲存資料",
+    clearStorageConfirm: "要清除本裝置所有 Plan of Life 儲存資料嗎？",
+    tabToday: "今天",
+    tabExplore: "探索",
+    tabPrayers: "經文",
+    tabProgress: "進度",
+    tabProfile: "個人",
+    readyForConfession: "可以準備告解",
+    readyForConfessionDetail: "設定節奏並紀錄下一次告解。",
+    confessionDueNow: "告解已到期",
+    confessionDueToday: "今天是告解日",
+    nextConfession: "距離下次告解還有 {days} {unit}",
+    targetLast: "目標：{target}。上次：{last}。",
+    targetWasLast: "原目標：{target}。上次：{last}。",
+    lastConfession: "上次告解：{last}。",
+    daySingular: "天",
+    dayPlural: "天",
+    categoryDailyPractices: "每日實踐",
+    categoryDevotions: "敬禮",
+    categoryFormation: "培育",
+    categorySacramentalLife: "聖事生活",
+    categoryFoundational: "基礎",
+    categoryMarian: "聖母",
+    categoryRosary: "玫瑰經",
+    categoryDaily: "每日",
+    practiceCompleteToast: "{title} 已完成。+10 恩寵點數",
+    genericPractice: "敬禮",
+    novenaStartedToast: "九日敬禮已開始。第 1 天已準備好。",
+    novenaCompleteToast: "九日敬禮完成。",
+    novenaDayCompleteToast: "九日敬禮第 {day} 天完成。",
+  },
+} as const;
+
+type TranslationKey = keyof typeof uiText.en;
+type Translator = (key: TranslationKey, values?: Record<string, string | number>) => string;
+
+function makeTranslator(language: UiLanguage): Translator {
+  return (key, values = {}) => {
+    const template: string = uiText[language][key] ?? uiText.en[key];
+    return Object.entries(values).reduce<string>(
+      (text, [name, value]) => text.replaceAll(`{${name}}`, String(value)),
+      template,
+    );
+  };
+}
 
 export default function App() {
   const [stage, setStage] = useLocalStorageState<AppStage>(
@@ -120,6 +383,8 @@ export default function App() {
     "plan-of-life:novena-progress",
     null,
   );
+  const uiLanguage = preferences.uiLanguage ?? "zhHant";
+  const t = useMemo(() => makeTranslator(uiLanguage), [uiLanguage]);
 
   const completedCount = plan.filter((item) => item.status === "completed").length;
   const progressValue = Math.round((completedCount / plan.length) * 100);
@@ -128,6 +393,16 @@ export default function App() {
   const visiblePlan = useMemo(() => {
     return [...plan].sort((a, b) => a.recommendedOrder - b.recommendedOrder);
   }, [plan]);
+
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${preferences.fontScale ?? 100}%`;
+  }, [preferences.fontScale]);
+
+  useEffect(() => {
+    if (plan.some((item) => !item.practice.languages)) {
+      setPlan(getRecommendedPlan(profile));
+    }
+  }, [plan, profile, setPlan]);
 
   function chooseAnswer(key: OnboardingAnswerKey, value: string) {
     const nextAnswers = { ...answers, [key]: value };
@@ -151,7 +426,11 @@ export default function App() {
         entry.id === itemId ? { ...entry, status: "completed" as PracticeStatus } : entry,
       ),
     );
-    setCompletionMessage(`${item?.practice.title ?? "Practice"} complete. +10 Grace Points`);
+    setCompletionMessage(
+      t("practiceCompleteToast", {
+        title: item ? getPracticeText(item.practice, uiLanguage).title : t("genericPractice"),
+      }),
+    );
     setTimeout(() => setCompletionMessage(null), 1800);
   }
 
@@ -179,7 +458,7 @@ export default function App() {
       intention: intention.trim(),
       status: "active",
     });
-    setCompletionMessage("Novena started. Day 1 is ready.");
+    setCompletionMessage(t("novenaStartedToast"));
     setTimeout(() => setCompletionMessage(null), 1800);
   }
 
@@ -203,7 +482,9 @@ export default function App() {
       };
     });
 
-    setCompletionMessage(day >= 9 ? "Novena complete." : `Novena day ${day} complete.`);
+    setCompletionMessage(
+      day >= 9 ? t("novenaCompleteToast") : t("novenaDayCompleteToast", { day }),
+    );
     setTimeout(() => setCompletionMessage(null), 1800);
   }
 
@@ -212,7 +493,7 @@ export default function App() {
   }
 
   function clearStoredAppData() {
-    if (!window.confirm("Clear all saved Plan of Life data from this device?")) {
+    if (!window.confirm(t("clearStorageConfirm"))) {
       return;
     }
 
@@ -229,7 +510,7 @@ export default function App() {
   }
 
   if (stage === "welcome") {
-    return <WelcomeScreen onStart={() => setStage("onboarding")} />;
+    return <WelcomeScreen t={t} onStart={() => setStage("onboarding")} />;
   }
 
   if (stage === "onboarding") {
@@ -237,6 +518,7 @@ export default function App() {
       <OnboardingScreen
         questionIndex={questionIndex}
         answers={answers}
+        language={uiLanguage}
         onChoose={chooseAnswer}
       />
     );
@@ -254,6 +536,8 @@ export default function App() {
           <PracticeDetail
             key={selectedPractice.id}
             item={selectedPractice}
+            language={uiLanguage}
+            t={t}
             onBack={() => setSelectedPracticeId(null)}
             onComplete={() => completePractice(selectedPractice.id)}
           />
@@ -263,7 +547,9 @@ export default function App() {
             profile={profile}
             plan={visiblePlan}
             completedCount={completedCount}
+            language={uiLanguage}
             progressValue={progressValue}
+            t={t}
             onOpenPractice={setSelectedPracticeId}
             onComplete={completePractice}
           />
@@ -272,6 +558,8 @@ export default function App() {
             key="explore"
             confessionFrequencyDays={preferences.confessionFrequencyDays}
             confessionLogs={confessionLogs}
+            language={uiLanguage}
+            t={t}
             onAddConfessionLog={addConfessionLog}
             onConfessionFrequencyChange={(confessionFrequencyDays) =>
               setPreferences((currentPreferences) => ({
@@ -285,6 +573,8 @@ export default function App() {
           <PrayersScreen
             key="prayers"
             language={preferences.prayerLanguage}
+            t={t}
+            uiLanguage={uiLanguage}
             novenaProgress={novenaProgress}
             onCompleteNovenaDay={completeNovenaDay}
             onLanguageChange={(prayerLanguage) =>
@@ -301,6 +591,7 @@ export default function App() {
             key="progress"
             completedCount={completedCount}
             confessionLogs={confessionLogs}
+            t={t}
             novenaProgress={novenaProgress}
             progressValue={progressValue}
           />
@@ -311,12 +602,25 @@ export default function App() {
             preferences={preferences}
             profile={profile}
             progressValue={progressValue}
+            t={t}
             onClearStorage={clearStoredAppData}
+            onFontScaleChange={(fontScale) =>
+              setPreferences((currentPreferences) => ({
+                ...currentPreferences,
+                fontScale,
+              }))
+            }
             onPersonalProfileChange={setPersonalProfile}
             onPrayerLanguageChange={(prayerLanguage) =>
               setPreferences((currentPreferences) => ({
                 ...currentPreferences,
                 prayerLanguage,
+              }))
+            }
+            onUiLanguageChange={(nextUiLanguage) =>
+              setPreferences((currentPreferences) => ({
+                ...currentPreferences,
+                uiLanguage: nextUiLanguage,
               }))
             }
             onReset={resetOnboarding}
@@ -329,13 +633,13 @@ export default function App() {
       </AnimatePresence>
 
       {!selectedPractice ? (
-        <BottomNav activeTab={activeTab} onChange={setActiveTab} />
+        <BottomNav activeTab={activeTab} t={t} onChange={setActiveTab} />
       ) : null}
     </main>
   );
 }
 
-function WelcomeScreen({ onStart }: { onStart: () => void }) {
+function WelcomeScreen({ t, onStart }: { t: Translator; onStart: () => void }) {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background px-6 py-8">
       <section className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
@@ -353,16 +657,16 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
 
         <div className="space-y-4">
           <h1 className="text-4xl font-black leading-tight tracking-normal text-foreground">
-            Grow your prayer life step by step
+            {t("welcomeTitle")}
           </h1>
           <p className="text-lg font-bold leading-relaxed text-muted">
-            Build simple Catholic habits with daily acts of piety.
+            {t("welcomeSubtitle")}
           </p>
         </div>
       </section>
 
       <Button size="xl" className="w-full" onClick={onStart}>
-        Get Started
+        {t("getStarted")}
         <ChevronRight className="size-6" />
       </Button>
     </main>
@@ -372,14 +676,17 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
 function OnboardingScreen({
   questionIndex,
   answers,
+  language,
   onChoose,
 }: {
   questionIndex: number;
   answers: Partial<Record<OnboardingAnswerKey, string>>;
+  language: UiLanguage;
   onChoose: (key: OnboardingAnswerKey, value: string) => void;
 }) {
   const safeQuestionIndex = Math.min(questionIndex, onboardingQuestions.length - 1);
   const question = onboardingQuestions[safeQuestionIndex];
+  const localizedQuestion = getOnboardingQuestionText(question.id, language);
   const progress = ((safeQuestionIndex + 1) / onboardingQuestions.length) * 100;
 
   return (
@@ -397,12 +704,12 @@ function OnboardingScreen({
             <Sparkles className="size-8" />
           </div>
           <h1 className="text-3xl font-black leading-tight tracking-normal">
-            {question.title}
+            {localizedQuestion.title}
           </h1>
         </div>
 
         <div className="space-y-3">
-          {question.options.map((option) => {
+          {question.options.map((option, index) => {
             const selected = answers[question.key] === option.value;
             return (
               <button
@@ -415,7 +722,7 @@ function OnboardingScreen({
                     : "border-border text-foreground active:translate-y-1 active:shadow-none",
                 )}
               >
-                <span>{option.label}</span>
+                <span>{localizedQuestion.options[index] ?? option.label}</span>
                 <span
                   className={cn(
                     "grid size-8 shrink-0 place-items-center rounded-full border-4",
@@ -437,14 +744,18 @@ function TodayScreen({
   profile,
   plan,
   completedCount,
+  language,
   progressValue,
+  t,
   onOpenPractice,
   onComplete,
 }: {
   profile: UserSpiritualProfile;
   plan: DailyPlanItem[];
   completedCount: number;
+  language: UiLanguage;
   progressValue: number;
+  t: Translator;
   onOpenPractice: (id: string) => void;
   onComplete: (id: string) => void;
 }) {
@@ -452,20 +763,22 @@ function TodayScreen({
     <ScreenMotion className="space-y-5">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-base font-black text-primary-dark">Peace be with you</p>
-          <h1 className="text-3xl font-black tracking-normal">Today</h1>
+          <p className="text-base font-black text-primary-dark">{t("peace")}</p>
+          <h1 className="text-3xl font-black tracking-normal">{t("today")}</h1>
         </div>
         <div className="flex items-center gap-2 rounded-full border-4 border-white bg-yellow px-3 py-2 text-sm font-black shadow-playful">
           <Flame className="size-5 fill-white text-white" />
-          7 day streak
+          {t("streak")}
         </div>
       </header>
 
       <Card className="border-4 border-primary-light p-5">
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-black uppercase text-muted">Daily progress</p>
-            <p className="text-2xl font-black">{completedCount} of {plan.length} complete</p>
+            <p className="text-sm font-black uppercase text-muted">{t("dailyProgress")}</p>
+            <p className="text-2xl font-black">
+              {t("completeCount", { completed: completedCount, total: plan.length })}
+            </p>
           </div>
           <div className="grid size-16 place-items-center rounded-full bg-primary-light text-xl font-black text-primary-dark">
             {progressValue}%
@@ -473,18 +786,20 @@ function TodayScreen({
         </div>
         <Progress value={progressValue} />
         <p className="mt-4 text-base font-bold text-muted">
-          Your {profile.dailyPrayerTimeMinutes}-minute goal is ready in small steps.
+          {t("minuteGoal", { minutes: profile.dailyPrayerTimeMinutes })}
         </p>
       </Card>
 
       <section>
-        <h2 className="mb-3 text-2xl font-black">Today&apos;s Spiritual Plan</h2>
+        <h2 className="mb-3 text-2xl font-black">{t("todayPlan")}</h2>
         <div className="space-y-4">
           {plan.map((item, index) => (
             <PracticeCard
               key={item.id}
               item={item}
               iconIndex={index}
+              language={language}
+              t={t}
               onOpen={() => onOpenPractice(item.id)}
               onComplete={() => onComplete(item.id)}
             />
@@ -498,16 +813,21 @@ function TodayScreen({
 function PracticeCard({
   item,
   iconIndex,
+  language,
+  t,
   onOpen,
   onComplete,
 }: {
   item: DailyPlanItem;
   iconIndex: number;
+  language: UiLanguage;
+  t: Translator;
   onOpen: () => void;
   onComplete: () => void;
 }) {
   const Icon = practiceIcons[iconIndex % practiceIcons.length];
   const completed = item.status === "completed";
+  const practiceText = getPracticeText(item.practice, language);
 
   return (
     <Card
@@ -523,13 +843,13 @@ function PracticeCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-start justify-between gap-3">
-            <h3 className="text-xl font-black leading-tight">{item.practice.title}</h3>
+            <h3 className="text-xl font-black leading-tight">{practiceText.title}</h3>
             <span className="rounded-full bg-background px-3 py-1 text-sm font-black text-muted">
               {item.practice.estimatedMinutes} min
             </span>
           </div>
           <p className="mb-4 text-base font-bold leading-snug text-muted">
-            {item.practice.description}
+            {practiceText.description}
           </p>
           <div className="grid grid-cols-[0.85fr_1.15fr] gap-2">
             <Button
@@ -541,7 +861,7 @@ function PracticeCard({
               }}
               className="w-full"
             >
-              Open
+              {t("open")}
             </Button>
             <Button
               size="sm"
@@ -552,7 +872,7 @@ function PracticeCard({
               }}
               className="w-full"
             >
-              {completed ? "Done" : "Complete"}
+              {completed ? t("done") : t("complete")}
               <Check className="size-5" />
             </Button>
           </div>
@@ -564,14 +884,19 @@ function PracticeCard({
 
 function PracticeDetail({
   item,
+  language,
+  t,
   onBack,
   onComplete,
 }: {
   item: DailyPlanItem;
+  language: UiLanguage;
+  t: Translator;
   onBack: () => void;
   onComplete: () => void;
 }) {
   const completed = item.status === "completed";
+  const practiceText = getPracticeText(item.practice, language);
 
   return (
     <ScreenMotion className="flex min-h-[calc(100vh-2.5rem)] flex-col space-y-5">
@@ -579,7 +904,7 @@ function PracticeDetail({
         onClick={onBack}
         className="sticky top-3 z-30 w-fit rounded-full border-4 border-border bg-white px-4 py-2 text-base font-black shadow-playful active:translate-y-1 active:shadow-none"
       >
-        Back
+        {t("back")}
       </button>
 
       <Card className="border-4 border-primary-light p-5">
@@ -588,24 +913,24 @@ function PracticeDetail({
         </div>
         <div className="mb-4 flex flex-wrap gap-2">
           <span className="rounded-full bg-blue px-3 py-1 text-sm font-black text-white">
-            {readableCategory(item.practice.category)}
+            {readableCategory(item.practice.category, t)}
           </span>
           <span className="rounded-full bg-yellow px-3 py-1 text-sm font-black text-foreground">
             {item.practice.estimatedMinutes} min
           </span>
         </div>
         <h1 className="mb-3 text-4xl font-black leading-tight tracking-normal">
-          {item.practice.title}
+          {practiceText.title}
         </h1>
         <p className="text-lg font-bold leading-relaxed text-muted">
-          {item.practice.description}
+          {practiceText.description}
         </p>
       </Card>
 
       <Card className="flex-1 border-4 border-border p-5">
-        <h2 className="mb-3 text-2xl font-black">Prayer</h2>
+        <h2 className="mb-3 text-2xl font-black">{t("prayer")}</h2>
         <p className="whitespace-pre-line text-lg font-bold leading-relaxed text-foreground">
-          {item.practice.content}
+          {practiceText.content}
         </p>
       </Card>
 
@@ -615,7 +940,7 @@ function PracticeDetail({
         variant={completed ? "secondary" : "default"}
         onClick={onComplete}
       >
-        {completed ? "Completed" : "Mark as Completed"}
+        {completed ? t("completed") : t("markCompleted")}
         <Check className="size-6" />
       </Button>
     </ScreenMotion>
@@ -625,19 +950,23 @@ function PracticeDetail({
 function ExploreScreen({
   confessionFrequencyDays,
   confessionLogs,
+  language,
+  t,
   onAddConfessionLog,
   onConfessionFrequencyChange,
   onDeleteConfessionLog,
 }: {
   confessionFrequencyDays: number;
   confessionLogs: ConfessionLogEntry[];
+  language: UiLanguage;
+  t: Translator;
   onAddConfessionLog: (date: string, note: string) => void;
   onConfessionFrequencyChange: (days: number) => void;
   onDeleteConfessionLog: (entryId: string) => void;
 }) {
   const [confessionDate, setConfessionDate] = useState(getTodayInputDate());
   const [confessionNote, setConfessionNote] = useState("");
-  const confessionStatus = getConfessionStatus(confessionLogs, confessionFrequencyDays);
+  const confessionStatus = getConfessionStatus(confessionLogs, confessionFrequencyDays, t, language);
 
   function submitConfessionLog(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -651,14 +980,14 @@ function ExploreScreen({
   return (
     <ScreenMotion className="space-y-5">
       <header>
-        <p className="text-base font-black text-primary-dark">Explore</p>
-        <h1 className="text-3xl font-black tracking-normal">Sacramental life</h1>
+        <p className="text-base font-black text-primary-dark">{t("tabExplore")}</p>
+        <h1 className="text-3xl font-black tracking-normal">{t("sacramentalLife")}</h1>
       </header>
 
       <Card className="border-4 border-danger p-5">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-black uppercase text-danger">Confession rhythm</p>
+            <p className="text-sm font-black uppercase text-danger">{t("confessionRhythm")}</p>
             <h2 className="text-2xl font-black tracking-normal">{confessionStatus.title}</h2>
             <p className="mt-1 text-base font-bold text-muted">{confessionStatus.detail}</p>
           </div>
@@ -692,7 +1021,7 @@ function ExploreScreen({
 
         <form onSubmit={submitConfessionLog} className="mt-5 grid gap-3">
           <label className="grid gap-2">
-            <span className="text-sm font-black uppercase text-muted">Date</span>
+            <span className="text-sm font-black uppercase text-muted">{t("date")}</span>
             <input
               type="date"
               value={confessionDate}
@@ -702,25 +1031,25 @@ function ExploreScreen({
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-black uppercase text-muted">Note</span>
+            <span className="text-sm font-black uppercase text-muted">{t("note")}</span>
             <input
               type="text"
               value={confessionNote}
               onChange={(event) => setConfessionNote(event.target.value)}
-              placeholder="Grace, counsel, next step"
+              placeholder={t("confessionNotePlaceholder")}
               className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-danger"
             />
           </label>
 
           <Button type="submit" size="lg" className="w-full">
-            Add Confession
+            {t("addConfession")}
             <CalendarPlus className="size-5" />
           </Button>
         </form>
 
         <div className="mt-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-black">Confession log</h3>
+            <h3 className="text-xl font-black">{t("confessionLog")}</h3>
             <span className="rounded-full bg-background px-3 py-1 text-sm font-black text-muted">
               {confessionLogs.length}
             </span>
@@ -734,14 +1063,14 @@ function ExploreScreen({
                     <CalendarDays className="size-5" strokeWidth={2.8} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-base font-black">{formatDisplayDate(entry.date)}</p>
+                    <p className="text-base font-black">{formatDisplayDate(entry.date, language)}</p>
                     {entry.note ? (
                       <p className="break-words text-sm font-bold text-muted">{entry.note}</p>
                     ) : null}
                   </div>
                   <button
                     type="button"
-                    aria-label={`Delete confession log from ${formatDisplayDate(entry.date)}`}
+                    aria-label={t("deleteConfession", { date: formatDisplayDate(entry.date, language) })}
                     onClick={() => onDeleteConfessionLog(entry.id)}
                     className="grid size-10 shrink-0 place-items-center rounded-full text-muted transition hover:bg-background hover:text-danger"
                   >
@@ -752,7 +1081,7 @@ function ExploreScreen({
             </div>
           ) : (
             <div className="rounded-2xl border-4 border-border bg-white p-4 text-base font-bold text-muted">
-              No confession logged yet.
+              {t("noConfession")}
             </div>
           )}
         </div>
@@ -760,15 +1089,22 @@ function ExploreScreen({
 
       <div className="grid gap-4">
         {sacramentalActions.map((action) => (
-          <SacramentalActionCard key={action.id} action={action} />
+          <SacramentalActionCard key={action.id} action={action} language={language} />
         ))}
       </div>
     </ScreenMotion>
   );
 }
 
-function SacramentalActionCard({ action }: { action: SacramentalAction }) {
+function SacramentalActionCard({
+  action,
+  language,
+}: {
+  action: SacramentalAction;
+  language: UiLanguage;
+}) {
   const Icon = getSacramentalActionIcon(action.type);
+  const actionText = getSacramentalActionText(action, language);
 
   return (
     <Card className="border-4 border-primary-light p-5">
@@ -777,16 +1113,16 @@ function SacramentalActionCard({ action }: { action: SacramentalAction }) {
           <Icon className="size-7" strokeWidth={2.8} />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-black uppercase text-muted">{action.cadence}</p>
-          <h2 className="text-2xl font-black tracking-normal">{action.title}</h2>
+          <p className="text-sm font-black uppercase text-muted">{actionText.cadence}</p>
+          <h2 className="text-2xl font-black tracking-normal">{actionText.title}</h2>
           <p className="mt-1 text-base font-bold leading-relaxed text-muted">
-            {action.description}
+            {actionText.description}
           </p>
         </div>
       </div>
 
       <div className="grid gap-2">
-        {action.steps.map((step) => (
+        {actionText.steps.map((step) => (
           <div key={step} className="flex items-center gap-3 rounded-2xl bg-background px-3 py-2">
             <Check className="size-5 shrink-0 text-primary-dark" strokeWidth={3.2} />
             <span className="text-base font-black text-foreground">{step}</span>
@@ -799,6 +1135,8 @@ function SacramentalActionCard({ action }: { action: SacramentalAction }) {
 
 function PrayersScreen({
   language,
+  t,
+  uiLanguage,
   novenaProgress,
   onCompleteNovenaDay,
   onLanguageChange,
@@ -806,6 +1144,8 @@ function PrayersScreen({
   onStartNovena,
 }: {
   language: PrayerLanguage;
+  t: Translator;
+  uiLanguage: UiLanguage;
   novenaProgress: NovenaProgress | null;
   onCompleteNovenaDay: (day: number) => void;
   onLanguageChange: (language: PrayerLanguage) => void;
@@ -832,13 +1172,13 @@ function PrayersScreen({
     <ScreenMotion className="space-y-5">
       <header className="space-y-4">
         <div>
-          <p className="text-base font-black text-primary-dark">Prayers</p>
-          <h1 className="text-3xl font-black tracking-normal">Common Catholic prayers</h1>
+          <p className="text-base font-black text-primary-dark">{t("prayers")}</p>
+          <h1 className="text-3xl font-black tracking-normal">{t("commonPrayers")}</h1>
         </div>
 
         <div
           role="group"
-          aria-label="Prayer language"
+          aria-label={t("prayerLanguage")}
           className="grid grid-cols-2 gap-1 rounded-full border-4 border-white bg-white p-1 shadow-soft"
         >
           {prayerLanguageOptions.map((option) => {
@@ -869,8 +1209,8 @@ function PrayersScreen({
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            aria-label="Search prayers"
-            placeholder={language === "en" ? "Search prayers" : "搜尋經文"}
+            aria-label={t("searchPrayers")}
+            placeholder={t("searchPrayers")}
             className="min-h-14 w-full rounded-full border-4 border-border bg-white py-3 pl-12 pr-4 text-base font-black text-foreground shadow-playful outline-none placeholder:text-muted focus:border-primary"
           />
         </label>
@@ -887,6 +1227,8 @@ function PrayersScreen({
                 hasOtherActiveNovena={
                   Boolean(novenaProgress) && novenaProgress?.novenaId !== novena.id
                 }
+                t={t}
+                uiLanguage={uiLanguage}
                 onCompleteDay={onCompleteNovenaDay}
                 onQuit={onQuitNovena}
                 onStart={onStartNovena}
@@ -894,15 +1236,15 @@ function PrayersScreen({
             ))}
 
             {visiblePrayers.map((prayer) => (
-              <PrayerCard key={prayer.id} prayer={prayer} language={language} />
+              <PrayerCard key={prayer.id} prayer={prayer} language={language} t={t} />
             ))}
           </>
         ) : (
           <Card className="border-4 border-border p-5 text-center">
             <ScrollText className="mx-auto mb-3 size-10 text-primary-dark" />
-            <h2 className="text-2xl font-black">No prayers found</h2>
+            <h2 className="text-2xl font-black">{t("noPrayersFound")}</h2>
             <p className="mt-2 text-base font-bold text-muted">
-              Try another title, devotion, or keyword.
+              {t("noPrayersHint")}
             </p>
           </Card>
         )}
@@ -915,6 +1257,8 @@ function NovenaCard({
   novena,
   progress,
   hasOtherActiveNovena,
+  t,
+  uiLanguage,
   onCompleteDay,
   onQuit,
   onStart,
@@ -922,6 +1266,8 @@ function NovenaCard({
   novena: Novena;
   progress: NovenaProgress | null;
   hasOtherActiveNovena: boolean;
+  t: Translator;
+  uiLanguage: UiLanguage;
   onCompleteDay: (day: number) => void;
   onQuit: () => void;
   onStart: (novenaId: string, intention: string) => void;
@@ -944,7 +1290,7 @@ function NovenaCard({
     <Card className="border-4 border-yellow p-5">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-black uppercase text-yellow">Novena</p>
+          <p className="text-sm font-black uppercase text-yellow">{t("novena")}</p>
           <h2 className="text-2xl font-black tracking-normal">{novena.title}</h2>
           <p className="mt-1 text-base font-bold leading-relaxed text-muted">
             {novena.description}
@@ -960,7 +1306,9 @@ function NovenaCard({
           <div>
             <div className="mb-2 flex items-center justify-between gap-3">
               <p className="text-sm font-black uppercase text-muted">
-                {isCompleted ? "Complete" : `Day ${currentDayNumber} of ${novena.days.length}`}
+                {isCompleted
+                  ? t("complete")
+                  : t("dayOf", { day: currentDayNumber, total: novena.days.length })}
               </p>
               <span className="rounded-full bg-background px-3 py-1 text-sm font-black text-muted">
                 {completedCount}/{novena.days.length}
@@ -971,7 +1319,7 @@ function NovenaCard({
 
           {progress.intention ? (
             <div className="rounded-2xl bg-background px-4 py-3">
-              <p className="text-sm font-black uppercase text-muted">Intention</p>
+              <p className="text-sm font-black uppercase text-muted">{t("intention")}</p>
               <p className="break-words text-base font-bold text-foreground">
                 {progress.intention}
               </p>
@@ -980,16 +1328,16 @@ function NovenaCard({
 
           {isCompleted ? (
             <div className="rounded-2xl bg-primary-light px-4 py-3">
-              <p className="text-xl font-black text-primary-dark">Novena complete</p>
+              <p className="text-xl font-black text-primary-dark">{t("novenaComplete")}</p>
               <p className="mt-1 text-base font-bold text-muted">
-                You completed all nine days.
+                {t("novenaCompleteDetail")}
               </p>
             </div>
           ) : (
             <div className="space-y-3 rounded-2xl border-4 border-border bg-white p-4">
               <div>
                 <p className="text-sm font-black uppercase text-muted">
-                  Day {currentDay.day}
+                  {t("dayOf", { day: currentDay.day, total: novena.days.length })}
                 </p>
                 <h3 className="text-2xl font-black tracking-normal">{currentDay.title}</h3>
               </div>
@@ -1000,7 +1348,7 @@ function NovenaCard({
                 {currentDay.prayer}
               </p>
               <div className="rounded-2xl bg-background px-4 py-3">
-                <p className="text-sm font-black uppercase text-muted">Action</p>
+                <p className="text-sm font-black uppercase text-muted">{t("action")}</p>
                 <p className="text-base font-black text-foreground">{currentDay.action}</p>
               </div>
             </div>
@@ -1036,23 +1384,23 @@ function NovenaCard({
               disabled={isCompleted || completedToday}
               onClick={() => onCompleteDay(currentDayNumber)}
             >
-              {completedToday ? "Continue Tomorrow" : "Complete Day"}
+              {completedToday ? t("continueTomorrow") : t("completeDay")}
               <Check className="size-5" />
             </Button>
             <Button type="button" size="lg" variant="danger" onClick={onQuit}>
-              Quit
+              {t("quit")}
             </Button>
           </div>
         </div>
       ) : (
         <form onSubmit={submitNovenaStart} className="space-y-3">
           <label className="grid gap-2">
-            <span className="text-sm font-black uppercase text-muted">Intention</span>
+            <span className="text-sm font-black uppercase text-muted">{t("intention")}</span>
             <input
               type="text"
               value={intention}
               onChange={(event) => setIntention(event.target.value)}
-              placeholder={novena.intentionPrompt}
+              placeholder={uiLanguage === "zhHant" ? "你想為哪件工作、召叫或責任祈禱？" : novena.intentionPrompt}
               className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-yellow"
             />
           </label>
@@ -1063,7 +1411,7 @@ function NovenaCard({
             className="w-full"
             disabled={hasOtherActiveNovena}
           >
-            {hasOtherActiveNovena ? "Novena Active" : "Start Novena"}
+            {hasOtherActiveNovena ? t("novenaActive") : t("startNovena")}
             <CalendarPlus className="size-5" />
           </Button>
         </form>
@@ -1075,9 +1423,11 @@ function NovenaCard({
 function PrayerCard({
   prayer,
   language,
+  t,
 }: {
   prayer: CatholicPrayer;
   language: PrayerLanguage;
+  t: Translator;
 }) {
   const translation = prayer.languages[language];
 
@@ -1086,7 +1436,7 @@ function PrayerCard({
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="mb-1 text-sm font-black uppercase text-primary-dark">
-            {readablePrayerCategory(prayer.category)}
+            {readablePrayerCategory(prayer.category, t)}
           </p>
           <h2 className="text-2xl font-black tracking-normal">{translation.title}</h2>
           {translation.subtitle ? (
@@ -1124,11 +1474,13 @@ function PrayerCard({
 function ProgressScreen({
   completedCount,
   confessionLogs,
+  t,
   novenaProgress,
   progressValue,
 }: {
   completedCount: number;
   confessionLogs: ConfessionLogEntry[];
+  t: Translator;
   novenaProgress: NovenaProgress | null;
   progressValue: number;
 }) {
@@ -1137,8 +1489,8 @@ function ProgressScreen({
   return (
     <ScreenMotion className="space-y-5">
       <header>
-        <p className="text-base font-black text-primary-dark">Progress</p>
-        <h1 className="text-3xl font-black tracking-normal">Small steps add up</h1>
+        <p className="text-base font-black text-primary-dark">{t("progress")}</p>
+        <h1 className="text-3xl font-black tracking-normal">{t("progressTitle")}</h1>
       </header>
 
       <Card className="border-4 border-yellow p-5">
@@ -1148,16 +1500,16 @@ function ProgressScreen({
           </div>
           <div>
             <p className="text-4xl font-black">7</p>
-            <p className="text-lg font-black text-muted">day prayer streak</p>
+            <p className="text-lg font-black text-muted">{t("prayerStreak")}</p>
           </div>
         </div>
       </Card>
 
       <Card className="border-4 border-primary-light p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-black">This week</h2>
+          <h2 className="text-2xl font-black">{t("thisWeek")}</h2>
           <span className="rounded-full bg-primary-light px-3 py-1 text-sm font-black text-primary-dark">
-            {completedCount} completed
+            {t("completedCount", { count: completedCount })}
           </span>
         </div>
         <div className="grid grid-cols-7 gap-2">
@@ -1182,27 +1534,27 @@ function ProgressScreen({
       <Card className="border-4 border-blue p-5">
         <div className="mb-4 flex items-center gap-3">
           <Medal className="size-9 text-blue" />
-          <h2 className="text-2xl font-black">Grace Points</h2>
+          <h2 className="text-2xl font-black">{t("gracePoints")}</h2>
         </div>
         <Progress value={Math.max(progressValue, 35)} />
         <p className="mt-4 text-lg font-black text-muted">
-          Keep showing up. Your next badge is close.
+          {t("badgeHint")}
         </p>
       </Card>
 
       <Card className="border-4 border-border p-5">
         <div className="mb-4 flex items-center gap-3">
           <ClipboardList className="size-9 text-primary-dark" />
-          <h2 className="text-2xl font-black">Saved tracks</h2>
+          <h2 className="text-2xl font-black">{t("savedTracks")}</h2>
         </div>
         <div className="grid gap-3">
-          <TrackSummaryRow label="Confessions logged" value={`${confessionLogs.length}`} />
+          <TrackSummaryRow label={t("confessionsLogged")} value={`${confessionLogs.length}`} />
           <TrackSummaryRow
-            label="Novena progress"
+            label={t("novenaProgress")}
             value={
               novenaProgress
                 ? `${novenaCompletedCount}/9 ${novenaProgress.status}`
-                : "No active novena"
+                : t("noActiveNovena")
             }
           />
         </div>
@@ -1216,44 +1568,50 @@ function ProfileScreen({
   preferences,
   profile,
   progressValue,
+  t,
   onClearStorage,
+  onFontScaleChange,
   onPersonalProfileChange,
   onPrayerLanguageChange,
+  onUiLanguageChange,
   onReset,
 }: {
   personalProfile: PersonalProfile;
   preferences: AppPreferences;
   profile: UserSpiritualProfile;
   progressValue: number;
+  t: Translator;
   onClearStorage: () => void;
+  onFontScaleChange: (fontScale: number) => void;
   onPersonalProfileChange: (profile: PersonalProfile) => void;
   onPrayerLanguageChange: (language: PrayerLanguage) => void;
+  onUiLanguageChange: (language: UiLanguage) => void;
   onReset: () => void;
 }) {
   return (
     <ScreenMotion className="space-y-5">
       <header>
-        <p className="text-base font-black text-primary-dark">Profile</p>
-        <h1 className="text-3xl font-black tracking-normal">Your prayer path</h1>
+        <p className="text-base font-black text-primary-dark">{t("profile")}</p>
+        <h1 className="text-3xl font-black tracking-normal">{t("prayerPath")}</h1>
       </header>
 
       <Card className="border-4 border-primary-light p-5 text-center">
         <div className="mx-auto mb-4 grid size-24 place-items-center rounded-full bg-primary-light text-primary-dark">
           <ShieldCheck className="size-12" strokeWidth={2.8} />
         </div>
-        <h2 className="text-2xl font-black">Growing step by step</h2>
-        <p className="text-base font-bold text-muted">{progressValue}% of today&apos;s plan complete</p>
+        <h2 className="text-2xl font-black">{t("growing")}</h2>
+        <p className="text-base font-bold text-muted">{t("planComplete", { progress: progressValue })}</p>
       </Card>
 
       <Card className="border-4 border-primary-light p-5">
         <div className="mb-4 flex items-center gap-3">
           <UserRound className="size-9 text-primary-dark" />
-          <h2 className="text-2xl font-black">Personal profile</h2>
+          <h2 className="text-2xl font-black">{t("personalProfile")}</h2>
         </div>
 
         <div className="grid gap-3">
           <label className="grid gap-2">
-            <span className="text-sm font-black uppercase text-muted">Name</span>
+            <span className="text-sm font-black uppercase text-muted">{t("name")}</span>
             <input
               type="text"
               value={personalProfile.displayName}
@@ -1263,13 +1621,13 @@ function ProfileScreen({
                   displayName: event.target.value,
                 })
               }
-              placeholder="Your name"
+              placeholder={t("namePlaceholder")}
               className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
             />
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-black uppercase text-muted">Parish</span>
+            <span className="text-sm font-black uppercase text-muted">{t("parish")}</span>
             <input
               type="text"
               value={personalProfile.parish}
@@ -1279,13 +1637,13 @@ function ProfileScreen({
                   parish: event.target.value,
                 })
               }
-              placeholder="Parish name"
+              placeholder={t("parishPlaceholder")}
               className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
             />
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-black uppercase text-muted">Patron saint</span>
+            <span className="text-sm font-black uppercase text-muted">{t("patronSaint")}</span>
             <input
               type="text"
               value={personalProfile.patronSaint}
@@ -1295,7 +1653,7 @@ function ProfileScreen({
                   patronSaint: event.target.value,
                 })
               }
-              placeholder="St. Joseph"
+              placeholder={t("patronSaintPlaceholder")}
               className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
             />
           </label>
@@ -1305,12 +1663,67 @@ function ProfileScreen({
       <Card className="border-4 border-blue p-5">
         <div className="mb-4 flex items-center gap-3">
           <Languages className="size-9 text-blue" />
-          <h2 className="text-2xl font-black">Preferences</h2>
+          <h2 className="text-2xl font-black">{t("preferences")}</h2>
         </div>
 
+        <p className="mb-2 text-sm font-black uppercase text-muted">{t("uiLanguage")}</p>
         <div
           role="group"
-          aria-label="Default prayer language"
+          aria-label={t("uiLanguage")}
+          className="mb-4 grid grid-cols-2 gap-1 rounded-full border-4 border-white bg-white p-1 shadow-soft"
+        >
+          {uiLanguageOptions.map((option) => {
+            const active = (preferences.uiLanguage ?? "zhHant") === option.id;
+
+            return (
+              <button
+                key={option.id}
+                type="button"
+                aria-label={option.label}
+                aria-pressed={active}
+                onClick={() => onUiLanguageChange(option.id)}
+                className={cn(
+                  "flex min-h-12 items-center justify-center gap-2 rounded-full px-3 text-sm font-black leading-tight transition",
+                  active ? "bg-blue text-white" : "bg-transparent text-muted",
+                )}
+              >
+                <Languages className="size-4" strokeWidth={3} />
+                <span>{option.shortLabel}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="mb-2 text-sm font-black uppercase text-muted">{t("fontSize")}</p>
+        <div
+          role="group"
+          aria-label={t("fontSize")}
+          className="mb-4 grid grid-cols-4 gap-1 rounded-[1.5rem] border-4 border-white bg-white p-1 shadow-soft"
+        >
+          {fontScaleOptions.map((option) => {
+            const active = (preferences.fontScale ?? 100) === option.value;
+
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={active}
+                onClick={() => onFontScaleChange(option.value)}
+                className={cn(
+                  "min-h-11 rounded-2xl px-2 text-xs font-black leading-tight transition",
+                  active ? "bg-blue text-white" : "text-muted",
+                )}
+              >
+                {t(option.labelKey)}
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="mb-2 text-sm font-black uppercase text-muted">{t("defaultPrayerLanguage")}</p>
+        <div
+          role="group"
+          aria-label={t("defaultPrayerLanguage")}
           className="grid grid-cols-2 gap-1 rounded-full border-4 border-white bg-white p-1 shadow-soft"
         >
           {prayerLanguageOptions.map((option) => {
@@ -1337,22 +1750,30 @@ function ProfileScreen({
       </Card>
 
       <div className="space-y-3">
-        <ProfileRow label="Experience" value={readableValue(profile.experienceLevel)} />
-        <ProfileRow label="Prayer time" value={readableValue(profile.preferredPrayerTime)} />
-        <ProfileRow label="Preferred devotion" value={profile.preferredDevotions.join(", ")} />
-        <ProfileRow label="Daily goal" value={profile.spiritualGoal} />
+        <ProfileRow label={t("experience")} value={readableProfileValue(profile.experienceLevel, preferences.uiLanguage ?? "zhHant")} />
+        <ProfileRow label={t("prayerTime")} value={readableProfileValue(profile.preferredPrayerTime, preferences.uiLanguage ?? "zhHant")} />
+        <ProfileRow
+          label={t("preferredDevotion")}
+          value={profile.preferredDevotions
+            .map((devotion) => readableProfileValue(devotion, preferences.uiLanguage ?? "zhHant"))
+            .join(", ")}
+        />
+        <ProfileRow
+          label={t("dailyGoal")}
+          value={readableProfileValue(profile.spiritualGoal, preferences.uiLanguage ?? "zhHant")}
+        />
       </div>
 
-      <AppUpdateCard />
+      <AppUpdateCard t={t} />
 
       <Button size="lg" variant="secondary" className="w-full" onClick={onReset}>
         <RotateCcw className="size-5" />
-        Reset onboarding
+        {t("resetOnboarding")}
       </Button>
 
       <Button size="lg" variant="danger" className="w-full" onClick={onClearStorage}>
         <Trash2 className="size-5" />
-        Clear Storage
+        {t("clearStorage")}
       </Button>
     </ScreenMotion>
   );
@@ -1376,10 +1797,10 @@ function TrackSummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function AppUpdateCard() {
+function AppUpdateCard({ t }: { t: Translator }) {
   const [isSupported, setIsSupported] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [status, setStatus] = useState("Ready");
+  const [status, setStatus] = useState<TranslationKey>("updateReady");
 
   useEffect(() => {
     setIsSupported("serviceWorker" in navigator && process.env.NODE_ENV === "production");
@@ -1387,19 +1808,19 @@ function AppUpdateCard() {
 
   async function updateApp() {
     if (!("serviceWorker" in navigator) || process.env.NODE_ENV !== "production") {
-      setStatus("Available after install");
+      setStatus("updateInstall");
       return;
     }
 
     setIsUpdating(true);
-    setStatus("Updating...");
+    setStatus("updating");
 
     try {
       let didReload = false;
       const reloadApp = () => {
         if (didReload) return;
         didReload = true;
-        setStatus("Updated. Restarting...");
+        setStatus("updatedRestarting");
         window.setTimeout(() => window.location.reload(), 300);
       };
 
@@ -1429,10 +1850,10 @@ function AppUpdateCard() {
     } catch {
       try {
         await clearAppCaches();
-        setStatus("Updated. Restarting...");
+        setStatus("updatedRestarting");
         window.setTimeout(() => window.location.reload(), 300);
       } catch {
-        setStatus("Update failed");
+        setStatus("updateFailed");
         setIsUpdating(false);
       }
     }
@@ -1445,9 +1866,9 @@ function AppUpdateCard() {
           <RefreshCw className={cn("size-6", isUpdating ? "animate-spin" : "")} strokeWidth={2.8} />
         </div>
         <div>
-          <h2 className="text-2xl font-black">App update</h2>
+          <h2 className="text-2xl font-black">{t("appUpdate")}</h2>
           <p className="text-base font-bold text-muted">
-            {isSupported ? status : "Available after install"}
+            {isSupported ? t(status) : t("updateInstall")}
           </p>
         </div>
       </div>
@@ -1459,7 +1880,7 @@ function AppUpdateCard() {
         onClick={updateApp}
         disabled={!isSupported || isUpdating}
       >
-        {isUpdating ? "Updating..." : "Update App"}
+        {isUpdating ? t("updating") : t("updateApp")}
         <RefreshCw className={cn("size-5", isUpdating ? "animate-spin" : "")} />
       </Button>
     </Card>
@@ -1468,9 +1889,11 @@ function AppUpdateCard() {
 
 function BottomNav({
   activeTab,
+  t,
   onChange,
 }: {
   activeTab: Tab;
+  t: Translator;
   onChange: (tab: Tab) => void;
 }) {
   return (
@@ -1489,7 +1912,7 @@ function BottomNav({
               )}
             >
               <Icon className="size-6" strokeWidth={active ? 3 : 2.4} />
-              {item.label}
+              {t(item.labelKey)}
             </button>
           );
         })}
@@ -1626,13 +2049,18 @@ function getSacramentalActionIcon(type: SacramentalAction["type"]) {
   }
 }
 
-function getConfessionStatus(logs: ConfessionLogEntry[], frequencyDays: number) {
+function getConfessionStatus(
+  logs: ConfessionLogEntry[],
+  frequencyDays: number,
+  t: Translator,
+  language: UiLanguage,
+) {
   const latestLog = logs[0];
 
   if (!latestLog) {
     return {
-      title: "Ready for Confession",
-      detail: "Set a rhythm and record the next confession.",
+      title: t("readyForConfession"),
+      detail: t("readyForConfessionDetail"),
       progressValue: 0,
     };
   }
@@ -1646,23 +2074,32 @@ function getConfessionStatus(logs: ConfessionLogEntry[], frequencyDays: number) 
 
   if (daysUntilNext < 0) {
     return {
-      title: "Confession due now",
-      detail: `Target was ${formatDisplayDate(toInputDate(nextDate))}. Last: ${formatDisplayDate(latestLog.date)}.`,
+      title: t("confessionDueNow"),
+      detail: t("targetWasLast", {
+        target: formatDisplayDate(toInputDate(nextDate), language),
+        last: formatDisplayDate(latestLog.date, language),
+      }),
       progressValue: 100,
     };
   }
 
   if (daysUntilNext === 0) {
     return {
-      title: "Confession due today",
-      detail: `Last confession: ${formatDisplayDate(latestLog.date)}.`,
+      title: t("confessionDueToday"),
+      detail: t("lastConfession", { last: formatDisplayDate(latestLog.date, language) }),
       progressValue: 100,
     };
   }
 
   return {
-    title: `Next confession in ${daysUntilNext} ${daysUntilNext === 1 ? "day" : "days"}`,
-    detail: `Target: ${formatDisplayDate(toInputDate(nextDate))}. Last: ${formatDisplayDate(latestLog.date)}.`,
+    title: t("nextConfession", {
+      days: daysUntilNext,
+      unit: daysUntilNext === 1 ? t("daySingular") : t("dayPlural"),
+    }),
+    detail: t("targetLast", {
+      target: formatDisplayDate(toInputDate(nextDate), language),
+      last: formatDisplayDate(latestLog.date, language),
+    }),
     progressValue,
   };
 }
@@ -1697,8 +2134,8 @@ function toInputDate(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function formatDisplayDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
+function formatDisplayDate(value: string, language: UiLanguage = "en") {
+  return new Intl.DateTimeFormat(language === "zhHant" ? "zh-Hant" : "en", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -1717,18 +2154,29 @@ function buildProfile(
   };
 }
 
-function readableCategory(category: string) {
-  return category
-    .split("_")
-    .map((word) => word[0].toUpperCase() + word.slice(1))
-    .join(" ");
+function readableCategory(category: string, t: Translator) {
+  const categoryMap: Record<string, TranslationKey> = {
+    daily_practices: "categoryDailyPractices",
+    devotions: "categoryDevotions",
+    formation: "categoryFormation",
+    sacramental_life: "categorySacramentalLife",
+  };
+
+  const key = categoryMap[category];
+  if (key) return t(key);
+
+  return readableValue(category);
 }
 
-function readablePrayerCategory(category: PrayerCategory) {
-  return category
-    .split("_")
-    .map((word) => word[0].toUpperCase() + word.slice(1))
-    .join(" ");
+function readablePrayerCategory(category: PrayerCategory, t: Translator) {
+  const categoryMap: Record<PrayerCategory, TranslationKey> = {
+    foundational: "categoryFoundational",
+    marian: "categoryMarian",
+    rosary: "categoryRosary",
+    daily: "categoryDaily",
+  };
+
+  return t(categoryMap[category]);
 }
 
 function getPrayerSearchText(prayer: CatholicPrayer) {
@@ -1756,9 +2204,186 @@ function getNovenaSearchText(novena: Novena) {
     .toLocaleLowerCase();
 }
 
+function getPracticeText(practice: DailyPlanItem["practice"], language: UiLanguage) {
+  if (!practice.languages) {
+    const legacyPractice = practice as DailyPlanItem["practice"] & {
+      title?: string;
+      description?: string;
+      content?: string;
+    };
+
+    return {
+      title: legacyPractice.title ?? legacyPractice.sourceTitle ?? "",
+      description: legacyPractice.description ?? "",
+      content: legacyPractice.content ?? "",
+    };
+  }
+
+  return practice.languages[language] ?? practice.languages.en;
+}
+
+function getOnboardingQuestionText(questionId: string, language: UiLanguage) {
+  const localizedQuestions: Record<
+    string,
+    Record<UiLanguage, { title: string; options: string[] }>
+  > = {
+    experience: {
+      en: {
+        title: "Which best describes you?",
+        options: [
+          "I’m new to the Catholic faith",
+          "I’m learning and exploring",
+          "I practice my faith regularly",
+          "I want to grow deeper",
+        ],
+      },
+      zhHant: {
+        title: "哪一項最符合你？",
+        options: [
+          "我是天主教信仰的新朋友",
+          "我正在學習和探索",
+          "我有穩定實踐信仰",
+          "我想更深入成長",
+        ],
+      },
+    },
+    time: {
+      en: {
+        title: "How much time could you usually spend in prayer each day?",
+        options: ["2–5 minutes", "5–10 minutes", "10–20 minutes", "20+ minutes"],
+      },
+      zhHant: {
+        title: "你通常每天可以用多少時間祈禱？",
+        options: ["2–5 分鐘", "5–10 分鐘", "10–20 分鐘", "20 分鐘以上"],
+      },
+    },
+    devotion: {
+      en: {
+        title: "Which forms of prayer do you feel most drawn to?",
+        options: [
+          "Scripture reading",
+          "Rosary or Marian prayers",
+          "Silent meditation",
+          "Traditional prayers",
+          "I’m open to exploring",
+        ],
+      },
+      zhHant: {
+        title: "你較被哪種祈禱方式吸引？",
+        options: ["聖經閱讀", "玫瑰經或聖母經文", "靜默默禱", "傳統經文", "我願意探索"],
+      },
+    },
+    rhythm: {
+      en: {
+        title: "When do you usually prefer to pray?",
+        options: ["Morning", "Midday", "Evening", "Before sleep", "Flexible"],
+      },
+      zhHant: {
+        title: "你通常喜歡在什麼時候祈禱？",
+        options: ["早上", "中午", "晚上", "睡前", "彈性"],
+      },
+    },
+    goal: {
+      en: {
+        title: "What would you like help with most?",
+        options: [
+          "Building a daily prayer habit",
+          "Deepening my relationship with God",
+          "Learning traditional Catholic devotions",
+          "Preparing better for confession",
+          "Growing spiritually step by step",
+        ],
+      },
+      zhHant: {
+        title: "你最希望在哪方面得到幫助？",
+        options: [
+          "建立每日祈禱習慣",
+          "加深我與天主的關係",
+          "學習傳統天主教敬禮",
+          "更好地準備告解",
+          "一步一步靈性成長",
+        ],
+      },
+    },
+  };
+
+  return localizedQuestions[questionId]?.[language] ?? localizedQuestions[questionId]?.en ?? {
+    title: "",
+    options: [],
+  };
+}
+
+function getSacramentalActionText(action: SacramentalAction, language: UiLanguage) {
+  const zhHantText: Record<
+    SacramentalAction["id"],
+    { title: string; description: string; cadence: string; steps: string[] }
+  > = {
+    confession: {
+      title: "告解",
+      description: "以穩定的省察、痛悔與恩寵節奏回到慈悲中。",
+      cadence: "每月節奏",
+      steps: ["省察良心", "選擇告解時間", "作痛悔經", "完成補贖"],
+    },
+    retreat: {
+      title: "避靜",
+      description: "預留安靜時間作祈禱、靈修閱讀和重新定向。",
+      cadence: "季節性或年度節奏",
+      steps: ["選擇避靜日", "帶聖經和筆記", "保留一段靜默", "定下一個下一步"],
+    },
+    "mass-prep": {
+      title: "彌撒準備",
+      description: "以讀經祈禱並收斂到達來準備主日彌撒。",
+      cadence: "每週節奏",
+      steps: ["閱讀主日讀經", "提前到達", "獻上一個意向", "彌撒後感謝"],
+    },
+    adoration: {
+      title: "朝拜聖體",
+      description: "花時間在聖體前安靜陪伴主。",
+      cadence: "每週或每月節奏",
+      steps: ["選定朝拜時間", "保持靜默", "向耶穌說話", "聆聽並記下一個感動"],
+    },
+  };
+
+  if (language === "zhHant") return zhHantText[action.id];
+  return {
+    title: action.title,
+    description: action.description,
+    cadence: action.cadence,
+    steps: action.steps,
+  };
+}
+
 function readableValue(value: string) {
   return value
     .split("_")
     .map((word) => word[0].toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function readableProfileValue(value: string, language: UiLanguage) {
+  if (language === "en") return readableValue(value);
+
+  const zhHantValues: Record<string, string> = {
+    beginner: "初學者",
+    exploring: "探索中",
+    regular: "穩定實踐",
+    growing_deeper: "希望更深入",
+    morning: "早上",
+    midday: "中午",
+    evening: "晚上",
+    before_sleep: "睡前",
+    flexible: "彈性",
+    "Scripture reading": "聖經閱讀",
+    "Rosary or Marian prayers": "玫瑰經或聖母經文",
+    "Silent meditation": "靜默默禱",
+    "Traditional prayers": "傳統經文",
+    "I’m open to exploring": "我願意探索",
+    "Building a daily prayer habit": "建立每日祈禱習慣",
+    "Deepening my relationship with God": "加深我與天主的關係",
+    "Learning traditional Catholic devotions": "學習傳統天主教敬禮",
+    "Preparing better for confession": "更好地準備告解",
+    "Growing spiritually step by step": "一步一步靈性成長",
+  };
+
+  return zhHantValues[value] ?? readableValue(value);
 }

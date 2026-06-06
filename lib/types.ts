@@ -15,6 +15,8 @@ export type ContentCategory =
 
 export type PrayerLanguage = "en" | "zhHant";
 
+export type UiLanguage = "en" | "zhHant";
+
 export type PrayerCategory = "foundational" | "marian" | "rosary" | "daily";
 
 export type SacramentalActionType =
@@ -25,15 +27,29 @@ export type SacramentalActionType =
 
 export type PracticeStatus = "pending" | "completed" | "skipped";
 
+export type PietyCadence = "daily" | "weekly" | "monthly" | "yearly" | "always";
+
+export type PietyDifficulty = "beginner" | "intermediate" | "advanced";
+
 export type ActOfPiety = {
   id: string;
-  title: string;
-  description: string;
+  sourceTitle: string;
+  cadence: PietyCadence;
+  languages: Record<
+    UiLanguage,
+    {
+      title: string;
+      description: string;
+      content: string;
+    }
+  >;
   category: ContentCategory;
   estimatedMinutes: number;
-  difficulty: "beginner" | "intermediate" | "advanced";
+  difficulty: PietyDifficulty;
   tags: string[];
-  content: string;
+  prayerTimes: PreferredPrayerTime[];
+  recommendedFor: Array<ExperienceLevel | "all">;
+  sourceUrl?: string;
 };
 
 export type UserSpiritualProfile = {
@@ -51,7 +67,9 @@ export type PersonalProfile = {
 };
 
 export type AppPreferences = {
+  uiLanguage: UiLanguage;
   prayerLanguage: PrayerLanguage;
+  fontScale: number;
   confessionFrequencyDays: number;
 };
 
