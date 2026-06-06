@@ -214,7 +214,7 @@ export const actsOfPiety: ActOfPiety[] = [
       },
     },
     category: "devotions",
-    estimatedMinutes: 5,
+    estimatedMinutes: 15,
     difficulty: "beginner",
     tags: ["rosary", "mary", "marian", "daily", "family"],
     prayerTimes: ["evening", "before_sleep", "flexible"],

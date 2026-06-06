@@ -126,6 +126,14 @@ export type ConfessionLogEntry = {
   note: string;
 };
 
+export type PrayerIntention = {
+  id: string;
+  title: string;
+  note: string;
+  createdAt: string;
+  archived: boolean;
+};
+
 export type NovenaDay = {
   day: number;
   title: string;

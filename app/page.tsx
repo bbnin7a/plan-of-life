@@ -19,8 +19,11 @@ import {
   Languages,
   Medal,
   Moon,
+  Pencil,
+  Plus,
   RefreshCw,
   RotateCcw,
+  Save,
   ScrollText,
   Search,
   ShieldCheck,
@@ -63,6 +66,7 @@ import type {
   PietyFrequency,
   PietyScheduleEntry,
   PrayerCategory,
+  PrayerIntention,
   PrayerLanguage,
   SacramentalAction,
   UiLanguage,
@@ -218,6 +222,13 @@ const uiText = {
     searchPrayers: "Search prayers",
     noPrayersFound: "No prayers found",
     noPrayersHint: "Try another title, devotion, or keyword.",
+    prayerIntentions: "Prayer intentions",
+    intentionTitle: "Intention title",
+    intentionTitlePlaceholder: "Who or what are you praying for?",
+    intentionNotePlaceholder: "Optional details or next step",
+    addIntention: "Add intention",
+    archiveIntention: "Archive intention",
+    noPrayerIntentions: "No prayer intentions saved yet.",
     novena: "Novena",
     dayOf: "Day {day} of {total}",
     intention: "Intention",
@@ -253,6 +264,9 @@ const uiText = {
     parishPlaceholder: "Parish name",
     patronSaint: "Patron saint",
     patronSaintPlaceholder: "St. Joseph",
+    edit: "Edit",
+    save: "Save",
+    notSet: "Not set",
     preferences: "Preferences",
     uiLanguage: "UI language",
     defaultPrayerLanguage: "Default prayer language",
@@ -359,6 +373,13 @@ const uiText = {
     searchPrayers: "搜尋經文",
     noPrayersFound: "找不到經文",
     noPrayersHint: "請嘗試其他標題、敬禮或關鍵字。",
+    prayerIntentions: "祈禱意向",
+    intentionTitle: "意向標題",
+    intentionTitlePlaceholder: "你想為誰或什麼祈禱？",
+    intentionNotePlaceholder: "可選：細節或下一步",
+    addIntention: "新增意向",
+    archiveIntention: "封存意向",
+    noPrayerIntentions: "尚未儲存祈禱意向。",
     novena: "九日敬禮",
     dayOf: "第 {day} 天 / 共 {total} 天",
     intention: "意向",
@@ -394,6 +415,9 @@ const uiText = {
     parishPlaceholder: "堂區名稱",
     patronSaint: "主保聖人",
     patronSaintPlaceholder: "聖若瑟",
+    edit: "編輯",
+    save: "儲存",
+    notSet: "未設定",
     preferences: "偏好設定",
     uiLanguage: "介面語言",
     defaultPrayerLanguage: "預設經文語言",
@@ -492,6 +516,10 @@ export default function App() {
   );
   const [pietyCompletions, setPietyCompletions] = useLocalStorageState<PietyCompletionEntry[]>(
     "plan-of-life:piety-completions",
+    [],
+  );
+  const [prayerIntentions, setPrayerIntentions] = useLocalStorageState<PrayerIntention[]>(
+    "plan-of-life:prayer-intentions",
     [],
   );
   const [selectedDetail, setSelectedDetail] = useState<SelectedDetail | null>(null);
@@ -654,6 +682,33 @@ export default function App() {
     setConfessionLogs((logs) => logs.filter((entry) => entry.id !== entryId));
   }
 
+  function addPrayerIntention(title: string, note: string) {
+    const trimmedTitle = title.trim();
+    const trimmedNote = note.trim();
+
+    if (!trimmedTitle && !trimmedNote) {
+      return;
+    }
+
+    const entry: PrayerIntention = {
+      id: `prayer-intention-${Date.now()}`,
+      title: trimmedTitle || t("intention"),
+      note: trimmedNote,
+      createdAt: new Date().toISOString(),
+      archived: false,
+    };
+
+    setPrayerIntentions((intentions) => [entry, ...intentions]);
+  }
+
+  function archivePrayerIntention(intentionId: string) {
+    setPrayerIntentions((intentions) =>
+      intentions.map((intention) =>
+        intention.id === intentionId ? { ...intention, archived: true } : intention,
+      ),
+    );
+  }
+
   function startNovena(novenaId: string, intention: string) {
     setNovenaProgress({
       novenaId,
@@ -798,16 +853,13 @@ export default function App() {
           <PrayersScreen
             key="prayers"
             language={preferences.prayerLanguage}
+            prayerIntentions={prayerIntentions}
             t={t}
             uiLanguage={uiLanguage}
             novenaProgress={novenaProgress}
+            onAddPrayerIntention={addPrayerIntention}
+            onArchivePrayerIntention={archivePrayerIntention}
             onCompleteNovenaDay={completeNovenaDay}
-            onLanguageChange={(prayerLanguage) =>
-              setPreferences((currentPreferences) => ({
-                ...currentPreferences,
-                prayerLanguage,
-              }))
-            }
             onQuitNovena={quitNovena}
             onOpenPrayer={setSelectedPrayerId}
             onStartNovena={startNovena}
@@ -861,14 +913,17 @@ export default function App() {
         {completionMessage ? <CompletionToast message={completionMessage} /> : null}
       </AnimatePresence>
 
-      {selectedPrayer ? (
-        <PrayerDetailDialog
-          language={preferences.prayerLanguage}
-          prayer={selectedPrayer}
-          t={t}
-          onClose={() => setSelectedPrayerId(null)}
-        />
-      ) : null}
+      <AnimatePresence>
+        {selectedPrayer ? (
+          <PrayerDetailDialog
+            key={selectedPrayer.id}
+            language={preferences.prayerLanguage}
+            prayer={selectedPrayer}
+            t={t}
+            onClose={() => setSelectedPrayerId(null)}
+          />
+        ) : null}
+      </AnimatePresence>
 
       {!selectedDetail ? (
         <BottomNav activeTab={activeTab} t={t} onChange={setActiveTab} />
@@ -1627,27 +1682,34 @@ function SacramentalActionCard({
 
 function PrayersScreen({
   language,
+  prayerIntentions,
   t,
   uiLanguage,
   novenaProgress,
+  onAddPrayerIntention,
+  onArchivePrayerIntention,
   onCompleteNovenaDay,
-  onLanguageChange,
   onQuitNovena,
   onOpenPrayer,
   onStartNovena,
 }: {
   language: PrayerLanguage;
+  prayerIntentions: PrayerIntention[];
   t: Translator;
   uiLanguage: UiLanguage;
   novenaProgress: NovenaProgress | null;
+  onAddPrayerIntention: (title: string, note: string) => void;
+  onArchivePrayerIntention: (intentionId: string) => void;
   onCompleteNovenaDay: (day: number) => void;
-  onLanguageChange: (language: PrayerLanguage) => void;
   onQuitNovena: () => void;
   onOpenPrayer: (prayerId: string) => void;
   onStartNovena: (novenaId: string, intention: string) => void;
 }) {
   const [query, setQuery] = useState("");
+  const [intentionTitle, setIntentionTitle] = useState("");
+  const [intentionNote, setIntentionNote] = useState("");
   const normalizedQuery = query.trim().toLocaleLowerCase();
+  const activeIntentions = prayerIntentions.filter((intention) => !intention.archived);
 
   const visiblePrayers = useMemo(() => {
     if (!normalizedQuery) return catholicPrayers;
@@ -1662,39 +1724,19 @@ function PrayersScreen({
     return novenas.filter((novena) => getNovenaSearchText(novena).includes(normalizedQuery));
   }, [normalizedQuery]);
 
+  function submitPrayerIntention(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onAddPrayerIntention(intentionTitle, intentionNote);
+    setIntentionTitle("");
+    setIntentionNote("");
+  }
+
   return (
     <ScreenMotion className="space-y-5">
       <header className="space-y-4">
         <div>
           <p className="text-base font-black text-primary-dark">{t("prayers")}</p>
           <h1 className="text-3xl font-black tracking-normal">{t("commonPrayers")}</h1>
-        </div>
-
-        <div
-          role="group"
-          aria-label={t("prayerLanguage")}
-          className="grid grid-cols-2 gap-1 rounded-full border-4 border-white bg-white p-1 shadow-soft"
-        >
-          {prayerLanguageOptions.map((option) => {
-            const active = language === option.id;
-
-            return (
-              <button
-                key={option.id}
-                type="button"
-                aria-label={option.label}
-                aria-pressed={active}
-                onClick={() => onLanguageChange(option.id)}
-                className={cn(
-                  "flex min-h-12 items-center justify-center gap-2 rounded-full px-3 text-sm font-black leading-tight transition",
-                  active ? "bg-primary text-white" : "bg-transparent text-muted",
-                )}
-              >
-                <Languages className="size-4" strokeWidth={3} />
-                <span>{option.id === "zhHant" ? option.shortLabel : option.label}</span>
-              </button>
-            );
-          })}
         </div>
 
         <label className="relative block">
@@ -1709,6 +1751,82 @@ function PrayersScreen({
           />
         </label>
       </header>
+
+      <Card className="border-4 border-primary-light p-5">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="grid size-11 place-items-center rounded-2xl bg-primary-light text-primary-dark">
+            <Heart className="size-6" strokeWidth={2.8} />
+          </div>
+          <h2 className="text-2xl font-black">{t("prayerIntentions")}</h2>
+        </div>
+
+        <form onSubmit={submitPrayerIntention} className="grid gap-3">
+          <label className="grid gap-2">
+            <span className="text-sm font-black uppercase text-muted">{t("intentionTitle")}</span>
+            <input
+              type="text"
+              value={intentionTitle}
+              onChange={(event) => setIntentionTitle(event.target.value)}
+              placeholder={t("intentionTitlePlaceholder")}
+              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
+            />
+          </label>
+          <div className="grid grid-cols-[1fr_auto] gap-2">
+            <input
+              type="text"
+              value={intentionNote}
+              onChange={(event) => setIntentionNote(event.target.value)}
+              placeholder={t("intentionNotePlaceholder")}
+              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
+            />
+            <Button
+              type="submit"
+              size="sm"
+              aria-label={t("addIntention")}
+              title={t("addIntention")}
+              disabled={!intentionTitle.trim() && !intentionNote.trim()}
+              className="size-12 min-h-12 px-0 py-0"
+            >
+              <Plus className="size-5" strokeWidth={3} />
+            </Button>
+          </div>
+        </form>
+
+        <div className="mt-4 grid gap-2">
+          {activeIntentions.length > 0 ? (
+            activeIntentions.map((intention) => (
+              <div
+                key={intention.id}
+                className="grid grid-cols-[1fr_auto] gap-3 rounded-2xl bg-background px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="break-words text-base font-black text-foreground">
+                    {intention.title}
+                  </p>
+                  {intention.note ? (
+                    <p className="mt-1 break-words text-sm font-bold leading-relaxed text-muted">
+                      {intention.note}
+                    </p>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  aria-label={t("archiveIntention")}
+                  title={t("archiveIntention")}
+                  onClick={() => onArchivePrayerIntention(intention.id)}
+                  className="grid size-10 shrink-0 place-items-center rounded-full border-4 border-border bg-white text-danger shadow-soft transition active:translate-y-1 active:shadow-none"
+                >
+                  <Trash2 className="size-5" strokeWidth={2.8} />
+                </button>
+              </div>
+            ))
+          ) : (
+            <p className="rounded-2xl bg-background px-4 py-3 text-base font-bold text-muted">
+              {t("noPrayerIntentions")}
+            </p>
+          )}
+        </div>
+      </Card>
 
       <div className="grid gap-4">
         {visiblePrayers.length > 0 || visibleNovenas.length > 0 ? (
@@ -1935,9 +2053,15 @@ function PrayerCard({
           </p>
           <h2 className="text-2xl font-black tracking-normal">{translation.title}</h2>
         </div>
-        <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary-light text-primary-dark">
+        <button
+          type="button"
+          aria-label={t("viewPrayer")}
+          title={t("viewPrayer")}
+          onClick={onOpen}
+          className="grid size-11 shrink-0 place-items-center rounded-2xl border-4 border-primary-light bg-primary-light text-primary-dark shadow-soft transition active:translate-y-1 active:shadow-none"
+        >
           <ScrollText className="size-6" strokeWidth={2.8} />
-        </div>
+        </button>
       </div>
 
       <p className="text-base font-bold leading-relaxed text-muted">
@@ -1955,10 +2079,6 @@ function PrayerCard({
             </span>
           ))}
         </div>
-        <Button type="button" size="lg" className="w-full" onClick={onOpen}>
-          {t("viewPrayer")}
-          <ScrollText className="size-5" />
-        </Button>
       </div>
     </Card>
   );
@@ -1978,37 +2098,50 @@ function PrayerDetailDialog({
   const translation = prayer.languages[language];
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end bg-foreground/40 px-4 pb-4 pt-16">
-      <Card className="mx-auto max-h-[82vh] w-full max-w-md overflow-y-auto border-4 border-primary-light p-5">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-black uppercase text-primary-dark">
-              {readablePrayerCategory(prayer.category, t)}
-            </p>
-            <h2 className="text-3xl font-black tracking-normal">{translation.title}</h2>
+    <motion.div
+      className="fixed inset-0 z-40 grid place-items-center bg-foreground/40 px-4 py-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="w-full max-w-md"
+        initial={{ opacity: 0, scale: 0.9, y: 18 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 10 }}
+        transition={{ type: "spring", stiffness: 230, damping: 20 }}
+      >
+        <Card className="max-h-[82vh] w-full overflow-y-auto border-4 border-primary-light p-5 shadow-soft">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-black uppercase text-primary-dark">
+                {readablePrayerCategory(prayer.category, t)}
+              </p>
+              <h2 className="text-3xl font-black tracking-normal">{translation.title}</h2>
+            </div>
+            <button
+              type="button"
+              aria-label={t("close")}
+              onClick={onClose}
+              className="grid size-10 shrink-0 place-items-center rounded-full bg-background text-xl font-black text-muted"
+            >
+              ×
+            </button>
           </div>
-          <button
-            type="button"
-            aria-label={t("close")}
-            onClick={onClose}
-            className="grid size-10 shrink-0 place-items-center rounded-full bg-background text-xl font-black text-muted"
+          <p
+            className={cn(
+              "whitespace-pre-line font-bold leading-relaxed text-foreground",
+              language === "zhHant" ? "text-xl" : "text-lg",
+            )}
           >
-            ×
-          </button>
-        </div>
-        <p
-          className={cn(
-            "whitespace-pre-line font-bold leading-relaxed text-foreground",
-            language === "zhHant" ? "text-xl" : "text-lg",
-          )}
-        >
-          {translation.text}
-        </p>
-        <Button type="button" size="lg" className="mt-5 w-full" onClick={onClose}>
-          {t("close")}
-        </Button>
-      </Card>
-    </div>
+            {translation.text}
+          </p>
+          <Button type="button" size="lg" className="mt-5 w-full" onClick={onClose}>
+            {t("close")}
+          </Button>
+        </Card>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -2157,6 +2290,8 @@ function ProfileScreen({
   onUiLanguageChange: (language: UiLanguage) => void;
   onReset: () => void;
 }) {
+  const [editingPersonalProfile, setEditingPersonalProfile] = useState(false);
+
   return (
     <ScreenMotion className="space-y-5">
       <header>
@@ -2173,60 +2308,86 @@ function ProfileScreen({
       </Card>
 
       <Card className="border-4 border-primary-light p-5">
-        <div className="mb-4 flex items-center gap-3">
-          <UserRound className="size-9 text-primary-dark" />
-          <h2 className="text-2xl font-black">{t("personalProfile")}</h2>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <UserRound className="size-9 shrink-0 text-primary-dark" />
+            <h2 className="text-2xl font-black">{t("personalProfile")}</h2>
+          </div>
+          <button
+            type="button"
+            aria-label={editingPersonalProfile ? t("save") : t("edit")}
+            title={editingPersonalProfile ? t("save") : t("edit")}
+            onClick={() => setEditingPersonalProfile((editing) => !editing)}
+            className="grid size-10 shrink-0 place-items-center rounded-full border-4 border-primary-light bg-white text-primary-dark shadow-soft transition active:translate-y-1 active:shadow-none"
+          >
+            {editingPersonalProfile ? (
+              <Save className="size-5" strokeWidth={2.8} />
+            ) : (
+              <Pencil className="size-5" strokeWidth={2.8} />
+            )}
+          </button>
         </div>
 
-        <div className="grid gap-3">
-          <label className="grid gap-2">
-            <span className="text-sm font-black uppercase text-muted">{t("name")}</span>
-            <input
-              type="text"
-              value={personalProfile.displayName}
-              onChange={(event) =>
-                onPersonalProfileChange({
-                  ...personalProfile,
-                  displayName: event.target.value,
-                })
-              }
-              placeholder={t("namePlaceholder")}
-              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
-            />
-          </label>
+        {editingPersonalProfile ? (
+          <div className="grid gap-3">
+            <label className="grid gap-2">
+              <span className="text-sm font-black uppercase text-muted">{t("name")}</span>
+              <input
+                type="text"
+                value={personalProfile.displayName}
+                onChange={(event) =>
+                  onPersonalProfileChange({
+                    ...personalProfile,
+                    displayName: event.target.value,
+                  })
+                }
+                placeholder={t("namePlaceholder")}
+                className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
+              />
+            </label>
 
-          <label className="grid gap-2">
-            <span className="text-sm font-black uppercase text-muted">{t("parish")}</span>
-            <input
-              type="text"
-              value={personalProfile.parish}
-              onChange={(event) =>
-                onPersonalProfileChange({
-                  ...personalProfile,
-                  parish: event.target.value,
-                })
-              }
-              placeholder={t("parishPlaceholder")}
-              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
-            />
-          </label>
+            <label className="grid gap-2">
+              <span className="text-sm font-black uppercase text-muted">{t("parish")}</span>
+              <input
+                type="text"
+                value={personalProfile.parish}
+                onChange={(event) =>
+                  onPersonalProfileChange({
+                    ...personalProfile,
+                    parish: event.target.value,
+                  })
+                }
+                placeholder={t("parishPlaceholder")}
+                className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
+              />
+            </label>
 
-          <label className="grid gap-2">
-            <span className="text-sm font-black uppercase text-muted">{t("patronSaint")}</span>
-            <input
-              type="text"
-              value={personalProfile.patronSaint}
-              onChange={(event) =>
-                onPersonalProfileChange({
-                  ...personalProfile,
-                  patronSaint: event.target.value,
-                })
-              }
-              placeholder={t("patronSaintPlaceholder")}
-              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
+            <label className="grid gap-2">
+              <span className="text-sm font-black uppercase text-muted">{t("patronSaint")}</span>
+              <input
+                type="text"
+                value={personalProfile.patronSaint}
+                onChange={(event) =>
+                  onPersonalProfileChange({
+                    ...personalProfile,
+                    patronSaint: event.target.value,
+                  })
+                }
+                placeholder={t("patronSaintPlaceholder")}
+                className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-primary"
+              />
+            </label>
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            <ProfileField label={t("name")} value={personalProfile.displayName || t("notSet")} />
+            <ProfileField label={t("parish")} value={personalProfile.parish || t("notSet")} />
+            <ProfileField
+              label={t("patronSaint")}
+              value={personalProfile.patronSaint || t("notSet")}
             />
-          </label>
-        </div>
+          </div>
+        )}
       </Card>
 
       <Card className="border-4 border-blue p-5">
@@ -2354,6 +2515,15 @@ function ProfileRow({ label, value }: { label: string; value: string }) {
       <p className="text-sm font-black uppercase text-muted">{label}</p>
       <p className="text-xl font-black">{value}</p>
     </Card>
+  );
+}
+
+function ProfileField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-background px-4 py-3">
+      <p className="text-sm font-black uppercase text-muted">{label}</p>
+      <p className="break-words text-lg font-black text-foreground">{value}</p>
+    </div>
   );
 }
 
