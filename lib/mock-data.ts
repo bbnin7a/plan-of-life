@@ -44,6 +44,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "fixed-rising",
     sourceTitle: "Fixed rising time",
     cadence: "daily",
+    kind: "task",
     languages: {
       en: {
         title: "Fixed Rising Time",
@@ -70,6 +71,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "morning-offering",
     sourceTitle: "Offer your day",
     cadence: "daily",
+    kind: "task",
     languages: {
       en: {
         title: "Morning Offering",
@@ -96,6 +98,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "ordered-work",
     sourceTitle: "Ordered work",
     cadence: "daily",
+    kind: "tip",
     languages: {
       en: {
         title: "Ordered Work",
@@ -122,6 +125,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "daily-mass",
     sourceTitle: "Mass and Communion",
     cadence: "daily",
+    kind: "task",
     languages: {
       en: {
         title: "Mass and Communion",
@@ -148,6 +152,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "mental-prayer",
     sourceTitle: "Mental prayer",
     cadence: "daily",
+    kind: "task",
     languages: {
       en: {
         title: "Mental Prayer",
@@ -174,6 +179,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "angelus",
     sourceTitle: "Angelus",
     cadence: "daily",
+    kind: "task",
     languages: {
       en: {
         title: "Angelus",
@@ -200,6 +206,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "rosary",
     sourceTitle: "Rosary",
     cadence: "daily",
+    kind: "task",
     languages: {
       en: {
         title: "Rosary",
@@ -226,6 +233,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "spiritual-reading",
     sourceTitle: "Spiritual reading",
     cadence: "daily",
+    kind: "task",
     languages: {
       en: {
         title: "Spiritual Reading",
@@ -252,6 +260,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "evening-examen",
     sourceTitle: "Examination of conscience",
     cadence: "daily",
+    kind: "task",
     languages: {
       en: {
         title: "Evening Examen",
@@ -278,6 +287,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "sunday-mass",
     sourceTitle: "Sunday Mass",
     cadence: "weekly",
+    kind: "task",
     languages: {
       en: {
         title: "Sunday Mass",
@@ -304,6 +314,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "sunday-communion",
     sourceTitle: "Sunday Communion",
     cadence: "weekly",
+    kind: "task",
     languages: {
       en: {
         title: "Sunday Communion",
@@ -330,6 +341,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "saturday-marian",
     sourceTitle: "Saturday Marian devotion",
     cadence: "weekly",
+    kind: "task",
     languages: {
       en: {
         title: "Saturday Marian Devotion",
@@ -356,6 +368,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "monthly-confession",
     sourceTitle: "Monthly Confession",
     cadence: "monthly",
+    kind: "task",
     languages: {
       en: {
         title: "Monthly Confession",
@@ -382,6 +395,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "spiritual-direction",
     sourceTitle: "Spiritual guidance",
     cadence: "monthly",
+    kind: "task",
     languages: {
       en: {
         title: "Spiritual Guidance",
@@ -408,6 +422,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "monthly-recollection",
     sourceTitle: "Monthly recollection",
     cadence: "monthly",
+    kind: "task",
     languages: {
       en: {
         title: "Monthly Recollection",
@@ -434,6 +449,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "annual-retreat",
     sourceTitle: "Annual retreat",
     cadence: "yearly",
+    kind: "task",
     languages: {
       en: {
         title: "Annual Retreat",
@@ -460,6 +476,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "presence-of-god",
     sourceTitle: "Presence of God",
     cadence: "always",
+    kind: "tip",
     languages: {
       en: {
         title: "Presence of God",
@@ -486,6 +503,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "gratitude",
     sourceTitle: "Thanksgiving",
     cadence: "always",
+    kind: "tip",
     languages: {
       en: {
         title: "Gratitude",
@@ -512,6 +530,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "purity-of-intention",
     sourceTitle: "Purity of intention",
     cadence: "always",
+    kind: "tip",
     languages: {
       en: {
         title: "Purity of Intention",
@@ -538,6 +557,7 @@ export const actsOfPiety: ActOfPiety[] = [
     id: "memento-mori",
     sourceTitle: "Live toward eternity",
     cadence: "always",
+    kind: "tip",
     languages: {
       en: {
         title: "Live Toward Eternity",
@@ -679,7 +699,9 @@ export function getScoredPietyRecommendations(profile: UserSpiritualProfile) {
 }
 
 export function getRecommendedPlan(profile: UserSpiritualProfile): DailyPlanItem[] {
-  const scored = getScoredPietyRecommendations(profile).filter(({ score }) => score > 0);
+  const scored = getScoredPietyRecommendations(profile).filter(
+    ({ practice, score }) => score > 0 && practice.kind === "task",
+  );
 
   return scored.map(({ practice }, index) => ({
     id: `plan-${practice.id}`,
@@ -799,6 +821,7 @@ export const sacramentalActions: SacramentalAction[] = [
 export const saintProfiles: SaintProfile[] = [
   {
     id: "st-joseph",
+    imageSrc: "/saints/st-joseph.png",
     feastDay: "March 19",
     patronage: ["families", "workers", "the universal church"],
     tags: ["humility", "work", "family", "silence"],
@@ -825,6 +848,7 @@ export const saintProfiles: SaintProfile[] = [
   },
   {
     id: "st-josemaria",
+    imageSrc: "/saints/st-josemaria.png",
     feastDay: "June 26",
     patronage: ["ordinary work", "lay holiness", "daily life"],
     tags: ["work", "holiness", "ordinary life", "plan of life"],
@@ -851,6 +875,7 @@ export const saintProfiles: SaintProfile[] = [
   },
   {
     id: "st-therese",
+    imageSrc: "/saints/st-therese.png",
     feastDay: "October 1",
     patronage: ["missions", "small sacrifices", "trust"],
     tags: ["little way", "trust", "love", "simplicity"],

@@ -33,10 +33,13 @@ export type PietyDifficulty = "beginner" | "intermediate" | "advanced";
 
 export type PietyFrequency = "daily" | "weekly" | "monthly" | "yearly";
 
+export type PietyKind = "task" | "tip";
+
 export type ActOfPiety = {
   id: string;
   sourceTitle: string;
   cadence: PietyCadence;
+  kind: PietyKind;
   languages: Record<
     UiLanguage,
     {
@@ -124,6 +127,7 @@ export type SacramentalAction = {
 
 export type SaintProfile = {
   id: string;
+  imageSrc: string;
   feastDay: string;
   patronage: string[];
   tags: string[];

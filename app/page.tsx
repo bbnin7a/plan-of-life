@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import {
   ArrowLeft,
   Award,
@@ -185,6 +186,8 @@ const uiText = {
     peace: "Peace be with you",
     friendName: "friend",
     today: "Today",
+    todayTips: "Today tips",
+    tip: "Tip",
     streak: "7 day streak",
     streakValue: "{days} day streak",
     dailyProgress: "Daily progress",
@@ -203,6 +206,14 @@ const uiText = {
     addTime: "Add time",
     noRepeatTimes: "No times selected",
     scheduleDetails: "Schedule details",
+    scheduleWizard: "Schedule setup",
+    scheduleStepReview: "Review",
+    scheduleStepRepeat: "Repeat",
+    scheduleStepTime: "Time",
+    configureSchedule: "Configure schedule",
+    next: "Next",
+    previous: "Previous",
+    saveSchedule: "Save schedule",
     practiceInfo: "Practice info",
     howToImprove: "How to do this better",
     howToImproveDetail: "Start small, keep the time realistic, and review the act after you complete it.",
@@ -279,6 +290,9 @@ const uiText = {
     gracePoints: "Grace Points",
     categoryDistribution: "Today's categories",
     badgeHint: "Keep showing up. Your next badge is close.",
+    badges: "Badges",
+    badgeUnlocked: "Unlocked",
+    badgeLocked: "Locked",
     savedTracks: "Saved tracks",
     confessionsLogged: "Confessions logged",
     novenaProgress: "Novena progress",
@@ -360,6 +374,8 @@ const uiText = {
     peace: "願平安與你同在",
     friendName: "朋友",
     today: "今天",
+    todayTips: "今日提示",
+    tip: "提示",
     streak: "連續 7 天",
     streakValue: "連續 {days} 天",
     dailyProgress: "今日進度",
@@ -378,6 +394,14 @@ const uiText = {
     addTime: "加入時間",
     noRepeatTimes: "尚未選擇時間",
     scheduleDetails: "排程細節",
+    scheduleWizard: "設定排程",
+    scheduleStepReview: "檢視",
+    scheduleStepRepeat: "重複",
+    scheduleStepTime: "時間",
+    configureSchedule: "設定排程",
+    next: "下一步",
+    previous: "上一步",
+    saveSchedule: "儲存排程",
     practiceInfo: "敬禮資訊",
     howToImprove: "如何做得更好",
     howToImproveDetail: "從小步驟開始，保持時間實際，完成後簡短回顧。",
@@ -454,6 +478,9 @@ const uiText = {
     gracePoints: "恩寵點數",
     categoryDistribution: "今日類別分佈",
     badgeHint: "持續前進。下一個徽章已經接近。",
+    badges: "徽章",
+    badgeUnlocked: "已取得",
+    badgeLocked: "未取得",
     savedTracks: "已儲存追蹤",
     confessionsLogged: "告解紀錄",
     novenaProgress: "九日敬禮進度",
@@ -616,6 +643,13 @@ export default function App() {
   const scoredRecommendations = useMemo(
     () => getScoredPietyRecommendations(profile),
     [profile],
+  );
+  const todayTips = useMemo(
+    () =>
+      scoredRecommendations
+        .filter(({ practice, score }) => practice.kind === "tip" && score > 0)
+        .map(({ practice }) => practice),
+    [scoredRecommendations],
   );
   const categoryDistribution = useMemo(
     () => getCategoryDistribution(todayAgenda),
@@ -899,6 +933,7 @@ export default function App() {
             personalProfile={personalProfile}
             profile={profile}
             todayAgenda={todayAgenda}
+            todayTips={todayTips}
             upcomingAgenda={upcomingAgenda}
             streakDays={streakDays}
             completedCount={completedCount}
@@ -914,6 +949,7 @@ export default function App() {
             }
             onCompletePiety={completePiety}
             onCompleteNovenaDay={completeNovenaDay}
+            onOpenProgress={() => setActiveTab("progress")}
           />
         ) : activeTab === "explore" ? (
           <ExploreScreen
@@ -1159,6 +1195,7 @@ function TodayScreen({
   personalProfile,
   profile,
   todayAgenda,
+  todayTips,
   upcomingAgenda,
   streakDays,
   completedCount,
@@ -1168,10 +1205,12 @@ function TodayScreen({
   onOpenAgendaItem,
   onCompletePiety,
   onCompleteNovenaDay,
+  onOpenProgress,
 }: {
   personalProfile: PersonalProfile;
   profile: UserSpiritualProfile;
   todayAgenda: AgendaItem[];
+  todayTips: ActOfPiety[];
   upcomingAgenda: AgendaItem[];
   streakDays: number;
   completedCount: number;
@@ -1181,6 +1220,7 @@ function TodayScreen({
   onOpenAgendaItem: (item: AgendaItem) => void;
   onCompletePiety: (pietyId: string, date: string) => void;
   onCompleteNovenaDay: (day: number) => void;
+  onOpenProgress: () => void;
 }) {
   const [greeting] = useState(() =>
     getTodayGreeting(personalProfile.displayName, language, t("friendName")),
@@ -1193,10 +1233,14 @@ function TodayScreen({
           <p className="text-base font-black text-primary-dark">{greeting}</p>
           <h1 className="text-3xl font-black tracking-normal">{t("today")}</h1>
         </div>
-        <div className="flex items-center gap-2 rounded-full border-4 border-white bg-yellow px-3 py-2 text-sm font-black shadow-playful">
+        <button
+          type="button"
+          onClick={onOpenProgress}
+          className="flex items-center gap-2 rounded-full border-4 border-white bg-yellow px-3 py-2 text-sm font-black shadow-playful active:translate-y-1 active:shadow-none"
+        >
           <AnimatedFireIcon className="size-5" />
           {t("streakValue", { days: streakDays })}
-        </div>
+        </button>
       </header>
 
       <MetricCard
@@ -1209,6 +1253,17 @@ function TodayScreen({
           {t("minuteGoal", { minutes: profile.dailyPrayerTimeMinutes })}
         </p>
       </MetricCard>
+
+      {todayTips.length > 0 ? (
+        <section>
+          <SectionHeader title={t("todayTips")} />
+          <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2">
+            {todayTips.map((tip) => (
+              <TipCard key={tip.id} language={language} tip={tip} t={t} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section>
         <SectionHeader title={t("todayPlan")} />
@@ -1389,6 +1444,35 @@ function AnimatedFireIcon({ className }: { className?: string }) {
       <Flame className="size-full fill-white text-white" strokeWidth={2.8} />
       <span className="animated-fire-spark absolute size-1.5 rounded-full bg-white/90" />
     </span>
+  );
+}
+
+function TipCard({
+  language,
+  tip,
+  t,
+}: {
+  language: UiLanguage;
+  tip: ActOfPiety;
+  t: Translator;
+}) {
+  const text = getPracticeText(tip, language);
+  const meta = getCategoryMeta(tip.category);
+  const Icon = meta.icon;
+
+  return (
+    <Card className={cn("w-[82%] shrink-0 snap-start border-4 p-4", meta.borderClass)}>
+      <div className="mb-3 flex items-center gap-3">
+        <div className={cn("grid size-11 shrink-0 place-items-center rounded-2xl text-white", meta.bgClass)}>
+          <Icon className="size-5" strokeWidth={2.8} />
+        </div>
+        <div className="min-w-0">
+          <p className={cn("text-xs font-black uppercase", meta.textClass)}>{t("tip")}</p>
+          <h3 className="truncate text-xl font-black tracking-normal">{text.title}</h3>
+        </div>
+      </div>
+      <p className="text-base font-bold leading-relaxed text-muted">{text.content}</p>
+    </Card>
   );
 }
 
@@ -1618,7 +1702,7 @@ function ExploreScreen({
             onOpen={() => setSelectedCategory("sacramental")}
           />
           <LibraryCategoryCard
-            count={recommendedPieties.length}
+            count={recommendedPieties.filter(({ practice }) => practice.kind === "task").length}
             description={t("todayPlan")}
             icon={FolderOpen}
             title={t("folderPiety")}
@@ -1646,13 +1730,13 @@ function ExploreScreen({
           </button>
 
       {selectedCategory === "sacramental" ? (
-      <LibraryFolder
-        count={sacramentalActions.length + 1}
-        description={t("readyForConfessionDetail")}
-        icon={Church}
-        title={t("folderSacramentalLife")}
-        tone="danger"
-      >
+        <CategoryDetailSection
+          count={sacramentalActions.length + 1}
+          description={t("readyForConfessionDetail")}
+          icon={Church}
+          title={t("folderSacramentalLife")}
+          tone="danger"
+        >
         <Card className="border-4 border-danger p-5">
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
@@ -1761,19 +1845,21 @@ function ExploreScreen({
             <SacramentalActionCard key={action.id} action={action} language={language} />
           ))}
         </div>
-      </LibraryFolder>
+        </CategoryDetailSection>
       ) : null}
 
       {selectedCategory === "piety" ? (
-      <LibraryFolder
-        count={recommendedPieties.length}
-        description={t("todayPlan")}
-        icon={FolderOpen}
-        title={t("folderPiety")}
-        tone="primary"
-      >
+        <CategoryDetailSection
+          count={recommendedPieties.length}
+          description={t("todayPlan")}
+          icon={FolderOpen}
+          title={t("folderPiety")}
+          tone="primary"
+        >
         <div className="grid gap-4">
-          {recommendedPieties.map(({ practice: piety, score }) => {
+          {recommendedPieties
+            .filter(({ practice }) => practice.kind === "task")
+            .map(({ practice: piety, score }) => {
             const schedule = scheduledPieties.find((entry) => entry.pietyId === piety.id);
 
             return (
@@ -1791,23 +1877,23 @@ function ExploreScreen({
             );
           })}
         </div>
-      </LibraryFolder>
+        </CategoryDetailSection>
       ) : null}
 
       {selectedCategory === "saints" ? (
-      <LibraryFolder
-        count={saintProfiles.length}
-        description={t("saints")}
-        icon={UserRound}
-        title={t("folderSaints")}
-        tone="blue"
-      >
+        <CategoryDetailSection
+          count={saintProfiles.length}
+          description={t("saints")}
+          icon={UserRound}
+          title={t("folderSaints")}
+          tone="blue"
+        >
         <div className="grid gap-4">
           {saintProfiles.map((saint) => (
             <SaintCard key={saint.id} language={language} saint={saint} t={t} />
           ))}
         </div>
-      </LibraryFolder>
+        </CategoryDetailSection>
       ) : null}
         </>
       )}
@@ -1871,6 +1957,60 @@ function LibraryFolder({
       </div>
 
       <div className="grid gap-4">{children}</div>
+    </section>
+  );
+}
+
+function CategoryDetailSection({
+  children,
+  count,
+  description,
+  icon: Icon,
+  title,
+  tone,
+}: {
+  children: React.ReactNode;
+  count: number;
+  description: string;
+  icon: typeof Sun;
+  title: string;
+  tone: "primary" | "danger" | "blue";
+}) {
+  const toneClasses = {
+    primary: {
+      iconBg: "bg-primary",
+      text: "text-primary-dark",
+    },
+    danger: {
+      iconBg: "bg-danger",
+      text: "text-danger",
+    },
+    blue: {
+      iconBg: "bg-blue",
+      text: "text-blue",
+    },
+  }[tone];
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-start gap-4">
+        <div className={cn("grid size-14 shrink-0 place-items-center rounded-2xl text-white", toneClasses.iconBg)}>
+          <Icon className="size-7" strokeWidth={2.8} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className={cn("text-sm font-black uppercase", toneClasses.text)}>{title}</p>
+              <h2 className="text-3xl font-black tracking-normal">{title}</h2>
+            </div>
+            <span className="rounded-full bg-white px-3 py-1 text-sm font-black text-muted shadow-soft">
+              {count}
+            </span>
+          </div>
+          <p className="mt-2 text-base font-bold leading-relaxed text-muted">{description}</p>
+        </div>
+      </div>
+      {children}
     </section>
   );
 }
@@ -1957,9 +2097,14 @@ function SaintCard({
   return (
     <Card className="border-4 border-blue p-5">
       <div className="mb-4 flex items-start gap-4">
-        <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-blue text-white">
-          <Medal className="size-7" strokeWidth={2.8} />
-        </div>
+        <Image
+          src={saint.imageSrc}
+          alt={text.name}
+          width={96}
+          height={96}
+          className="size-20 shrink-0 rounded-2xl border-4 border-white bg-blue/10 object-cover shadow-soft [image-rendering:pixelated]"
+          priority={false}
+        />
         <div className="min-w-0">
           <p className="text-sm font-black uppercase text-blue">{t("saints")}</p>
           <h3 className="text-2xl font-black tracking-normal">{text.name}</h3>
@@ -2007,6 +2152,7 @@ function PietyScheduleCard({
     shouldToggle?: boolean,
   ) => void;
 }) {
+  const [wizardOpen, setWizardOpen] = useState(false);
   const text = getPracticeText(piety, language);
   const frequency = schedule?.frequency ?? getDefaultFrequencyForPiety(piety);
   const startDate = schedule?.startDate ?? getTodayInputDate();
@@ -2014,32 +2160,6 @@ function PietyScheduleCard({
   const repeatTimes = schedule?.repeatTimes ?? [];
   const meta = getCategoryMeta(piety.category);
   const Icon = meta.icon;
-  const weekdayOptions = getWeekdayOptions(language);
-
-  function updateFrequency(nextFrequency: PietyFrequency) {
-    onUpdate({
-      frequency: nextFrequency,
-      repeatDays: repeatDays.length > 0 ? repeatDays : getDefaultRepeatDays(nextFrequency),
-      enabled: true,
-    });
-  }
-
-  function toggleRepeatDay(day: number) {
-    const nextDays = repeatDays.includes(day)
-      ? repeatDays.filter((entry) => entry !== day)
-      : [...repeatDays, day].sort((a, b) => a - b);
-
-    onUpdate({ repeatDays: nextDays, enabled: true });
-  }
-
-  function addRepeatTime(time: string) {
-    if (!time || repeatTimes.includes(time)) return;
-    onUpdate({ repeatTimes: [...repeatTimes, time].sort(), enabled: true });
-  }
-
-  function removeRepeatTime(time: string) {
-    onUpdate({ repeatTimes: repeatTimes.filter((entry) => entry !== time), enabled: true });
-  }
 
   return (
     <Card className={cn("border-4 p-5", schedule?.enabled ? meta.borderClass : "border-border")}>
@@ -2071,12 +2191,6 @@ function PietyScheduleCard({
       </div>
 
       <div className="mb-4 grid gap-3 rounded-2xl bg-background px-4 py-3">
-        <div>
-          <p className="text-sm font-black uppercase text-muted">{t("practiceInfo")}</p>
-          <p className="mt-1 text-base font-bold leading-relaxed text-foreground">
-            {text.content}
-          </p>
-        </div>
         <div className="grid grid-cols-2 gap-2">
           <ScheduleInfoPill label={t("suggestedFrequency")} value={getFrequencyLabel(getDefaultFrequencyForPiety(piety), t)} />
           <ScheduleInfoPill
@@ -2085,96 +2199,46 @@ function PietyScheduleCard({
           />
         </div>
         <div>
-          <p className="text-sm font-black uppercase text-muted">{t("howToImprove")}</p>
+          <p className="text-sm font-black uppercase text-muted">{t("scheduleDetails")}</p>
           <p className="mt-1 text-base font-bold leading-relaxed text-foreground">
-            {t("howToImproveDetail")}
+            {formatScheduleSummary(startDate, frequency, repeatDays, repeatTimes, language, t)}
           </p>
         </div>
       </div>
 
-      <div className="mb-4 grid gap-4">
-        <div>
-          <p className="mb-2 text-sm font-black uppercase text-muted">{t("suggestedFrequency")}</p>
-          <div
-            role="group"
-            aria-label={t("suggestedFrequency")}
-            className="grid grid-cols-4 gap-1 rounded-[1.5rem] border-4 border-white bg-white p-1 shadow-soft"
-          >
-            {frequencyOptions.map((option) => {
-              const active = frequency === option;
-
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => updateFrequency(option)}
-                  className={cn(
-                    "min-h-11 rounded-2xl px-2 text-xs font-black leading-tight transition",
-                    active ? cn(meta.bgClass, "text-white") : "text-muted",
-                  )}
-                >
-                  {getFrequencyLabel(option, t)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <label className="grid gap-2">
-          <span className="text-sm font-black uppercase text-muted">{t("startDate")}</span>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(event) => onUpdate({ startDate: event.target.value, enabled: true })}
-            className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-black text-foreground outline-none focus:border-primary"
-          />
-        </label>
-
-        <div>
-          <p className="mb-2 text-sm font-black uppercase text-muted">{t("repeatDays")}</p>
-          <div className="grid grid-cols-7 gap-1">
-            {weekdayOptions.map((option) => {
-              const active = repeatDays.includes(option.value);
-
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => toggleRepeatDay(option.value)}
-                  className={cn(
-                    "grid aspect-square place-items-center rounded-full border-4 text-xs font-black transition",
-                    active
-                      ? cn(meta.borderClass, meta.bgClass, "text-white")
-                      : "border-border bg-white text-muted",
-                  )}
-                >
-                  {option.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <RepeatTimesEditor
-          repeatTimes={repeatTimes}
-          t={t}
-          onAdd={addRepeatTime}
-          onRemove={removeRepeatTime}
-        />
+      <div className="grid grid-cols-[1fr_auto] gap-2">
+        <Button type="button" size="lg" className="w-full" onClick={() => setWizardOpen(true)}>
+          {t("configureSchedule")}
+          <CalendarPlus className="size-5" />
+        </Button>
+        <Button
+          type="button"
+          size="lg"
+          variant={schedule?.enabled ? "secondary" : "default"}
+          onClick={() => onUpdate(undefined, true)}
+        >
+          {schedule?.enabled ? t("scheduled") : t("addToSchedule")}
+        </Button>
       </div>
 
-      <Button
-        type="button"
-        size="lg"
-        className="w-full"
-        variant={schedule?.enabled ? "secondary" : "default"}
-        onClick={() => onUpdate(undefined, true)}
-      >
-        {schedule?.enabled ? t("scheduled") : t("addToSchedule")}
-        <CalendarPlus className="size-5" />
-      </Button>
+      <AnimatePresence>
+        {wizardOpen ? (
+          <ScheduleWizardSheet
+            frequency={frequency}
+            language={language}
+            piety={piety}
+            repeatDays={repeatDays}
+            repeatTimes={repeatTimes}
+            startDate={startDate}
+            t={t}
+            onClose={() => setWizardOpen(false)}
+            onSave={(updates) => {
+              onUpdate(updates);
+              setWizardOpen(false);
+            }}
+          />
+        ) : null}
+      </AnimatePresence>
     </Card>
   );
 }
@@ -2185,6 +2249,223 @@ function ScheduleInfoPill({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-black uppercase text-muted">{label}</p>
       <p className="text-sm font-black text-foreground">{value}</p>
     </div>
+  );
+}
+
+function ScheduleWizardSheet({
+  frequency,
+  language,
+  piety,
+  repeatDays,
+  repeatTimes,
+  startDate,
+  t,
+  onClose,
+  onSave,
+}: {
+  frequency: PietyFrequency;
+  language: UiLanguage;
+  piety: ActOfPiety;
+  repeatDays: number[];
+  repeatTimes: string[];
+  startDate: string;
+  t: Translator;
+  onClose: () => void;
+  onSave: (updates: Partial<Omit<PietyScheduleEntry, "id" | "pietyId">>) => void;
+}) {
+  const [step, setStep] = useState(0);
+  const [draftFrequency, setDraftFrequency] = useState<PietyFrequency>(frequency);
+  const [draftStartDate, setDraftStartDate] = useState(startDate);
+  const [draftRepeatDays, setDraftRepeatDays] = useState(repeatDays);
+  const [draftRepeatTimes, setDraftRepeatTimes] = useState(repeatTimes);
+  const text = getPracticeText(piety, language);
+  const meta = getCategoryMeta(piety.category);
+  const weekdayOptions = getWeekdayOptions(language);
+  const stepLabels = [t("scheduleStepReview"), t("scheduleStepRepeat"), t("scheduleStepTime")];
+
+  function toggleDraftDay(day: number) {
+    setDraftRepeatDays((days) =>
+      days.includes(day)
+        ? days.filter((entry) => entry !== day)
+        : [...days, day].sort((a, b) => a - b),
+    );
+  }
+
+  function save() {
+    onSave({
+      frequency: draftFrequency,
+      startDate: draftStartDate,
+      repeatDays: draftRepeatDays,
+      repeatTimes: draftRepeatTimes,
+      enabled: true,
+    });
+  }
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-40 flex items-end bg-foreground/40 px-3 pb-3"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="mx-auto w-full max-w-md"
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 80, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 230, damping: 24 }}
+      >
+        <Card className="max-h-[86vh] overflow-y-auto border-4 border-primary-light p-5 shadow-soft">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-black uppercase text-primary-dark">{t("scheduleWizard")}</p>
+              <h2 className="text-2xl font-black tracking-normal">{text.title}</h2>
+            </div>
+            <button
+              type="button"
+              aria-label={t("close")}
+              onClick={onClose}
+              className="grid size-10 shrink-0 place-items-center rounded-full bg-background text-xl font-black text-muted"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="mb-5 grid grid-cols-3 gap-2">
+            {stepLabels.map((label, index) => (
+              <div
+                key={label}
+                className={cn(
+                  "rounded-2xl px-3 py-2 text-center text-xs font-black",
+                  step === index ? "bg-primary text-white" : "bg-background text-muted",
+                )}
+              >
+                {label}
+              </div>
+            ))}
+          </div>
+
+          {step === 0 ? (
+            <div className="grid gap-4">
+              <div className="rounded-2xl bg-background px-4 py-3">
+                <p className="text-sm font-black uppercase text-muted">{t("practiceInfo")}</p>
+                <p className="mt-1 text-base font-bold leading-relaxed text-foreground">{text.content}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <ScheduleInfoPill
+                  label={t("suggestedFrequency")}
+                  value={getFrequencyLabel(getDefaultFrequencyForPiety(piety), t)}
+                />
+                <ScheduleInfoPill
+                  label={t("preferredTimes")}
+                  value={piety.prayerTimes.map((time) => readableProfileValue(time, language)).join(", ")}
+                />
+              </div>
+              <div className="rounded-2xl bg-background px-4 py-3">
+                <p className="text-sm font-black uppercase text-muted">{t("howToImprove")}</p>
+                <p className="mt-1 text-base font-bold leading-relaxed text-foreground">
+                  {t("howToImproveDetail")}
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          {step === 1 ? (
+            <div className="grid gap-4">
+              <label className="grid gap-2">
+                <span className="text-sm font-black uppercase text-muted">{t("startDate")}</span>
+                <input
+                  type="date"
+                  value={draftStartDate}
+                  onChange={(event) => setDraftStartDate(event.target.value)}
+                  className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-black text-foreground outline-none focus:border-primary"
+                />
+              </label>
+              <div>
+                <p className="mb-2 text-sm font-black uppercase text-muted">{t("suggestedFrequency")}</p>
+                <div className="grid grid-cols-4 gap-1 rounded-[1.5rem] border-4 border-white bg-white p-1 shadow-soft">
+                  {frequencyOptions.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      aria-pressed={draftFrequency === option}
+                      onClick={() => {
+                        setDraftFrequency(option);
+                        if (draftRepeatDays.length === 0) setDraftRepeatDays(getDefaultRepeatDays(option));
+                      }}
+                      className={cn(
+                        "min-h-11 rounded-2xl px-2 text-xs font-black leading-tight transition",
+                        draftFrequency === option ? cn(meta.bgClass, "text-white") : "text-muted",
+                      )}
+                    >
+                      {getFrequencyLabel(option, t)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="mb-2 text-sm font-black uppercase text-muted">{t("repeatDays")}</p>
+                <div className="grid grid-cols-7 gap-1">
+                  {weekdayOptions.map((option) => {
+                    const active = draftRepeatDays.includes(option.value);
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => toggleDraftDay(option.value)}
+                        className={cn(
+                          "grid aspect-square place-items-center rounded-full border-4 text-xs font-black transition",
+                          active
+                            ? cn(meta.borderClass, meta.bgClass, "text-white")
+                            : "border-border bg-white text-muted",
+                        )}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {step === 2 ? (
+            <RepeatTimesEditor
+              repeatTimes={draftRepeatTimes}
+              t={t}
+              onAdd={(time) =>
+                setDraftRepeatTimes((times) =>
+                  time && !times.includes(time) ? [...times, time].sort() : times,
+                )
+              }
+              onRemove={(time) =>
+                setDraftRepeatTimes((times) => times.filter((entry) => entry !== time))
+              }
+            />
+          ) : null}
+
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              size="lg"
+              variant="secondary"
+              disabled={step === 0}
+              onClick={() => setStep((current) => Math.max(0, current - 1))}
+            >
+              {t("previous")}
+            </Button>
+            <Button
+              type="button"
+              size="lg"
+              onClick={() => (step === 2 ? save() : setStep((current) => current + 1))}
+            >
+              {step === 2 ? t("saveSchedule") : t("next")}
+            </Button>
+          </div>
+        </Card>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -2771,6 +3052,7 @@ function ProgressScreen({
   progressValue: number;
 }) {
   const novenaCompletedCount = novenaProgress?.completedDays.length ?? 0;
+  const badges = getBadgeLevels(streakDays, completedCount, t);
 
   return (
     <ScreenMotion className="space-y-5">
@@ -2828,6 +3110,18 @@ function ProgressScreen({
         </p>
       </Card>
 
+      <Card className="border-4 border-yellow p-5">
+        <div className="mb-4 flex items-center gap-3">
+          <Award className="size-9 text-yellow" />
+          <h2 className="text-2xl font-black">{t("badges")}</h2>
+        </div>
+        <div className="grid gap-3">
+          {badges.map((badge) => (
+            <BadgeLevelRow key={badge.id} badge={badge} t={t} />
+          ))}
+        </div>
+      </Card>
+
       <Card className="border-4 border-primary-light p-5">
         <div className="mb-4 flex items-center gap-3">
           <Award className="size-9 text-primary-dark" />
@@ -2868,6 +3162,42 @@ function ProgressScreen({
         </div>
       </Card>
     </ScreenMotion>
+  );
+}
+
+function BadgeLevelRow({
+  badge,
+  t,
+}: {
+  badge: ReturnType<typeof getBadgeLevels>[number];
+  t: Translator;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 rounded-2xl border-4 p-3",
+        badge.unlocked ? "border-yellow bg-yellow/20" : "border-border bg-background",
+      )}
+    >
+      <div
+        className={cn(
+          "grid size-12 shrink-0 place-items-center rounded-2xl text-white",
+          badge.unlocked ? "bg-yellow" : "bg-muted",
+        )}
+      >
+        <Medal className="size-6" strokeWidth={2.8} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-lg font-black">{badge.title}</h3>
+          <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-muted">
+            {badge.unlocked ? t("badgeUnlocked") : t("badgeLocked")}
+          </span>
+        </div>
+        <p className="mt-1 text-sm font-bold text-muted">{badge.detail}</p>
+        <Progress value={badge.progress} className="mt-2 h-4" />
+      </div>
+    </div>
   );
 }
 
@@ -3450,7 +3780,7 @@ function getAgendaForDate(
     .filter((entry) => isScheduleDueOnDate(entry, date))
     .map((entry) => {
       const piety = actsOfPiety.find((candidate) => candidate.id === entry.pietyId);
-      if (!piety) return null;
+      if (!piety || piety.kind === "tip") return null;
 
       return {
         type: "piety" as const,
@@ -3608,6 +3938,26 @@ function getWeekdayOptions(language: UiLanguage) {
   return labels.map((label, value) => ({ label, value }));
 }
 
+function getBadgeLevels(streakDays: number, completedCount: number, t: Translator) {
+  const totalPoints = streakDays * 10 + completedCount * 5;
+  const levels = [
+    { id: "spark", threshold: 10, title: "Spark" },
+    { id: "steady", threshold: 50, title: "Steady Flame" },
+    { id: "pilgrim", threshold: 120, title: "Pilgrim" },
+    { id: "faithful", threshold: 250, title: "Faithful Builder" },
+  ];
+
+  return levels.map((level) => ({
+    ...level,
+    detail:
+      t("badges") === "徽章"
+        ? `需要 ${level.threshold} 點；目前 ${totalPoints} 點`
+        : `${level.threshold} points needed; ${totalPoints} now`,
+    progress: Math.min(100, Math.round((totalPoints / level.threshold) * 100)),
+    unlocked: totalPoints >= level.threshold,
+  }));
+}
+
 function hasPietyCompletion(completions: PietyCompletionEntry[], pietyId: string, date: string) {
   return completions.some((entry) => entry.pietyId === pietyId && entry.date === date);
 }
@@ -3671,6 +4021,23 @@ function getFrequencyLabel(frequency: PietyFrequency, t: Translator) {
   };
 
   return t(frequencyMap[frequency]);
+}
+
+function formatScheduleSummary(
+  startDate: string,
+  frequency: PietyFrequency,
+  repeatDays: number[],
+  repeatTimes: string[],
+  language: UiLanguage,
+  t: Translator,
+) {
+  const weekdays = getWeekdayOptions(language)
+    .filter((day) => repeatDays.includes(day.value))
+    .map((day) => day.label)
+    .join(", ");
+  const times = repeatTimes.length > 0 ? repeatTimes.join(", ") : t("noRepeatTimes");
+
+  return `${formatDisplayDate(startDate, language)} · ${getFrequencyLabel(frequency, t)} · ${weekdays || t("repeatDays")} · ${times}`;
 }
 
 function getAgendaTitle(item: AgendaItem, language: UiLanguage) {
