@@ -17,6 +17,12 @@ export type PrayerLanguage = "en" | "zhHant";
 
 export type PrayerCategory = "foundational" | "marian" | "rosary" | "daily";
 
+export type SacramentalActionType =
+  | "confession"
+  | "retreat"
+  | "mass_prep"
+  | "adoration";
+
 export type PracticeStatus = "pending" | "completed" | "skipped";
 
 export type ActOfPiety = {
@@ -57,6 +63,21 @@ export type CatholicPrayer = {
       text: string;
     }
   >;
+};
+
+export type SacramentalAction = {
+  id: string;
+  type: SacramentalActionType;
+  title: string;
+  description: string;
+  cadence: string;
+  steps: string[];
+};
+
+export type ConfessionLogEntry = {
+  id: string;
+  date: string;
+  note: string;
 };
 
 export type OnboardingAnswerKey =

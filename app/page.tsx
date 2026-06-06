@@ -5,10 +5,13 @@ import {
   Award,
   BookOpen,
   CalendarCheck2,
+  CalendarDays,
+  CalendarPlus,
   Check,
   ChevronRight,
   Church,
   Clock3,
+  ClipboardList,
   Compass,
   Flame,
   Heart,
@@ -16,6 +19,7 @@ import {
   Languages,
   Medal,
   Moon,
+  RefreshCw,
   RotateCcw,
   ScrollText,
   Search,
@@ -23,29 +27,32 @@ import {
   Sparkles,
   Star,
   Sun,
+  Trash2,
   UserRound,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import {
-  categoryCards,
   catholicPrayers,
   defaultProfile,
   dailyPlan,
   getRecommendedPlan,
   onboardingQuestions,
+  sacramentalActions,
   weeklyProgress,
 } from "@/lib/mock-data";
 import type {
   CatholicPrayer,
+  ConfessionLogEntry,
   DailyPlanItem,
   OnboardingAnswerKey,
   PrayerCategory,
   PrayerLanguage,
   PracticeStatus,
+  SacramentalAction,
   UserSpiritualProfile,
 } from "@/lib/types";
 
@@ -65,6 +72,12 @@ const prayerLanguageOptions: Array<{ id: PrayerLanguage; label: string; shortLab
   { id: "en", label: "English", shortLabel: "EN" },
   { id: "zhHant", label: "Traditional Chinese", shortLabel: "繁中" },
 ];
+const confessionFrequencyOptions = [
+  { days: 14, label: "2 weeks" },
+  { days: 30, label: "1 month" },
+  { days: 60, label: "2 months" },
+  { days: 90, label: "3 months" },
+] as const;
 
 export default function App() {
   const [stage, setStage] = useState<AppStage>("welcome");
@@ -75,6 +88,14 @@ export default function App() {
   const [plan, setPlan] = useState<DailyPlanItem[]>(dailyPlan);
   const [selectedPracticeId, setSelectedPracticeId] = useState<string | null>(null);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
+  const [confessionFrequencyDays, setConfessionFrequencyDays] = useLocalStorageState(
+    "plan-of-life:confession-frequency-days",
+    30,
+  );
+  const [confessionLogs, setConfessionLogs] = useLocalStorageState<ConfessionLogEntry[]>(
+    "plan-of-life:confession-logs",
+    [],
+  );
 
   const completedCount = plan.filter((item) => item.status === "completed").length;
   const progressValue = Math.round((completedCount / plan.length) * 100);
@@ -108,6 +129,22 @@ export default function App() {
     );
     setCompletionMessage(`${item?.practice.title ?? "Practice"} complete. +10 Grace Points`);
     setTimeout(() => setCompletionMessage(null), 1800);
+  }
+
+  function addConfessionLog(date: string, note: string) {
+    const entry: ConfessionLogEntry = {
+      id: `confession-${Date.now()}`,
+      date,
+      note: note.trim(),
+    };
+
+    setConfessionLogs((logs) =>
+      [entry, ...logs].sort((a, b) => b.date.localeCompare(a.date)),
+    );
+  }
+
+  function deleteConfessionLog(entryId: string) {
+    setConfessionLogs((logs) => logs.filter((entry) => entry.id !== entryId));
   }
 
   function resetOnboarding() {
@@ -159,7 +196,14 @@ export default function App() {
               onComplete={completePractice}
             />
           ) : activeTab === "explore" ? (
-            <ExploreScreen key="explore" />
+            <ExploreScreen
+              key="explore"
+              confessionFrequencyDays={confessionFrequencyDays}
+              confessionLogs={confessionLogs}
+              onAddConfessionLog={addConfessionLog}
+              onConfessionFrequencyChange={setConfessionFrequencyDays}
+              onDeleteConfessionLog={deleteConfessionLog}
+            />
           ) : activeTab === "prayers" ? (
             <PrayersScreen key="prayers" />
           ) : activeTab === "progress" ? (
@@ -485,35 +529,178 @@ function PracticeDetail({
   );
 }
 
-function ExploreScreen() {
-  const icons = [CalendarCheck2, Heart, BookOpen, Church];
+function ExploreScreen({
+  confessionFrequencyDays,
+  confessionLogs,
+  onAddConfessionLog,
+  onConfessionFrequencyChange,
+  onDeleteConfessionLog,
+}: {
+  confessionFrequencyDays: number;
+  confessionLogs: ConfessionLogEntry[];
+  onAddConfessionLog: (date: string, note: string) => void;
+  onConfessionFrequencyChange: (days: number) => void;
+  onDeleteConfessionLog: (entryId: string) => void;
+}) {
+  const [confessionDate, setConfessionDate] = useState(getTodayInputDate());
+  const [confessionNote, setConfessionNote] = useState("");
+  const confessionStatus = getConfessionStatus(confessionLogs, confessionFrequencyDays);
+
+  function submitConfessionLog(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!confessionDate) return;
+
+    onAddConfessionLog(confessionDate, confessionNote);
+    setConfessionDate(getTodayInputDate());
+    setConfessionNote("");
+  }
 
   return (
     <ScreenMotion className="space-y-5">
       <header>
         <p className="text-base font-black text-primary-dark">Explore</p>
-        <h1 className="text-3xl font-black tracking-normal">Find your next step</h1>
+        <h1 className="text-3xl font-black tracking-normal">Sacramental life</h1>
       </header>
 
+      <Card className="border-4 border-danger p-5">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-black uppercase text-danger">Confession rhythm</p>
+            <h2 className="text-2xl font-black tracking-normal">{confessionStatus.title}</h2>
+            <p className="mt-1 text-base font-bold text-muted">{confessionStatus.detail}</p>
+          </div>
+          <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-danger text-white">
+            <ClipboardList className="size-7" strokeWidth={2.8} />
+          </div>
+        </div>
+
+        <Progress value={confessionStatus.progressValue} />
+
+        <div className="mt-5 grid grid-cols-4 gap-1 rounded-[1.5rem] border-4 border-white bg-white p-1 shadow-soft">
+          {confessionFrequencyOptions.map((option) => {
+            const active = confessionFrequencyDays === option.days;
+
+            return (
+              <button
+                key={option.days}
+                type="button"
+                aria-pressed={active}
+                onClick={() => onConfessionFrequencyChange(option.days)}
+                className={cn(
+                  "min-h-11 rounded-2xl px-2 text-xs font-black leading-tight transition",
+                  active ? "bg-danger text-white" : "text-muted",
+                )}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <form onSubmit={submitConfessionLog} className="mt-5 grid gap-3">
+          <label className="grid gap-2">
+            <span className="text-sm font-black uppercase text-muted">Date</span>
+            <input
+              type="date"
+              value={confessionDate}
+              onChange={(event) => setConfessionDate(event.target.value)}
+              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-black text-foreground outline-none focus:border-danger"
+            />
+          </label>
+
+          <label className="grid gap-2">
+            <span className="text-sm font-black uppercase text-muted">Note</span>
+            <input
+              type="text"
+              value={confessionNote}
+              onChange={(event) => setConfessionNote(event.target.value)}
+              placeholder="Grace, counsel, next step"
+              className="min-h-12 rounded-2xl border-4 border-border bg-white px-4 py-2 text-base font-bold text-foreground outline-none placeholder:text-muted focus:border-danger"
+            />
+          </label>
+
+          <Button type="submit" size="lg" className="w-full">
+            Add Confession
+            <CalendarPlus className="size-5" />
+          </Button>
+        </form>
+
+        <div className="mt-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-black">Confession log</h3>
+            <span className="rounded-full bg-background px-3 py-1 text-sm font-black text-muted">
+              {confessionLogs.length}
+            </span>
+          </div>
+
+          {confessionLogs.length > 0 ? (
+            <div className="divide-y-4 divide-border overflow-hidden rounded-2xl border-4 border-border bg-white">
+              {confessionLogs.map((entry) => (
+                <div key={entry.id} className="flex items-start gap-3 p-3">
+                  <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-light text-primary-dark">
+                    <CalendarDays className="size-5" strokeWidth={2.8} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-base font-black">{formatDisplayDate(entry.date)}</p>
+                    {entry.note ? (
+                      <p className="break-words text-sm font-bold text-muted">{entry.note}</p>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={`Delete confession log from ${formatDisplayDate(entry.date)}`}
+                    onClick={() => onDeleteConfessionLog(entry.id)}
+                    className="grid size-10 shrink-0 place-items-center rounded-full text-muted transition hover:bg-background hover:text-danger"
+                  >
+                    <Trash2 className="size-5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border-4 border-border bg-white p-4 text-base font-bold text-muted">
+              No confession logged yet.
+            </div>
+          )}
+        </div>
+      </Card>
+
       <div className="grid gap-4">
-        {categoryCards.map((category, index) => {
-          const Icon = icons[index];
-          return (
-            <Card key={category.id} className={cn("border-4 p-5", category.border)}>
-              <div className="flex items-center gap-4">
-                <div className={cn("grid size-16 place-items-center rounded-3xl text-white", category.color)}>
-                  <Icon className="size-8" strokeWidth={2.8} />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black">{category.title}</h2>
-                  <p className="text-base font-bold text-muted">{category.description}</p>
-                </div>
-              </div>
-            </Card>
-          );
-        })}
+        {sacramentalActions.map((action) => (
+          <SacramentalActionCard key={action.id} action={action} />
+        ))}
       </div>
     </ScreenMotion>
+  );
+}
+
+function SacramentalActionCard({ action }: { action: SacramentalAction }) {
+  const Icon = getSacramentalActionIcon(action.type);
+
+  return (
+    <Card className="border-4 border-primary-light p-5">
+      <div className="mb-4 flex items-start gap-4">
+        <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary-light text-primary-dark">
+          <Icon className="size-7" strokeWidth={2.8} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-black uppercase text-muted">{action.cadence}</p>
+          <h2 className="text-2xl font-black tracking-normal">{action.title}</h2>
+          <p className="mt-1 text-base font-bold leading-relaxed text-muted">
+            {action.description}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-2">
+        {action.steps.map((step) => (
+          <div key={step} className="flex items-center gap-3 rounded-2xl bg-background px-3 py-2">
+            <Check className="size-5 shrink-0 text-primary-dark" strokeWidth={3.2} />
+            <span className="text-base font-black text-foreground">{step}</span>
+          </div>
+        ))}
+      </div>
+    </Card>
   );
 }
 
@@ -743,6 +930,8 @@ function ProfileScreen({
         <ProfileRow label="Daily goal" value={profile.spiritualGoal} />
       </div>
 
+      <AppUpdateCard />
+
       <Button size="lg" variant="secondary" className="w-full" onClick={onReset}>
         <RotateCcw className="size-5" />
         Reset onboarding
@@ -756,6 +945,96 @@ function ProfileRow({ label, value }: { label: string; value: string }) {
     <Card className="border-4 border-border p-4">
       <p className="text-sm font-black uppercase text-muted">{label}</p>
       <p className="text-xl font-black">{value}</p>
+    </Card>
+  );
+}
+
+function AppUpdateCard() {
+  const [isSupported, setIsSupported] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [status, setStatus] = useState("Ready");
+
+  useEffect(() => {
+    setIsSupported("serviceWorker" in navigator && process.env.NODE_ENV === "production");
+  }, []);
+
+  async function updateApp() {
+    if (!("serviceWorker" in navigator) || process.env.NODE_ENV !== "production") {
+      setStatus("Available after install");
+      return;
+    }
+
+    setIsUpdating(true);
+    setStatus("Updating...");
+
+    try {
+      let didReload = false;
+      const reloadApp = () => {
+        if (didReload) return;
+        didReload = true;
+        setStatus("Updated. Restarting...");
+        window.setTimeout(() => window.location.reload(), 300);
+      };
+
+      const registration =
+        (await navigator.serviceWorker.getRegistration()) ??
+        (await navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }));
+
+      await registration.update();
+
+      if (registration.waiting) {
+        navigator.serviceWorker.addEventListener("controllerchange", reloadApp, { once: true });
+        registration.waiting.postMessage({ type: "SKIP_WAITING" });
+        window.setTimeout(reloadApp, 1200);
+        return;
+      }
+
+      const readyRegistration = await navigator.serviceWorker.ready;
+      const worker = readyRegistration.active ?? navigator.serviceWorker.controller;
+
+      if (worker) {
+        await requestAppShellRefresh(worker);
+      } else {
+        await clearAppCaches();
+      }
+
+      reloadApp();
+    } catch {
+      try {
+        await clearAppCaches();
+        setStatus("Updated. Restarting...");
+        window.setTimeout(() => window.location.reload(), 300);
+      } catch {
+        setStatus("Update failed");
+        setIsUpdating(false);
+      }
+    }
+  }
+
+  return (
+    <Card className="border-4 border-blue p-5">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="grid size-12 place-items-center rounded-2xl bg-blue text-white">
+          <RefreshCw className={cn("size-6", isUpdating ? "animate-spin" : "")} strokeWidth={2.8} />
+        </div>
+        <div>
+          <h2 className="text-2xl font-black">App update</h2>
+          <p className="text-base font-bold text-muted">
+            {isSupported ? status : "Available after install"}
+          </p>
+        </div>
+      </div>
+
+      <Button
+        type="button"
+        size="lg"
+        className="w-full"
+        onClick={updateApp}
+        disabled={!isSupported || isUpdating}
+      >
+        {isUpdating ? "Updating..." : "Update App"}
+        <RefreshCw className={cn("size-5", isUpdating ? "animate-spin" : "")} />
+      </Button>
     </Card>
   );
 }
@@ -825,6 +1104,164 @@ function ScreenMotion({
       {children}
     </motion.div>
   );
+}
+
+function useLocalStorageState<T>(key: string, initialValue: T) {
+  const [value, setValue] = useState<T>(initialValue);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    try {
+      const storedValue = window.localStorage.getItem(key);
+      if (storedValue) {
+        setValue(JSON.parse(storedValue) as T);
+      }
+    } catch {
+      // Keep the in-memory initial value if stored data cannot be parsed.
+    } finally {
+      setHydrated(true);
+    }
+  }, [key]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+
+    window.localStorage.setItem(key, JSON.stringify(value));
+  }, [hydrated, key, value]);
+
+  return [value, setValue] as const;
+}
+
+function requestAppShellRefresh(worker: ServiceWorker) {
+  return new Promise<void>((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      cleanup();
+      reject(new Error("Timed out while refreshing the app shell."));
+    }, 7000);
+
+    function cleanup() {
+      window.clearTimeout(timeout);
+      navigator.serviceWorker.removeEventListener("message", handleMessage);
+    }
+
+    function handleMessage(event: MessageEvent) {
+      if (event.data?.type === "APP_REFRESHED") {
+        cleanup();
+        resolve();
+      }
+
+      if (event.data?.type === "APP_REFRESH_FAILED") {
+        cleanup();
+        reject(new Error("The app shell could not be refreshed."));
+      }
+    }
+
+    navigator.serviceWorker.addEventListener("message", handleMessage);
+    worker.postMessage({ type: "REFRESH_APP" });
+  });
+}
+
+async function clearAppCaches() {
+  if (!("caches" in window)) return;
+
+  const cacheKeys = await window.caches.keys();
+  await Promise.all(
+    cacheKeys
+      .filter((key) => key.startsWith("acts-of-piety"))
+      .map((key) => window.caches.delete(key)),
+  );
+}
+
+function getSacramentalActionIcon(type: SacramentalAction["type"]) {
+  switch (type) {
+    case "confession":
+      return ClipboardList;
+    case "retreat":
+      return Clock3;
+    case "mass_prep":
+      return CalendarCheck2;
+    case "adoration":
+      return Heart;
+  }
+}
+
+function getConfessionStatus(logs: ConfessionLogEntry[], frequencyDays: number) {
+  const latestLog = logs[0];
+
+  if (!latestLog) {
+    return {
+      title: "Ready for Confession",
+      detail: "Set a rhythm and record the next confession.",
+      progressValue: 0,
+    };
+  }
+
+  const today = startOfLocalDay(new Date());
+  const lastDate = parseInputDate(latestLog.date);
+  const nextDate = addDays(lastDate, frequencyDays);
+  const elapsedDays = Math.max(0, getDayDifference(lastDate, today));
+  const daysUntilNext = getDayDifference(today, nextDate);
+  const progressValue = Math.min(100, Math.round((elapsedDays / frequencyDays) * 100));
+
+  if (daysUntilNext < 0) {
+    return {
+      title: "Confession due now",
+      detail: `Target was ${formatDisplayDate(toInputDate(nextDate))}. Last: ${formatDisplayDate(latestLog.date)}.`,
+      progressValue: 100,
+    };
+  }
+
+  if (daysUntilNext === 0) {
+    return {
+      title: "Confession due today",
+      detail: `Last confession: ${formatDisplayDate(latestLog.date)}.`,
+      progressValue: 100,
+    };
+  }
+
+  return {
+    title: `Next confession in ${daysUntilNext} ${daysUntilNext === 1 ? "day" : "days"}`,
+    detail: `Target: ${formatDisplayDate(toInputDate(nextDate))}. Last: ${formatDisplayDate(latestLog.date)}.`,
+    progressValue,
+  };
+}
+
+function getTodayInputDate() {
+  return toInputDate(new Date());
+}
+
+function parseInputDate(value: string) {
+  return startOfLocalDay(new Date(`${value}T00:00:00`));
+}
+
+function startOfLocalDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function addDays(date: Date, days: number) {
+  const nextDate = new Date(date);
+  nextDate.setDate(nextDate.getDate() + days);
+  return nextDate;
+}
+
+function getDayDifference(startDate: Date, endDate: Date) {
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  return Math.round((endDate.getTime() - startDate.getTime()) / millisecondsPerDay);
+}
+
+function toInputDate(date: Date) {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatDisplayDate(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(parseInputDate(value));
 }
 
 function buildProfile(

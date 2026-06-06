@@ -8,7 +8,7 @@ export function PwaRegister() {
       return;
     }
 
-    navigator.serviceWorker.register("/sw.js").catch(() => {
+    navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).catch(() => {
       // PWA support is a progressive enhancement.
     });
   }, []);

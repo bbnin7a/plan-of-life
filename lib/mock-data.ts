@@ -2,6 +2,7 @@ import type {
   ActOfPiety,
   CatholicPrayer,
   ContentCategory,
+  SacramentalAction,
   DailyPlanItem,
   OnboardingAnswerKey,
   UserSpiritualProfile,
@@ -206,6 +207,61 @@ export const categoryCards: Array<{
     description: "Prepare for confession, Mass, and grace.",
     color: "bg-danger",
     border: "border-danger",
+  },
+];
+
+export const sacramentalActions: SacramentalAction[] = [
+  {
+    id: "confession",
+    type: "confession",
+    title: "Confession",
+    description: "Return to mercy with a steady rhythm of examination, contrition, and grace.",
+    cadence: "Monthly rhythm",
+    steps: [
+      "Examine conscience",
+      "Choose a confession time",
+      "Make an act of contrition",
+      "Complete the penance",
+    ],
+  },
+  {
+    id: "retreat",
+    type: "retreat",
+    title: "Retreat",
+    description: "Set aside quiet time for prayer, spiritual reading, and renewed direction.",
+    cadence: "Seasonal or annual rhythm",
+    steps: [
+      "Choose a retreat day",
+      "Bring Scripture and journal",
+      "Keep silence for one block",
+      "Name one next step",
+    ],
+  },
+  {
+    id: "mass-prep",
+    type: "mass_prep",
+    title: "Mass Preparation",
+    description: "Prepare for Sunday Mass by praying with the readings and arriving recollected.",
+    cadence: "Weekly rhythm",
+    steps: [
+      "Read the Sunday Gospel",
+      "Bring one intention",
+      "Arrive early",
+      "Give thanks after Communion",
+    ],
+  },
+  {
+    id: "adoration",
+    type: "adoration",
+    title: "Eucharistic Adoration",
+    description: "Spend time before Christ in the Blessed Sacrament with attention and love.",
+    cadence: "Weekly or monthly rhythm",
+    steps: [
+      "Schedule a chapel visit",
+      "Begin with silence",
+      "Pray slowly",
+      "Close with thanksgiving",
+    ],
   },
 ];
 
