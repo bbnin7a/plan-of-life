@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import Lottie from "lottie-react";
 import Image from "next/image";
 import {
   ArrowLeft,
@@ -43,6 +44,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import mascotAnimation from "@/lib/mascot-lottie.json";
 import { cn } from "@/lib/utils";
 import packageInfo from "@/package.json";
 import {
@@ -231,6 +233,8 @@ const uiText = {
   en: {
     appTitle: "生活計劃 Plan of Life",
     appSlogan: "Small faithful steps, every day with God.",
+    mascotEncouragementTitle: "Keep walking",
+    mascotEncouragementDetail: "Your rhythm is growing. One faithful step today still counts.",
     loading: "Loading...",
     preparingApp: "Preparing your plan",
     welcomeTitle: "Grow your prayer life step by step",
@@ -500,6 +504,8 @@ const uiText = {
   zhHant: {
     appTitle: "生活計劃 Plan of Life",
     appSlogan: "每日忠信小步，與主同行。",
+    mascotEncouragementTitle: "繼續同行",
+    mascotEncouragementDetail: "你的生活節奏正在成長。今天忠信的一小步也算數。",
     loading: "載入中...",
     preparingApp: "正在準備你的計劃",
     welcomeTitle: "一步一步培養祈禱生活",
@@ -1457,7 +1463,7 @@ function SplashScreen({ t }: { t: Translator }) {
         className="text-center"
       >
         <div className="mascot-bob relative mx-auto mb-6 grid size-40 place-items-center rounded-[2rem] border-8 border-white bg-primary-light shadow-playful">
-          <PlanOfLifeMascot title={t("appTitle")} />
+          <MascotLottie title={t("appTitle")} className="size-36" />
           <span className="mascot-glow absolute inset-x-8 bottom-3 h-3 rounded-full bg-primary/20 blur-sm" />
         </div>
         <h1 className="text-4xl font-black tracking-normal">{t("appTitle")}</h1>
@@ -1468,75 +1474,15 @@ function SplashScreen({ t }: { t: Translator }) {
   );
 }
 
-function PlanOfLifeMascot({ title }: { title: string }) {
+function MascotLottie({ className, title }: { className?: string; title: string }) {
   return (
-    <svg
+    <div
       aria-label={title}
-      className="mascot-svg size-36"
+      className={cn("pointer-events-none relative z-10", className)}
       role="img"
-      viewBox="0 0 160 160"
-      xmlns="http://www.w3.org/2000/svg"
     >
-      <title>{title}</title>
-      <defs>
-        <linearGradient id="mascotHood" x1="34" x2="126" y1="36" y2="132">
-          <stop stopColor="#8DEB3B" />
-          <stop offset="1" stopColor="#36B800" />
-        </linearGradient>
-        <linearGradient id="mascotWool" x1="42" x2="118" y1="42" y2="124">
-          <stop stopColor="#FFF8D8" />
-          <stop offset="1" stopColor="#FFE7A8" />
-        </linearGradient>
-      </defs>
-
-      <ellipse className="mascot-shadow-floor" cx="80" cy="142" fill="#3C9F16" opacity="0.18" rx="39" ry="7" />
-      <g className="mascot-halo">
-        <ellipse cx="80" cy="24" fill="none" rx="37" ry="10" stroke="#FFC928" strokeLinecap="round" strokeWidth="7" />
-        <ellipse cx="80" cy="24" fill="none" opacity="0.55" rx="28" ry="6" stroke="#FFF3A3" strokeWidth="3" />
-      </g>
-
-      <g className="mascot-body">
-        <path d="M40 68c0-27 20-49 45-49s41 22 41 49v53c0 13-11 24-25 24H65c-14 0-25-11-25-24V68Z" fill="url(#mascotHood)" />
-        <path d="M48 69c0-22 17-40 38-40s34 18 34 40v48c0 11-9 19-20 19H68c-11 0-20-8-20-19V69Z" fill="#5FD31A" opacity="0.72" />
-
-        <g className="mascot-ear-left">
-          <path d="M45 62c-13-12-28-11-32-2-4 8 4 18 16 20 9 2 17-2 21-8Z" fill="#FFE2B3" />
-          <path d="M27 63c7-4 15-1 19 5-7 5-18 4-23-2 1-1 2-2 4-3Z" fill="#FFBFA5" opacity="0.7" />
-        </g>
-        <g className="mascot-ear-right">
-          <path d="M115 62c13-12 28-11 32-2 4 8-4 18-16 20-9 2-17-2-21-8Z" fill="#FFE2B3" />
-          <path d="M133 63c-7-4-15-1-19 5 7 5 18 4 23-2-1-1-2-2-4-3Z" fill="#FFBFA5" opacity="0.7" />
-        </g>
-
-        <g className="mascot-face">
-          <circle cx="54" cy="54" fill="#FFF7D4" r="10" />
-          <circle cx="70" cy="47" fill="#FFF7D4" r="13" />
-          <circle cx="86" cy="47" fill="#FFF7D4" r="14" />
-          <circle cx="102" cy="54" fill="#FFF7D4" r="10" />
-          <path d="M43 67c0-24 18-40 38-40s37 16 37 40c0 26-17 48-39 48S43 91 43 67Z" fill="url(#mascotWool)" />
-          <circle cx="66" cy="72" fill="#2F2119" r="5" />
-          <circle cx="97" cy="72" fill="#2F2119" r="5" />
-          <circle cx="68" cy="70" fill="#FFFFFF" r="1.5" />
-          <circle cx="99" cy="70" fill="#FFFFFF" r="1.5" />
-          <path d="M77 82c2-3 8-3 10 0-1 4-8 4-10 0Z" fill="#F78A8A" />
-          <path d="M70 91c6 7 18 7 24 0" fill="none" stroke="#6B3B2D" strokeLinecap="round" strokeWidth="4" />
-        </g>
-
-        <g className="mascot-arm-left">
-          <path d="M44 88c-15-2-25 8-25 18 0 8 8 12 15 8 7-4 12-12 18-19Z" fill="#FFF0C0" />
-          <circle cx="25" cy="106" fill="#5B3828" r="6" />
-        </g>
-
-        <g className="mascot-book">
-          <rect fill="#2FB80A" height="43" rx="8" stroke="#F2C94C" strokeWidth="4" width="36" x="90" y="90" />
-          <path d="M108 101v20M98 111h20" stroke="#FFEAA0" strokeLinecap="round" strokeWidth="5" />
-          <path d="M91 98c-7 6-10 17-8 29 3 6 13 8 23 6" fill="none" stroke="#2B8A12" strokeLinecap="round" strokeWidth="5" />
-        </g>
-
-        <path d="M63 133h16M91 133h16" stroke="#5B3828" strokeLinecap="round" strokeWidth="8" />
-        <circle cx="80" cy="121" fill="#F7C948" r="7" stroke="#FFEAA0" strokeWidth="3" />
-      </g>
-    </svg>
+      <Lottie animationData={mascotAnimation} autoplay loop rendererSettings={{ preserveAspectRatio: "xMidYMid meet" }} />
+    </div>
   );
 }
 
@@ -4328,6 +4274,22 @@ function ProgressScreen({
           <div>
             <p className="text-4xl font-black">{streakDays}</p>
             <p className="text-lg font-black text-muted">{t("streakMetric")}</p>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="overflow-hidden border-4 border-primary-light p-4">
+        <div className="flex items-center gap-4">
+          <div className="relative grid size-24 shrink-0 place-items-center rounded-[1.5rem] bg-primary-light">
+            <MascotLottie title={t("appTitle")} className="size-24" />
+            <span className="mascot-glow absolute inset-x-5 bottom-3 h-2 rounded-full bg-primary/20 blur-sm" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-2xl font-black leading-tight">{t("mascotEncouragementTitle")}</p>
+            <p className="mt-2 text-base font-bold leading-relaxed text-muted">{t("mascotEncouragementDetail")}</p>
+            <span className="mt-3 inline-flex rounded-full bg-primary-light px-3 py-1 text-sm font-black text-primary-dark">
+              {t("badgePoints")}: {lifeStats.badgePoints}
+            </span>
           </div>
         </div>
       </Card>
