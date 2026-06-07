@@ -93,15 +93,48 @@ a {
   animation: mascot-shadow 2.2s ease-in-out infinite;
 }
 
-.mascot-image-frame {
-  background: radial-gradient(circle at 50% 38%, #ffffff 0%, #efffdf 58%, #d6ffb7 100%);
+.mascot-vector {
+  overflow: visible;
 }
 
-.mascot-image {
-  animation: mascot-image-float 2.4s ease-in-out infinite;
-  object-position: 50% 42%;
-  transform: scale(1.15);
-  transform-origin: 50% 78%;
+.mascot-vector-body {
+  animation: mascot-vector-body 2.4s ease-in-out infinite;
+  transform-origin: 90px 160px;
+}
+
+.mascot-vector-halo {
+  animation: mascot-vector-halo 2.4s ease-in-out infinite;
+  transform-origin: 93px 22px;
+}
+
+.mascot-vector-ear-left {
+  animation: mascot-vector-ear-left 2.9s ease-in-out infinite;
+  transform-origin: 50px 82px;
+}
+
+.mascot-vector-ear-right {
+  animation: mascot-vector-ear-right 3.1s ease-in-out infinite;
+  transform-origin: 132px 82px;
+}
+
+.mascot-vector-arm-left {
+  animation: mascot-vector-wave 1.8s ease-in-out infinite;
+  transform-origin: 51px 110px;
+}
+
+.mascot-vector-book {
+  animation: mascot-vector-book 2.4s ease-in-out infinite;
+  transform-origin: 126px 130px;
+}
+
+.mascot-vector-eyes {
+  animation: mascot-vector-blink 4.2s ease-in-out infinite;
+  transform-origin: 93px 86px;
+}
+
+.mascot-vector-shadow {
+  animation: mascot-shadow 2.2s ease-in-out infinite;
+  transform-origin: 90px 160px;
 }
 
 @keyframes fire-bounce {
@@ -162,18 +195,91 @@ a {
   }
 }
 
-@keyframes mascot-image-float {
+@keyframes mascot-vector-body {
   0%,
   100% {
-    transform: translateY(0) rotate(-1deg) scale(1.15);
+    transform: translateY(0) rotate(-0.6deg) scale(1);
   }
 
   45% {
-    transform: translateY(-0.18rem) rotate(1deg) scale(1.18);
+    transform: translateY(-4px) rotate(0.8deg) scale(1.015);
   }
 
   72% {
-    transform: translateY(0.04rem) rotate(-0.4deg) scale(1.14);
+    transform: translateY(1px) rotate(-0.3deg) scale(0.995);
+  }
+}
+
+@keyframes mascot-vector-halo {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  45% {
+    opacity: 0.78;
+    transform: translateY(-3px) scale(1.05);
+  }
+}
+
+@keyframes mascot-vector-ear-left {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  42% {
+    transform: rotate(-5deg);
+  }
+}
+
+@keyframes mascot-vector-ear-right {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  48% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes mascot-vector-wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  32% {
+    transform: rotate(-9deg);
+  }
+
+  64% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes mascot-vector-book {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+
+  45% {
+    transform: rotate(2.5deg) translateY(-2px);
+  }
+}
+
+@keyframes mascot-vector-blink {
+  0%,
+  88%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  92% {
+    transform: scaleY(0.08);
   }
 }
 

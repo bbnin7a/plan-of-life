@@ -1474,20 +1474,86 @@ function SplashScreen({ t }: { t: Translator }) {
 
 function MascotAnimation({ className, title }: { className?: string; title: string }) {
   return (
-    <div
+    <svg
       aria-label={title}
-      className={cn("mascot-image-frame pointer-events-none relative z-10 overflow-hidden rounded-[1.35rem]", className)}
+      className={cn("mascot-vector pointer-events-none relative z-10", className)}
       role="img"
+      viewBox="0 0 180 180"
+      xmlns="http://www.w3.org/2000/svg"
     >
-      <Image
-        alt=""
-        className="mascot-image h-full w-full object-cover"
-        fill
-        priority
-        sizes="144px"
-        src="/mascot-plan-of-life.png"
-      />
-    </div>
+      <title>{title}</title>
+      <defs>
+        <radialGradient id="mascotWoolGradient" cx="45%" cy="30%" r="70%">
+          <stop stopColor="#FFF9DE" />
+          <stop offset="0.68" stopColor="#FFE7A8" />
+          <stop offset="1" stopColor="#FFD684" />
+        </radialGradient>
+        <linearGradient id="mascotHoodGradient" x1="35" x2="138" y1="36" y2="150">
+          <stop stopColor="#9AF24A" />
+          <stop offset="0.55" stopColor="#58CC02" />
+          <stop offset="1" stopColor="#2F9300" />
+        </linearGradient>
+        <linearGradient id="mascotBookGradient" x1="102" x2="146" y1="96" y2="148">
+          <stop stopColor="#8BE63D" />
+          <stop offset="1" stopColor="#45B700" />
+        </linearGradient>
+      </defs>
+
+      <ellipse className="mascot-vector-shadow" cx="90" cy="160" fill="#2F9300" opacity="0.18" rx="43" ry="8" />
+
+      <g className="mascot-vector-body">
+        <g className="mascot-vector-halo">
+          <ellipse cx="93" cy="22" fill="none" rx="42" ry="12" stroke="#FFC928" strokeLinecap="round" strokeWidth="8" />
+          <ellipse cx="93" cy="22" fill="none" opacity="0.5" rx="31" ry="7" stroke="#FFF4A6" strokeWidth="3" />
+        </g>
+
+        <path d="M39 77c0-35 26-63 60-63 32 0 53 27 53 62v64c0 15-12 27-27 27H66c-15 0-27-12-27-27V77Z" fill="url(#mascotHoodGradient)" />
+        <path d="M49 80c0-29 22-52 50-52 26 0 42 23 42 52v55c0 11-9 20-20 20H69c-11 0-20-9-20-20V80Z" fill="#7DE22B" opacity="0.5" />
+
+        <g className="mascot-vector-ear-left">
+          <path d="M47 76c-14-13-32-13-39-4-7 10 3 24 18 27 12 2 23-4 31-14Z" fill="#FFE2B3" />
+          <path d="M22 75c9-6 20-2 25 6-8 7-21 6-29-1 1-2 2-3 4-5Z" fill="#FFB8A2" opacity="0.75" />
+        </g>
+        <g className="mascot-vector-ear-right">
+          <path d="M134 76c14-13 32-13 39-4 7 10-3 24-18 27-12 2-23-4-31-14Z" fill="#FFE2B3" />
+          <path d="M158 75c-9-6-20-2-25 6 8 7 21 6 29-1-1-2-2-3-4-5Z" fill="#FFB8A2" opacity="0.75" />
+        </g>
+
+        <g className="mascot-vector-arm-left">
+          <path d="M47 105c-18 0-31 12-31 25 0 9 9 14 17 9 8-5 14-16 24-26Z" fill="#FFF0C0" />
+          <circle cx="24" cy="131" fill="#5A3A28" r="7" />
+        </g>
+
+        <g className="mascot-vector-face">
+          <circle cx="57" cy="63" fill="#FFF9D8" r="11" />
+          <circle cx="74" cy="54" fill="#FFF9D8" r="15" />
+          <circle cx="92" cy="52" fill="#FFF9D8" r="17" />
+          <circle cx="111" cy="60" fill="#FFF9D8" r="13" />
+          <path d="M45 81c0-28 21-48 48-48 26 0 48 20 48 48 0 31-22 58-49 58S45 112 45 81Z" fill="url(#mascotWoolGradient)" />
+          <path d="M66 71c4-5 11-5 16 0" fill="none" stroke="#6B3B2D" strokeLinecap="round" strokeWidth="5" />
+          <path d="M107 71c4-5 11-5 16 0" fill="none" stroke="#6B3B2D" strokeLinecap="round" strokeWidth="5" />
+          <g className="mascot-vector-eyes">
+            <ellipse cx="73" cy="86" fill="#2F2119" rx="7" ry="8" />
+            <ellipse cx="113" cy="86" fill="#2F2119" rx="7" ry="8" />
+            <circle cx="76" cy="82" fill="#FFFFFF" r="2" />
+            <circle cx="116" cy="82" fill="#FFFFFF" r="2" />
+          </g>
+          <path d="M89 98c3-4 10-4 13 0-2 5-11 5-13 0Z" fill="#F78A8A" />
+          <path d="M83 110c8 8 23 8 31 0" fill="none" stroke="#6B3B2D" strokeLinecap="round" strokeWidth="5" />
+          <circle cx="56" cy="99" fill="#FFB5A2" opacity="0.35" r="7" />
+          <circle cx="130" cy="99" fill="#FFB5A2" opacity="0.35" r="7" />
+        </g>
+
+        <g className="mascot-vector-book">
+          <rect fill="url(#mascotBookGradient)" height="52" rx="9" stroke="#F2C94C" strokeWidth="4" width="44" x="105" y="104" />
+          <path d="M127 117v23M115 129h24" stroke="#FFEAA0" strokeLinecap="round" strokeWidth="5" />
+          <path d="M105 113c-8 7-12 21-9 35 4 7 16 9 29 7" fill="none" stroke="#2B8A12" strokeLinecap="round" strokeWidth="5" />
+        </g>
+
+        <path d="M70 157h17M105 157h17" stroke="#5A3A28" strokeLinecap="round" strokeWidth="9" />
+        <circle cx="95" cy="144" fill="#F7C948" r="8" stroke="#FFEAA0" strokeWidth="3" />
+      </g>
+    </svg>
   );
 }
 
