@@ -17,6 +17,7 @@ import {
   Clock3,
   ClipboardList,
   Compass,
+  ExternalLink,
   Flame,
   FolderOpen,
   Heart,
@@ -43,6 +44,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { ebookLibrary } from "@/lib/ebooks";
 import { cn } from "@/lib/utils";
 import packageInfo from "@/package.json";
 import {
@@ -66,6 +68,7 @@ import type {
   CatholicPrayer,
   ConfessionLogEntry,
   DailyPlanItem,
+  Ebook,
   Novena,
   NovenaProgress,
   OnboardingAnswerKey,
@@ -89,7 +92,7 @@ type AppStage = "welcome" | "onboarding" | "app";
 type Tab = "today" | "explore" | "prayers" | "progress" | "profile";
 type PrayerTab = "intentions" | "prayers" | "favorites";
 type PrayerFilter = "all" | "novena" | PrayerCategory;
-type ExploreLibraryCategory = "sacramental" | "piety" | "saints";
+type ExploreLibraryCategory = "sacramental" | "piety" | "saints" | "ebooks";
 type SelectedDetail =
   | { type: "piety"; pietyId: string; date: string }
   | { type: "novena" }
@@ -304,11 +307,17 @@ const uiText = {
     markCompleted: "Mark as Completed",
     library: "Library",
     spiritualLibrary: "Spiritual library",
-    librarySubtitle: "Browse sacramental life, acts of piety, and saints.",
+    librarySubtitle: "Browse sacramental life, acts of piety, saints, and spiritual reading.",
     backToLibrary: "Back to library",
     folderSacramentalLife: "Sacramental Life",
     folderPiety: "Acts of Piety",
     folderSaints: "Saints",
+    folderEbooks: "Ebooks",
+    ebookReader: "Ebook reader",
+    ebookChapters: "Chapters",
+    ebookPoints: "Points {start}-{end}",
+    readOfficialText: "Read official text",
+    openOfficialEbook: "Open official ebook",
     saints: "Saints",
     feastDay: "Feast day",
     patronage: "Patronage",
@@ -577,11 +586,17 @@ const uiText = {
     markCompleted: "標記為完成",
     library: "圖書館",
     spiritualLibrary: "靈修圖書館",
-    librarySubtitle: "瀏覽聖事生活、敬禮行動與聖人。",
+    librarySubtitle: "瀏覽聖事生活、敬禮行動、聖人與靈修閱讀。",
     backToLibrary: "返回圖書館",
     folderSacramentalLife: "聖事生活",
     folderPiety: "敬禮行動",
     folderSaints: "聖人",
+    folderEbooks: "電子書",
+    ebookReader: "電子書閱讀",
+    ebookChapters: "章節",
+    ebookPoints: "第 {start}-{end} 點",
+    readOfficialText: "閱讀官方文本",
+    openOfficialEbook: "開啟官方電子書",
     saints: "聖人",
     feastDay: "慶日",
     patronage: "主保",
@@ -2544,6 +2559,14 @@ function ExploreScreen({
             tone="blue"
             onOpen={() => setSelectedCategory("saints")}
           />
+          <LibraryCategoryCard
+            count={ebookLibrary.length}
+            description={t("ebookReader")}
+            icon={BookOpen}
+            title={t("folderEbooks")}
+            tone="yellow"
+            onOpen={() => setSelectedCategory("ebooks")}
+          />
         </div>
       ) : (
         <>
@@ -2729,6 +2752,22 @@ function ExploreScreen({
         </div>
         </CategoryDetailSection>
       ) : null}
+
+      {selectedCategory === "ebooks" ? (
+        <CategoryDetailSection
+          count={ebookLibrary.length}
+          description={t("ebookReader")}
+          icon={BookOpen}
+          title={t("folderEbooks")}
+          tone="yellow"
+        >
+        <div className="grid gap-4">
+          {ebookLibrary.map((ebook) => (
+            <EbookReaderCard key={ebook.id} ebook={ebook} language={language} t={t} />
+          ))}
+        </div>
+        </CategoryDetailSection>
+      ) : null}
         </>
       )}
     </ScreenMotion>
@@ -2748,7 +2787,7 @@ function LibraryFolder({
   description: string;
   icon: typeof Sun;
   title: string;
-  tone: "primary" | "danger" | "blue";
+  tone: "primary" | "danger" | "blue" | "yellow";
 }) {
   const toneClasses = {
     primary: {
@@ -2768,6 +2807,12 @@ function LibraryFolder({
       bg: "bg-blue/10",
       iconBg: "bg-blue",
       text: "text-blue",
+    },
+    yellow: {
+      border: "border-yellow",
+      bg: "bg-yellow/20",
+      iconBg: "bg-yellow",
+      text: "text-yellow",
     },
   }[tone];
 
@@ -2808,7 +2853,7 @@ function CategoryDetailSection({
   description: string;
   icon: typeof Sun;
   title: string;
-  tone: "primary" | "danger" | "blue";
+  tone: "primary" | "danger" | "blue" | "yellow";
 }) {
   const toneClasses = {
     primary: {
@@ -2822,6 +2867,10 @@ function CategoryDetailSection({
     blue: {
       iconBg: "bg-blue",
       text: "text-blue",
+    },
+    yellow: {
+      iconBg: "bg-yellow",
+      text: "text-yellow",
     },
   }[tone];
 
@@ -2862,7 +2911,7 @@ function LibraryCategoryCard({
   icon: typeof Sun;
   onOpen: () => void;
   title: string;
-  tone: "primary" | "danger" | "blue";
+  tone: "primary" | "danger" | "blue" | "yellow";
 }) {
   const toneClasses = {
     primary: {
@@ -2882,6 +2931,12 @@ function LibraryCategoryCard({
       bg: "bg-blue/10",
       iconBg: "bg-blue",
       text: "text-blue",
+    },
+    yellow: {
+      border: "border-yellow",
+      bg: "bg-yellow/20",
+      iconBg: "bg-yellow",
+      text: "text-yellow",
     },
   }[tone];
 
@@ -2914,6 +2969,87 @@ function LibraryCategoryCard({
         </div>
       </div>
     </button>
+  );
+}
+
+function EbookReaderCard({
+  ebook,
+  language,
+  t,
+}: {
+  ebook: Ebook;
+  language: UiLanguage;
+  t: Translator;
+}) {
+  const text = ebook.languages[language] ?? ebook.languages.en;
+  const totalPoints = ebook.chapters.reduce(
+    (sum, chapter) => sum + chapter.endPoint - chapter.startPoint + 1,
+    0,
+  );
+
+  return (
+    <Card className="border-4 border-yellow p-5">
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-yellow text-white">
+          <BookOpen className="size-7" strokeWidth={2.8} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-black uppercase text-yellow">{t("ebookReader")}</p>
+          <h3 className="text-2xl font-black tracking-normal">{text.title}</h3>
+          <p className="mt-1 text-base font-bold leading-relaxed text-muted">{ebook.author}</p>
+        </div>
+        <span className="shrink-0 rounded-full bg-background px-3 py-1 text-sm font-black text-muted">
+          {totalPoints}
+        </span>
+      </div>
+
+      <p className="text-base font-bold leading-relaxed text-foreground">{text.description}</p>
+      <p className="mt-3 rounded-2xl bg-yellow/20 px-4 py-3 text-sm font-black leading-relaxed text-foreground">
+        {text.attribution}
+      </p>
+
+      <a
+        href={ebook.sourceUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-4 border-yellow bg-white px-4 py-2 text-base font-black text-foreground shadow-soft transition active:translate-y-1 active:shadow-none"
+      >
+        {t("openOfficialEbook")}
+        <ExternalLink className="size-5" strokeWidth={2.8} />
+      </a>
+
+      <div className="mt-5 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h4 className="text-xl font-black">{t("ebookChapters")}</h4>
+          <span className="rounded-full bg-background px-3 py-1 text-sm font-black text-muted">
+            {ebook.chapters.length}
+          </span>
+        </div>
+
+        <div className="grid gap-2">
+          {ebook.chapters.map((chapter) => (
+            <a
+              key={chapter.id}
+              href={chapter.sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`${t("readOfficialText")}: ${chapter.title}`}
+              className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-2xl border-4 border-border bg-white px-4 py-3 text-left shadow-soft transition active:translate-y-1 active:shadow-none"
+            >
+              <span className="min-w-0">
+                <span className="block text-base font-black text-foreground">{chapter.title}</span>
+                <span className="block text-sm font-bold text-muted">
+                  {t("ebookPoints", { start: chapter.startPoint, end: chapter.endPoint })}
+                </span>
+              </span>
+              <span className="grid size-10 place-items-center rounded-full bg-yellow/20 text-yellow">
+                <ExternalLink className="size-5" strokeWidth={2.8} />
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </Card>
   );
 }
 

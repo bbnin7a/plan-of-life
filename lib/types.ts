@@ -153,6 +153,30 @@ export type SaintProfile = {
   >;
 };
 
+export type EbookChapter = {
+  id: string;
+  title: string;
+  startPoint: number;
+  endPoint: number;
+  sourceUrl: string;
+};
+
+export type Ebook = {
+  id: string;
+  title: string;
+  author: string;
+  sourceUrl: string;
+  languages: Record<
+    UiLanguage,
+    {
+      title: string;
+      description: string;
+      attribution: string;
+    }
+  >;
+  chapters: EbookChapter[];
+};
+
 export type ConfessionLogEntry = {
   id: string;
   date: string;
