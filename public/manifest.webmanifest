@@ -1,7 +1,7 @@
 {
-  "name": "Acts of Piety",
-  "short_name": "Piety",
-  "description": "A joyful Catholic habit and prayer app.",
+  "name": "生活計劃 Plan of Life",
+  "short_name": "Plan of Life",
+  "description": "A Catholic plan of life for prayer, sacraments, and daily holiness.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F7FDF2",

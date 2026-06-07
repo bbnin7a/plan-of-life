@@ -119,6 +119,12 @@ type CategoryMeta = {
   softClass: string;
   labelKey: TranslationKey;
 };
+type LifeRhythmStats = {
+  activeDays: number;
+  badgePoints: number;
+  totalCompletions: number;
+  weeklyConsistency: number;
+};
 
 const tabItems = [
   { id: "today", labelKey: "tabToday", icon: Home },
@@ -223,7 +229,8 @@ const frequencyOptions: PietyFrequency[] = ["daily", "weekly", "monthly", "yearl
 
 const uiText = {
   en: {
-    appTitle: "Acts of Piety",
+    appTitle: "生活計劃 Plan of Life",
+    appSlogan: "Small faithful steps, every day with God.",
     loading: "Loading...",
     preparingApp: "Preparing your plan",
     welcomeTitle: "Grow your prayer life step by step",
@@ -369,8 +376,14 @@ const uiText = {
     thisWeek: "This week",
     completedCount: "{count} completed",
     gracePoints: "Grace Points",
+    lifeRhythm: "Life rhythm",
+    totalActsCompleted: "Total acts",
+    activeDays: "Active days",
+    weeklyConsistency: "Weekly consistency",
+    badgePoints: "Badge points",
+    nextMilestone: "Next milestone",
     categoryDistribution: "Today's categories",
-    badgeHint: "Keep showing up. Your next badge is close.",
+    badgeHint: "Badges now reward consistent practice over time, not only today's checklist.",
     badges: "Badges",
     badgeUnlocked: "Unlocked",
     badgeLocked: "Locked",
@@ -485,7 +498,8 @@ const uiText = {
     statusCompleted: "completed",
   },
   zhHant: {
-    appTitle: "敬禮生活",
+    appTitle: "生活計劃 Plan of Life",
+    appSlogan: "每日忠信小步，與主同行。",
     loading: "載入中...",
     preparingApp: "正在準備你的計劃",
     welcomeTitle: "一步一步培養祈禱生活",
@@ -631,8 +645,14 @@ const uiText = {
     thisWeek: "本週",
     completedCount: "已完成 {count}",
     gracePoints: "恩寵點數",
+    lifeRhythm: "生活節奏",
+    totalActsCompleted: "累計完成",
+    activeDays: "活躍日數",
+    weeklyConsistency: "本週穩定度",
+    badgePoints: "徽章點數",
+    nextMilestone: "下一個里程碑",
     categoryDistribution: "今日類別分佈",
-    badgeHint: "持續前進。下一個徽章已經接近。",
+    badgeHint: "徽章現在更重視長期穩定實踐，而不只是今天完成幾項。",
     badges: "徽章",
     badgeUnlocked: "已取得",
     badgeLocked: "未取得",
@@ -844,6 +864,10 @@ export default function App() {
   const progressValue = todayAgenda.length > 0 ? Math.round((completedCount / todayAgenda.length) * 100) : 0;
   const streakDays = useMemo(
     () => getCompletionStreak(pietyCompletions, novenaProgress, today),
+    [pietyCompletions, novenaProgress, today],
+  );
+  const lifeStats = useMemo(
+    () => getLifeRhythmStats(pietyCompletions, novenaProgress, today),
     [pietyCompletions, novenaProgress, today],
   );
   const weekProgress = useMemo(
@@ -1307,6 +1331,7 @@ export default function App() {
             key="progress"
             completedCount={completedCount}
             confessionLogs={confessionLogs}
+            lifeStats={lifeStats}
             streakDays={streakDays}
             categoryDistribution={categoryDistribution}
             t={t}
@@ -1431,13 +1456,87 @@ function SplashScreen({ t }: { t: Translator }) {
         transition={{ type: "spring", stiffness: 180, damping: 18 }}
         className="text-center"
       >
-        <div className="mx-auto mb-6 grid size-32 place-items-center rounded-full border-8 border-white bg-primary-light shadow-playful">
-          <Church className="size-16 text-primary-dark" strokeWidth={2.8} />
+        <div className="mascot-bob relative mx-auto mb-6 grid size-40 place-items-center rounded-[2rem] border-8 border-white bg-primary-light shadow-playful">
+          <PlanOfLifeMascot title={t("appTitle")} />
+          <span className="mascot-glow absolute inset-x-8 bottom-3 h-3 rounded-full bg-primary/20 blur-sm" />
         </div>
         <h1 className="text-4xl font-black tracking-normal">{t("appTitle")}</h1>
-        <p className="mt-3 text-lg font-bold text-muted">{t("preparingApp")}</p>
+        <p className="mt-3 text-lg font-black leading-relaxed text-primary-dark">{t("appSlogan")}</p>
+        <p className="mt-2 text-base font-bold text-muted">{t("preparingApp")}</p>
       </motion.div>
     </main>
+  );
+}
+
+function PlanOfLifeMascot({ title }: { title: string }) {
+  return (
+    <svg
+      aria-label={title}
+      className="mascot-svg size-36"
+      role="img"
+      viewBox="0 0 160 160"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <title>{title}</title>
+      <defs>
+        <linearGradient id="mascotHood" x1="34" x2="126" y1="36" y2="132">
+          <stop stopColor="#8DEB3B" />
+          <stop offset="1" stopColor="#36B800" />
+        </linearGradient>
+        <linearGradient id="mascotWool" x1="42" x2="118" y1="42" y2="124">
+          <stop stopColor="#FFF8D8" />
+          <stop offset="1" stopColor="#FFE7A8" />
+        </linearGradient>
+      </defs>
+
+      <ellipse className="mascot-shadow-floor" cx="80" cy="142" fill="#3C9F16" opacity="0.18" rx="39" ry="7" />
+      <g className="mascot-halo">
+        <ellipse cx="80" cy="24" fill="none" rx="37" ry="10" stroke="#FFC928" strokeLinecap="round" strokeWidth="7" />
+        <ellipse cx="80" cy="24" fill="none" opacity="0.55" rx="28" ry="6" stroke="#FFF3A3" strokeWidth="3" />
+      </g>
+
+      <g className="mascot-body">
+        <path d="M40 68c0-27 20-49 45-49s41 22 41 49v53c0 13-11 24-25 24H65c-14 0-25-11-25-24V68Z" fill="url(#mascotHood)" />
+        <path d="M48 69c0-22 17-40 38-40s34 18 34 40v48c0 11-9 19-20 19H68c-11 0-20-8-20-19V69Z" fill="#5FD31A" opacity="0.72" />
+
+        <g className="mascot-ear-left">
+          <path d="M45 62c-13-12-28-11-32-2-4 8 4 18 16 20 9 2 17-2 21-8Z" fill="#FFE2B3" />
+          <path d="M27 63c7-4 15-1 19 5-7 5-18 4-23-2 1-1 2-2 4-3Z" fill="#FFBFA5" opacity="0.7" />
+        </g>
+        <g className="mascot-ear-right">
+          <path d="M115 62c13-12 28-11 32-2 4 8-4 18-16 20-9 2-17-2-21-8Z" fill="#FFE2B3" />
+          <path d="M133 63c-7-4-15-1-19 5 7 5 18 4 23-2-1-1-2-2-4-3Z" fill="#FFBFA5" opacity="0.7" />
+        </g>
+
+        <g className="mascot-face">
+          <circle cx="54" cy="54" fill="#FFF7D4" r="10" />
+          <circle cx="70" cy="47" fill="#FFF7D4" r="13" />
+          <circle cx="86" cy="47" fill="#FFF7D4" r="14" />
+          <circle cx="102" cy="54" fill="#FFF7D4" r="10" />
+          <path d="M43 67c0-24 18-40 38-40s37 16 37 40c0 26-17 48-39 48S43 91 43 67Z" fill="url(#mascotWool)" />
+          <circle cx="66" cy="72" fill="#2F2119" r="5" />
+          <circle cx="97" cy="72" fill="#2F2119" r="5" />
+          <circle cx="68" cy="70" fill="#FFFFFF" r="1.5" />
+          <circle cx="99" cy="70" fill="#FFFFFF" r="1.5" />
+          <path d="M77 82c2-3 8-3 10 0-1 4-8 4-10 0Z" fill="#F78A8A" />
+          <path d="M70 91c6 7 18 7 24 0" fill="none" stroke="#6B3B2D" strokeLinecap="round" strokeWidth="4" />
+        </g>
+
+        <g className="mascot-arm-left">
+          <path d="M44 88c-15-2-25 8-25 18 0 8 8 12 15 8 7-4 12-12 18-19Z" fill="#FFF0C0" />
+          <circle cx="25" cy="106" fill="#5B3828" r="6" />
+        </g>
+
+        <g className="mascot-book">
+          <rect fill="#2FB80A" height="43" rx="8" stroke="#F2C94C" strokeWidth="4" width="36" x="90" y="90" />
+          <path d="M108 101v20M98 111h20" stroke="#FFEAA0" strokeLinecap="round" strokeWidth="5" />
+          <path d="M91 98c-7 6-10 17-8 29 3 6 13 8 23 6" fill="none" stroke="#2B8A12" strokeLinecap="round" strokeWidth="5" />
+        </g>
+
+        <path d="M63 133h16M91 133h16" stroke="#5B3828" strokeLinecap="round" strokeWidth="8" />
+        <circle cx="80" cy="121" fill="#F7C948" r="7" stroke="#FFEAA0" strokeWidth="3" />
+      </g>
+    </svg>
   );
 }
 
@@ -4181,6 +4280,7 @@ function ProgressScreen({
   categoryDistribution,
   completedCount,
   confessionLogs,
+  lifeStats,
   streakDays,
   t,
   weekProgress,
@@ -4191,6 +4291,7 @@ function ProgressScreen({
   categoryDistribution: Array<{ category: ActOfPiety["category"]; total: number; completed: number }>;
   completedCount: number;
   confessionLogs: ConfessionLogEntry[];
+  lifeStats: LifeRhythmStats;
   streakDays: number;
   t: Translator;
   weekProgress: Array<{ day: string; done: boolean }>;
@@ -4199,7 +4300,7 @@ function ProgressScreen({
   progressValue: number;
 }) {
   const novenaCompletedCount = novenaProgress?.completedDays.length ?? 0;
-  const badges = getBadgeLevels(streakDays, completedCount, t);
+  const badges = getBadgeLevels(lifeStats.badgePoints, t);
 
   return (
     <ScreenMotion className="space-y-5">
@@ -4260,9 +4361,15 @@ function ProgressScreen({
       <Card className="border-4 border-blue p-5">
         <div className="mb-4 flex items-center gap-3">
           <Medal className="size-9 text-blue" />
-          <h2 className="text-2xl font-black">{t("gracePoints")}</h2>
+          <h2 className="text-2xl font-black">{t("lifeRhythm")}</h2>
         </div>
-        <Progress value={progressValue} />
+        <div className="grid grid-cols-2 gap-3">
+          <StatPill label={t("totalActsCompleted")} value={`${lifeStats.totalCompletions}`} />
+          <StatPill label={t("activeDays")} value={`${lifeStats.activeDays}`} />
+          <StatPill label={t("weeklyConsistency")} value={`${lifeStats.weeklyConsistency}%`} />
+          <StatPill label={t("badgePoints")} value={`${lifeStats.badgePoints}`} />
+        </div>
+        <Progress value={lifeStats.weeklyConsistency} className="mt-4" />
         <p className="mt-4 text-lg font-black text-muted">
           {t("badgeHint")}
         </p>
@@ -4320,6 +4427,15 @@ function ProgressScreen({
         </div>
       </Card>
     </ScreenMotion>
+  );
+}
+
+function StatPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-background px-3 py-3">
+      <p className="text-xs font-black uppercase text-muted">{label}</p>
+      <p className="mt-1 text-2xl font-black text-foreground">{value}</p>
+    </div>
   );
 }
 
@@ -5376,13 +5492,13 @@ function getFeastMonthIndex(feastDay: string) {
   return monthNames.indexOf(monthName);
 }
 
-function getBadgeLevels(streakDays: number, completedCount: number, t: Translator) {
-  const totalPoints = streakDays * 10 + completedCount * 5;
+function getBadgeLevels(totalPoints: number, t: Translator) {
   const levels = [
-    { id: "spark", threshold: 10, title: "Spark" },
-    { id: "steady", threshold: 50, title: "Steady Flame" },
-    { id: "pilgrim", threshold: 120, title: "Pilgrim" },
-    { id: "faithful", threshold: 250, title: "Faithful Builder" },
+    { id: "spark", threshold: 80, title: "Spark" },
+    { id: "steady", threshold: 220, title: "Steady Flame" },
+    { id: "pilgrim", threshold: 520, title: "Pilgrim" },
+    { id: "faithful", threshold: 1100, title: "Faithful Builder" },
+    { id: "rule", threshold: 2200, title: "Rule of Life" },
   ];
 
   return levels.map((level) => ({
@@ -5394,6 +5510,34 @@ function getBadgeLevels(streakDays: number, completedCount: number, t: Translato
     progress: Math.min(100, Math.round((totalPoints / level.threshold) * 100)),
     unlocked: totalPoints >= level.threshold,
   }));
+}
+
+function getLifeRhythmStats(
+  completions: PietyCompletionEntry[],
+  novenaProgress: NovenaProgress | null,
+  today: string,
+): LifeRhythmStats {
+  const completionDates = new Set(completions.map((entry) => entry.date));
+  if (novenaProgress?.lastCompletedDate) {
+    completionDates.add(novenaProgress.lastCompletedDate);
+  }
+
+  const recentActiveDays = Array.from({ length: 7 }, (_, index) => {
+    const date = toInputDate(addDays(parseInputDate(today), -index));
+    return completionDates.has(date);
+  }).filter(Boolean).length;
+  const weeklyConsistency = Math.round((recentActiveDays / 7) * 100);
+  const activeDays = completionDates.size;
+  const totalCompletions = completions.length + (novenaProgress?.completedDays.length ?? 0);
+  const streakDays = getCompletionStreak(completions, novenaProgress, today);
+  const badgePoints = totalCompletions * 8 + activeDays * 18 + streakDays * 25 + weeklyConsistency;
+
+  return {
+    activeDays,
+    badgePoints,
+    totalCompletions,
+    weeklyConsistency,
+  };
 }
 
 function hasPietyCompletion(completions: PietyCompletionEntry[], pietyId: string, date: string) {

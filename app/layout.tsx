@@ -3,13 +3,13 @@ import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Acts of Piety",
-  description: "A joyful Catholic habit and prayer app.",
-  applicationName: "Acts of Piety",
+  title: "生活計劃 Plan of Life",
+  description: "A Catholic plan of life for prayer, sacraments, and daily holiness.",
+  applicationName: "生活計劃 Plan of Life",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Acts of Piety",
+    title: "生活計劃 Plan of Life",
     statusBarStyle: "default",
   },
 };
