@@ -118,18 +118,13 @@ a {
 }
 
 .mascot-vector-arm-left {
-  animation: mascot-vector-wave 1.8s ease-in-out infinite;
-  transform-origin: 62px 118px;
+  animation: mascot-vector-hoof-left 2.2s ease-in-out infinite;
+  transform-origin: 65px 102px;
 }
 
 .mascot-vector-arm-right {
-  animation: mascot-vector-arm-right 2.2s ease-in-out infinite;
-  transform-origin: 122px 119px;
-}
-
-.mascot-vector-book {
-  animation: mascot-vector-book 2.4s ease-in-out infinite;
-  transform-origin: 108px 136px;
+  animation: mascot-vector-hoof-right 2.2s ease-in-out infinite;
+  transform-origin: 116px 102px;
 }
 
 .mascot-vector-eyes {
@@ -260,40 +255,25 @@ a {
   }
 }
 
-@keyframes mascot-vector-wave {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-
-  32% {
-    transform: rotate(-9deg);
-  }
-
-  64% {
-    transform: rotate(5deg);
-  }
-}
-
-@keyframes mascot-vector-arm-right {
+@keyframes mascot-vector-hoof-left {
   0%,
   100% {
     transform: rotate(0deg);
   }
 
   45% {
-    transform: rotate(-3deg);
+    transform: translateY(-2px) rotate(-4deg);
   }
 }
 
-@keyframes mascot-vector-book {
+@keyframes mascot-vector-hoof-right {
   0%,
   100% {
-    transform: rotate(0deg) translateY(0) scale(1);
+    transform: rotate(0deg);
   }
 
   45% {
-    transform: rotate(1.5deg) translateY(-2px) scale(1.02);
+    transform: translateY(-2px) rotate(4deg);
   }
 }
 
