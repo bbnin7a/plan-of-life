@@ -83,6 +83,7 @@ import type {
 } from "@/lib/types";
 
 const CURRENT_APP_VERSION = packageInfo.version;
+const VERSION_CHECK_INTERVAL_MS = 3 * 60 * 60 * 1000;
 
 type AppStage = "welcome" | "onboarding" | "app";
 type Tab = "today" | "explore" | "prayers" | "progress" | "profile";
@@ -853,6 +854,7 @@ export default function App() {
     null,
   );
   const [showSplash, setShowSplash] = useState(true);
+  const [availableAppVersion, setAvailableAppVersion] = useState(CURRENT_APP_VERSION);
   const uiLanguage = preferences.uiLanguage ?? "zhHant";
   const t = useMemo(() => makeTranslator(uiLanguage), [uiLanguage]);
   const today = getTodayInputDate();
@@ -928,13 +930,52 @@ export default function App() {
     orientationSeenHydrated &&
     confessionLogsHydrated &&
     novenaProgressHydrated;
-  const hasNewAppVersion = compareVersionStrings(lastSeenAppVersion, CURRENT_APP_VERSION) < 0;
+  const hasNewAppVersion = compareVersionStrings(lastSeenAppVersion, availableAppVersion) < 0;
   const currentOrientationStep = orientationSteps[orientationStepIndex];
 
   useEffect(() => {
     const timer = window.setTimeout(() => setShowSplash(false), 900);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkForReleasedVersion() {
+      const versionInfo = await fetchReleasedAppVersion();
+      if (cancelled || !versionInfo) return;
+
+      if (compareVersionStrings(versionInfo.version, availableAppVersion) > 0) {
+        setAvailableAppVersion(versionInfo.version);
+      }
+
+      if (
+        compareVersionStrings(versionInfo.version, CURRENT_APP_VERSION) > 0 &&
+        "serviceWorker" in navigator &&
+        process.env.NODE_ENV === "production"
+      ) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        await registration?.update();
+      }
+    }
+
+    checkForReleasedVersion();
+    const interval = window.setInterval(checkForReleasedVersion, VERSION_CHECK_INTERVAL_MS);
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        checkForReleasedVersion();
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [availableAppVersion]);
 
   useEffect(() => {
     const fontScale = preferences.fontScale ?? 100;
@@ -1174,8 +1215,8 @@ export default function App() {
     setSelectedDetail(null);
   }
 
-  function acknowledgeCurrentAppVersion() {
-    setLastSeenAppVersion(CURRENT_APP_VERSION);
+function acknowledgeCurrentAppVersion() {
+    setLastSeenAppVersion(availableAppVersion);
   }
 
   function openOrientationTour() {
@@ -1277,7 +1318,7 @@ export default function App() {
             versionUpdate={
               hasNewAppVersion
                 ? {
-                    currentVersion: CURRENT_APP_VERSION,
+                    currentVersion: availableAppVersion,
                     previousVersion: lastSeenAppVersion,
                   }
                 : null
@@ -1357,6 +1398,7 @@ export default function App() {
             progressValue={progressValue}
             t={t}
             appVersion={CURRENT_APP_VERSION}
+            availableAppVersion={availableAppVersion}
             lastSeenAppVersion={lastSeenAppVersion}
             onAcknowledgeVersionUpdate={acknowledgeCurrentAppVersion}
             onClearStorage={clearStoredAppData}
@@ -1401,7 +1443,6 @@ export default function App() {
           prayer={selectedPrayer}
           t={t}
           onClose={() => setSelectedPrayerId(null)}
-          onSelectPrayer={setSelectedPrayerId}
         />
       ) : null}
 
@@ -3969,29 +4010,19 @@ function PrayerCardGameDialog({
   prayer,
   t,
   onClose,
-  onSelectPrayer,
 }: {
   language: PrayerLanguage;
   prayer: CatholicPrayer;
   t: Translator;
   onClose: () => void;
-  onSelectPrayer: (prayerId: string) => void;
 }) {
   const translation = prayer.languages[language];
   const prayerCards = prayer.cards?.[language] ?? [];
   const [selectedCardIndex, setSelectedCardIndex] = useState(0);
   const selectedPrayerCard = prayerCards[selectedCardIndex];
-  const selectedIndex = catholicPrayers.findIndex((candidate) => candidate.id === prayer.id);
   const hasPrayerCardDeck = prayerCards.length > 0;
-  const canGoPrevious = hasPrayerCardDeck ? selectedCardIndex > 0 : selectedIndex > 0;
-  const canGoNext = hasPrayerCardDeck
-    ? selectedCardIndex < prayerCards.length - 1
-    : selectedIndex >= 0 && selectedIndex < catholicPrayers.length - 1;
-
-  function goToPrayer(index: number) {
-    const nextPrayer = catholicPrayers[index];
-    if (nextPrayer) onSelectPrayer(nextPrayer.id);
-  }
+  const canGoPrevious = hasPrayerCardDeck && selectedCardIndex > 0;
+  const canGoNext = hasPrayerCardDeck && selectedCardIndex < prayerCards.length - 1;
 
   function goToPrayerCard(index: number) {
     setSelectedCardIndex(Math.min(Math.max(index, 0), prayerCards.length - 1));
@@ -4007,20 +4038,11 @@ function PrayerCardGameDialog({
         backLabel={t("cardBack")}
         canGoNext={canGoNext}
         canGoPrevious={canGoPrevious}
-        frontLabel={t("cardFront")}
         key={`${prayer.id}-${selectedCardIndex}`}
         metadata={cardMetadata}
         navigationStyle={hasPrayerCardDeck ? "stacked" : "plain"}
-        onNext={() =>
-          hasPrayerCardDeck
-            ? goToPrayerCard(selectedCardIndex + 1)
-            : goToPrayer(selectedIndex + 1)
-        }
-        onPrevious={() =>
-          hasPrayerCardDeck
-            ? goToPrayerCard(selectedCardIndex - 1)
-            : goToPrayer(selectedIndex - 1)
-        }
+        onNext={() => goToPrayerCard(selectedCardIndex + 1)}
+        onPrevious={() => goToPrayerCard(selectedCardIndex - 1)}
         prayerText={cardText}
         remainingCards={hasPrayerCardDeck ? prayerCards.length - selectedCardIndex - 1 : 0}
         textLanguage={language}
@@ -4072,12 +4094,9 @@ function NovenaCardGameDialog({
           backLabel={t("cardBack")}
           canGoNext={selectedIndex < novena.days.length - 1}
           canGoPrevious={selectedIndex > 0}
-          frontLabel={t("cardFront")}
           key={selectedDay.day}
           metadata={`${t("dayOf", { day: selectedDay.day, total: novena.days.length })} · ${selectedDay.reflection}`}
           navigationStyle="stacked"
-          autoFlip={false}
-          defaultFlipped={false}
           onNext={() => setSelectedIndex((index) => Math.min(novena.days.length - 1, index + 1))}
           onPrevious={() => setSelectedIndex((index) => Math.max(0, index - 1))}
           prayerText={`${selectedDay.reflection}\n\n${selectedDay.prayer}\n\n${t("action")}: ${selectedDay.action}`}
@@ -4120,7 +4139,7 @@ function FlipCardDialogShell({
 
   return (
     <div
-      className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-foreground/50 px-2 py-5"
+      className="fixed inset-0 z-40 grid place-items-center overflow-hidden bg-foreground/50 px-2 py-5"
       onClick={(event) => {
         if (event.target === event.currentTarget) closeDialog();
       }}
@@ -4133,7 +4152,7 @@ function FlipCardDialogShell({
         transition={{ type: "spring", stiffness: 230, damping: 20 }}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="pointer-events-none absolute -top-3 right-2 z-30 flex justify-end">
+        <div className="pointer-events-none fixed right-3 top-[max(0.75rem,env(safe-area-inset-top))] z-50 flex justify-end">
           <button
             type="button"
             aria-label={t("close")}
@@ -4150,12 +4169,9 @@ function FlipCardDialogShell({
 }
 
 function PrayerFlipCard({
-  autoFlip = false,
   backLabel,
   canGoNext = false,
   canGoPrevious = false,
-  defaultFlipped = false,
-  frontLabel,
   metadata,
   navigationStyle = "plain",
   onNext,
@@ -4167,12 +4183,9 @@ function PrayerFlipCard({
   typeLabel,
   t,
 }: {
-  autoFlip?: boolean;
   backLabel: string;
   canGoNext?: boolean;
   canGoPrevious?: boolean;
-  defaultFlipped?: boolean;
-  frontLabel: string;
   metadata: string;
   navigationStyle?: "plain" | "stacked";
   onNext?: () => void;
@@ -4185,21 +4198,15 @@ function PrayerFlipCard({
   t: Translator;
 }) {
   const canNavigate = canGoPrevious || canGoNext;
-  const [flipped, setFlipped] = useState(defaultFlipped);
   const [dragOffset, setDragOffset] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
   const swipeBackOpacity = Math.min(Math.max(dragOffset / 120, 0), 1);
   const swipeNextOpacity = Math.min(Math.max(-dragOffset / 120, 0), 1);
 
   useEffect(() => {
-    setFlipped(defaultFlipped);
     setDragOffset(0);
     setSwipeDirection(null);
-    if (!autoFlip) return;
-
-    const timer = window.setTimeout(() => setFlipped(true), 520);
-    return () => window.clearTimeout(timer);
-  }, [autoFlip, defaultFlipped, title]);
+  }, [title]);
 
   function triggerSwipe(direction: "left" | "right") {
     if (swipeDirection) return;
@@ -4249,10 +4256,9 @@ function PrayerFlipCard({
           <NovenaDeckBackStack remainingCards={remainingCards} />
         ) : null}
         <motion.div
-          className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing [transform-style:preserve-3d]"
+          className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing"
           animate={{
             opacity: swipeDirection ? 0 : 1,
-            rotateY: flipped ? 180 : 0,
             rotateZ: swipeDirection === "left" ? -14 : swipeDirection === "right" ? 14 : dragOffset / 26,
             scale: swipeDirection ? 0.96 : 1,
             x: swipeDirection === "left" ? -560 : swipeDirection === "right" ? 560 : 0,
@@ -4260,10 +4266,12 @@ function PrayerFlipCard({
           }}
           drag={canNavigate && !swipeDirection ? "x" : false}
           dragConstraints={{ left: 0, right: 0 }}
+          dragDirectionLock
           dragElastic={0.48}
           whileDrag={{ scale: 1.02 }}
           onDrag={(_, info) => setDragOffset(info.offset.x)}
           onDragEnd={(_, info) => handleSwipe(info.offset.x, info.velocity.x)}
+          style={{ touchAction: canNavigate ? "pan-y" : "auto" }}
           transition={{ type: "spring", stiffness: 180, damping: 20, mass: 0.85 }}
         >
         {canGoPrevious ? (
@@ -4282,44 +4290,17 @@ function PrayerFlipCard({
             {t("swipeNext")}
           </motion.div>
         ) : null}
-        <Card className="absolute inset-0 overflow-hidden border-2 border-yellow bg-yellow p-2 shadow-playful [backface-visibility:hidden]">
-          <div className="flex h-full flex-col rounded-[1.1rem] border-2 border-white bg-white p-4">
-            <div className="rounded-2xl bg-primary-light px-4 py-2 text-center">
-              <p className="text-sm font-black uppercase text-primary-dark">{frontLabel}</p>
-            </div>
-            <div className="my-4 grid flex-1 place-items-center rounded-[1.35rem] border-2 border-yellow bg-background px-4 py-8 text-center">
-              <div className="mb-4 grid size-24 place-items-center rounded-full border-2 border-white bg-yellow text-white shadow-soft">
-                <Sparkles className="size-12" strokeWidth={2.8} />
-              </div>
-              <p className="text-base font-black uppercase text-yellow">{typeLabel}</p>
-              <h2 className="mt-2 text-4xl font-black tracking-normal text-foreground">{title}</h2>
-              <p className="mt-3 text-base font-bold leading-relaxed text-muted">{metadata}</p>
-            </div>
-            <Button type="button" size="lg" className="mt-auto w-full" onClick={() => setFlipped(true)}>
-              {t("flipCard")}
-              <RefreshCw className="size-5" />
-            </Button>
-          </div>
-        </Card>
-
-        <Card className="absolute inset-0 overflow-hidden border-2 border-primary bg-primary p-2 shadow-playful [backface-visibility:hidden] [transform:rotateY(180deg)]">
+        <Card className="absolute inset-0 overflow-hidden border-2 border-primary bg-primary p-2 shadow-playful">
           <div className="flex h-full flex-col rounded-[1.1rem] border-2 border-white bg-white p-4">
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-black uppercase text-primary-dark">{backLabel}</p>
+                <p className="text-sm font-black uppercase text-primary-dark">{typeLabel} · {backLabel}</p>
                 <h2 className="text-2xl font-black tracking-normal">{title}</h2>
+                <p className="mt-1 text-sm font-bold leading-snug text-muted">{metadata}</p>
               </div>
-              <button
-                type="button"
-                aria-label={t("flipCard")}
-                title={t("flipCard")}
-                onClick={() => setFlipped(false)}
-                className="grid size-11 shrink-0 place-items-center rounded-2xl border-2 border-primary-light bg-primary-light text-primary-dark shadow-soft"
-              >
-                <RefreshCw className="size-5" strokeWidth={2.8} />
-              </button>
+              <Sparkles className="size-7 shrink-0 text-yellow" strokeWidth={2.8} />
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto rounded-2xl bg-background px-4 py-3">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-background px-4 py-3 [touch-action:pan-y]">
               <p
                 className={cn(
                   "whitespace-pre-line font-bold leading-relaxed text-foreground",
@@ -4607,6 +4588,7 @@ function BadgeLevelRow({
 
 function ProfileScreen({
   appVersion,
+  availableAppVersion,
   lastSeenAppVersion,
   personalProfile,
   preferences,
@@ -4624,6 +4606,7 @@ function ProfileScreen({
   onShowOrientation,
 }: {
   appVersion: string;
+  availableAppVersion: string;
   lastSeenAppVersion: string;
   personalProfile: PersonalProfile;
   preferences: AppPreferences;
@@ -4845,7 +4828,8 @@ function ProfileScreen({
       </div>
 
       <AppUpdateCard
-        appVersion={appVersion}
+        appVersion={availableAppVersion}
+        installedAppVersion={appVersion}
         lastSeenAppVersion={lastSeenAppVersion}
         t={t}
         onAcknowledgeVersionUpdate={onAcknowledgeVersionUpdate}
@@ -4948,11 +4932,13 @@ function CategoryDistributionRow({
 
 function AppUpdateCard({
   appVersion,
+  installedAppVersion = appVersion,
   lastSeenAppVersion,
   t,
   onAcknowledgeVersionUpdate,
 }: {
   appVersion: string;
+  installedAppVersion?: string;
   lastSeenAppVersion: string;
   t: Translator;
   onAcknowledgeVersionUpdate: () => void;
@@ -5038,7 +5024,7 @@ function AppUpdateCard({
       </div>
 
       <div className="mb-4 grid grid-cols-2 gap-2">
-        <ScheduleInfoPill label={t("installedVersion")} value={lastSeenAppVersion} />
+        <ScheduleInfoPill label={t("installedVersion")} value={installedAppVersion} />
         <ScheduleInfoPill label={t("currentVersion")} value={appVersion} />
       </div>
 
@@ -5403,6 +5389,23 @@ async function clearAppCaches() {
       .filter((key) => key.startsWith("acts-of-piety"))
       .map((key) => window.caches.delete(key)),
   );
+}
+
+async function fetchReleasedAppVersion() {
+  try {
+    const response = await fetch(`/version.json?updatedAt=${Date.now()}`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) return null;
+
+    const data = (await response.json()) as { version?: unknown };
+    return typeof data.version === "string" && data.version.trim()
+      ? { version: data.version.trim() }
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 function clearPlanOfLifeLocalStorage() {

@@ -1,4 +1,4 @@
-const CACHE_NAME = "acts-of-piety-v0.3.2";
+const CACHE_NAME = "acts-of-piety-v0.3.3";
 const APP_SHELL = ["/", "/manifest.webmanifest", "/icons/icon-192.svg", "/icons/icon-512.svg"];
 
 async function cacheAppShell() {
@@ -58,6 +58,13 @@ self.addEventListener("message", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+
+  const requestUrl = new URL(event.request.url);
+
+  if (requestUrl.pathname === "/version.json") {
+    event.respondWith(fetch(event.request, { cache: "no-store" }));
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
