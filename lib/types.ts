@@ -114,6 +114,14 @@ export type CatholicPrayer = {
       text: string;
     }
   >;
+  cards?: Record<
+    PrayerLanguage,
+    Array<{
+      title: string;
+      subtitle?: string;
+      text: string;
+    }>
+  >;
 };
 
 export type SacramentalAction = {

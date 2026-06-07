@@ -39,6 +39,181 @@ export const defaultPreferences: AppPreferences = {
   confessionFrequencyDays: 30,
 };
 
+const rosaryOpeningZhHant = `聖號經
+因父，及子及聖神之名。亞孟。
+
+宗徒信經
+我信全能的天主父，天地萬物的創造者。
+我信父的唯一子，我們的主耶穌基督。
+我信他因聖神降孕，由童貞瑪利亞誕生。
+我信他在比拉多執政時蒙難，被釘在十字架上，死而安葬。
+我信他下降陰府，第三日從死者中復活。
+我信他升了天，坐在全能天主父的右邊。
+我信他要從天降來，審判生者死者。
+我信聖神。
+我信聖而公教會，諸聖的相通。
+我信罪過的赦免。
+我信肉身的復活。
+我信永恆的生命。亞孟。
+
+天主經
+我們的天父，願祢的名受顯揚；願祢的國來臨；願祢的旨意奉行在人間，如同在天上。求祢今天賞給我們日用的食糧；求祢寬恕我們的罪過，如同我們寬恕別人一樣；不要讓我們陷於誘惑；但救我們免於凶惡。亞孟。
+
+聖母經（三篇）
+萬福瑪利亞，妳充滿聖寵。主與妳同在。妳在婦女中受讚頌，妳的親子耶穌同受讚頌。天主聖母瑪利亞，求妳現在和我們臨終時，為我們罪人祈求天主。亞孟。（三篇）
+
+聖三光榮經
+願光榮歸於父、及子、及聖神。起初如何，今日亦然，直到永遠。亞孟。`;
+
+const rosaryDecadeZhHant = `天主經
+我們的天父，願祢的名受顯揚；願祢的國來臨；願祢的旨意奉行在人間，如同在天上。求祢今天賞給我們日用的食糧；求祢寬恕我們的罪過，如同我們寬恕別人一樣；不要讓我們陷於誘惑；但救我們免於凶惡。亞孟。
+
+聖母經（十篇）
+萬福瑪利亞，妳充滿聖寵。主與妳同在。妳在婦女中受讚頌，妳的親子耶穌同受讚頌。天主聖母瑪利亞，求妳現在和我們臨終時，為我們罪人祈求天主。亞孟。（十篇）
+
+聖三光榮經
+願光榮歸於父、及子、及聖神。起初如何，今日亦然，直到永遠。亞孟。
+
+花地瑪聖母禱詞
+我的耶穌，請寬恕我們的罪過，救我們免地獄永火。求祢把眾人的靈魂，特別是那些最需要祢憐憫的靈魂，領到天國裏去。亞孟。`;
+
+const rosaryClosingZhHant = `又聖母經
+萬褔母后！仁慈的母親，我們的生命，我們的甘飴，我們的希望。厄娃子孫，在此麈世，向您哀呼。在這涕泣之谷，向您歎息哭求。我們的主保，求您回顧，憐視我們。一但流亡期滿，使我們得見您的聖子，萬民稱頌的耶穌。童貞瑪利亞，您是寬仁的、慈悲的、甘飴的。天主聖母，請為我們祈求，使我們堪受基督的恩許。亞孟。`;
+
+const rosaryMysteryCardsZhHant = [
+  {
+    title: "歡喜奧蹟",
+    subtitle: "天使報喜、聖母訪親、耶穌誕生、獻於聖殿、耶穌十二齡講道",
+    text: `${rosaryOpeningZhHant}
+
+歡喜一端：天使向聖母瑪利亞報喜
+天使進去向她說：「萬福！滿被聖寵者，上主與妳同在！在女人中妳是蒙祝福的。」
+${rosaryDecadeZhHant}
+
+歡喜二端：聖母拜訪聖婦依撒伯爾
+依撒伯爾一聽到瑪利亞請安，胎兒就在她的腹中歡躍。依撒伯爾遂充滿了聖神，大聲呼喊說：「在女人中妳是蒙祝福的，妳的胎兒也是蒙祝福的。」
+${rosaryDecadeZhHant}
+
+歡喜三端：耶穌誕生
+瑪利亞便生了她的頭胎男兒，用襁褓裹起，放在馬槽裏，因為在客棧中祂們沒有地方。
+${rosaryDecadeZhHant}
+
+歡喜四端：聖母獻耶穌於聖殿
+按梅瑟的法律，一滿了祂們取潔的日期，祂們便帶著孩子上耶路撒冷去獻給上主，就如上主的法律上所記載的：「凡開胎首生的男性，應祝聖於上主。」
+${rosaryDecadeZhHant}
+
+歡喜五端：耶穌十二齡講道
+過了三天，聖母在聖殿裏找到了耶穌。衪正坐在經師中，聆聽他們，也詢問他們。
+${rosaryDecadeZhHant}
+
+${rosaryClosingZhHant}`,
+  },
+  {
+    title: "光明奧蹟",
+    subtitle: "受洗、加納婚宴、宣講天國、顯容、建立聖體",
+    text: `${rosaryOpeningZhHant}
+
+光明一端：耶穌在約旦河受洗
+那時，耶穌由加里肋亞來到約旦河若翰那裡，為受他的洗。
+${rosaryDecadeZhHant}
+
+光明二端：耶穌參加加納婚宴
+第三天，在加里肋亞加納有婚宴，耶穌的母親在那裡。司席一嘗已變成酒的水。這是耶穌所行的第一個神跡。
+${rosaryDecadeZhHant}
+
+光明三端：耶穌宣講天國福音
+若翰被監禁後，耶穌來到加里肋亞，宣講天主的福音，說：「時期已滿，天主的國臨近了，你們悔改，信從福音罷！」
+${rosaryDecadeZhHant}
+
+光明四端：耶穌在大博爾山顯容
+耶穌帶著伯多祿、若望和雅各伯上山去祈禱。正當衪祈禱時，衪的面容改變，衪的衣服潔白發光。雲中有聲音說：「這是我的兒子，我所揀選的，你們要聽從衪！」
+${rosaryDecadeZhHant}
+
+光明五端：耶穌建立聖體聖事
+他們正吃晚餐的時候，耶穌拿起餅來，祝福了，擘開遞給門徒說：「你們拿去吃吧！這是我的身體。」然後，又拿起杯來，祝謝了，遞給他們說：「你們都由其中喝吧！因為這是我的血，新約的血，為大眾傾流，以赦免罪過。」
+${rosaryDecadeZhHant}
+
+${rosaryClosingZhHant}`,
+  },
+  {
+    title: "痛苦奧蹟",
+    subtitle: "山園祈禱、受鞭打、茨冠、背十字架、釘死",
+    text: `${rosaryOpeningZhHant}
+
+痛苦一端：耶穌山園祈禱
+耶穌在極度恐懼中，祈禱越發懇切。衪的汗如同血珠滴在地上。衪從祈禱中起來，到門徒那裏，看見他們都因憂悶睡著了。
+${rosaryDecadeZhHant}
+
+痛苦二端：耶穌受鞭打苦刑
+那時，比拉多命人把耶穌帶去鞭打了。
+${rosaryDecadeZhHant}
+
+痛苦三端：耶穌受茨冠的苦辱
+兵士脫去了耶穌的衣服，給衪披上一件紫紅袍；又用荊棘編了一個茨冠，戴在衪的頭上，拿了一根蘆葦放在衪的右手裏；然後跪在衪前，戲弄衪說：「猶太人的君王，萬歲！」
+${rosaryDecadeZhHant}
+
+痛苦四端：耶穌背十字架上山
+耶穌自己背著十字架出來，到了一個名叫「髑髏」的地方，希伯來話叫「哥耳哥達」。
+${rosaryDecadeZhHant}
+
+痛苦五端：耶穌被釘死在十字架上
+耶穌大聲呼喊說：「父啊！我把我的靈魂交托在你手中。」說完這話，便斷了氣。
+${rosaryDecadeZhHant}
+
+${rosaryClosingZhHant}`,
+  },
+  {
+    title: "榮福奧蹟",
+    subtitle: "復活、升天、聖神降臨、聖母蒙召升天、天主光榮聖母",
+    text: `${rosaryOpeningZhHant}
+
+榮福一端：耶穌復活
+那少年人向她們說：「不要驚惶！你們尋找那被釘在十字架上的納匝肋人耶穌，祂已經復活了，不在這裏了；請看安放過祂的地方！」
+${rosaryDecadeZhHant}
+
+榮福二端：耶穌升天
+主耶穌給祂們說了這些話以後，就被接升天，坐在天主的右邊。
+${rosaryDecadeZhHant}
+
+榮福三端：聖神降臨
+眾人都充滿了聖神，照聖神賜給祂們的話，說起外方話來。
+${rosaryDecadeZhHant}
+
+榮福四端：聖母蒙召升天
+那時，天上出現了一個大異兆：有一個女人，身披太陽，腳踏月亮，頭戴十二顆星的榮冠。
+${rosaryDecadeZhHant}
+
+榮福五端：天主光榮聖母
+妳是耶路撒冷的榮耀，妳是我們民族的大光榮，天主也因妳而喜悅。願妳永遠為全能的上主所祝福！
+${rosaryDecadeZhHant}
+
+${rosaryClosingZhHant}`,
+  },
+];
+
+const rosaryMysteryCardsEn = [
+  {
+    title: "Joyful Mysteries",
+    subtitle: "Annunciation, Visitation, Nativity, Presentation, Finding in the Temple",
+    text: "Pray the Rosary opening prayers, then meditate on the five Joyful Mysteries. The full Traditional Chinese prayer text is available by switching prayer language to Traditional Chinese.",
+  },
+  {
+    title: "Luminous Mysteries",
+    subtitle: "Baptism, Wedding at Cana, Kingdom Proclaimed, Transfiguration, Eucharist",
+    text: "Pray the Rosary opening prayers, then meditate on the five Luminous Mysteries. The full Traditional Chinese prayer text is available by switching prayer language to Traditional Chinese.",
+  },
+  {
+    title: "Sorrowful Mysteries",
+    subtitle: "Agony, Scourging, Crowning with Thorns, Carrying the Cross, Crucifixion",
+    text: "Pray the Rosary opening prayers, then meditate on the five Sorrowful Mysteries. The full Traditional Chinese prayer text is available by switching prayer language to Traditional Chinese.",
+  },
+  {
+    title: "Glorious Mysteries",
+    subtitle: "Resurrection, Ascension, Pentecost, Assumption, Coronation",
+    text: "Pray the Rosary opening prayers, then meditate on the five Glorious Mysteries. The full Traditional Chinese prayer text is available by switching prayer language to Traditional Chinese.",
+  },
+];
+
 export const actsOfPiety: ActOfPiety[] = [
   {
     id: "fixed-rising",
@@ -1012,6 +1187,39 @@ export const catholicPrayers: CatholicPrayer[] = [
         subtitle: "讚美聖三的短頌。",
         text: "願光榮歸於父、及子、及聖神；\n起初如何，\n今日亦然，\n直到永遠。阿們。",
       },
+    },
+  },
+  {
+    id: "rosary",
+    category: "rosary",
+    tags: [
+      "rosary",
+      "mysteries",
+      "joyful",
+      "luminous",
+      "sorrowful",
+      "glorious",
+      "玫瑰經",
+      "歡喜奧蹟",
+      "光明奧蹟",
+      "痛苦奧蹟",
+      "榮福奧蹟",
+    ],
+    languages: {
+      en: {
+        title: "Rosary",
+        subtitle: "Four mystery cards for praying the Rosary.",
+        text: "Choose a mystery card: Joyful, Luminous, Sorrowful, or Glorious.",
+      },
+      zhHant: {
+        title: "玫瑰經",
+        subtitle: "以四張卡牌分別誦念歡喜、光明、痛苦、榮福奧蹟。",
+        text: "請選擇一張奧蹟卡牌：歡喜、光明、痛苦或榮福奧蹟。",
+      },
+    },
+    cards: {
+      en: rosaryMysteryCardsEn,
+      zhHant: rosaryMysteryCardsZhHant,
     },
   },
   {

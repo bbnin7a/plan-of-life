@@ -3978,14 +3978,28 @@ function PrayerCardGameDialog({
   onSelectPrayer: (prayerId: string) => void;
 }) {
   const translation = prayer.languages[language];
+  const prayerCards = prayer.cards?.[language] ?? [];
+  const [selectedCardIndex, setSelectedCardIndex] = useState(0);
+  const selectedPrayerCard = prayerCards[selectedCardIndex];
   const selectedIndex = catholicPrayers.findIndex((candidate) => candidate.id === prayer.id);
-  const canGoPrevious = selectedIndex > 0;
-  const canGoNext = selectedIndex >= 0 && selectedIndex < catholicPrayers.length - 1;
+  const hasPrayerCardDeck = prayerCards.length > 0;
+  const canGoPrevious = hasPrayerCardDeck ? selectedCardIndex > 0 : selectedIndex > 0;
+  const canGoNext = hasPrayerCardDeck
+    ? selectedCardIndex < prayerCards.length - 1
+    : selectedIndex >= 0 && selectedIndex < catholicPrayers.length - 1;
 
   function goToPrayer(index: number) {
     const nextPrayer = catholicPrayers[index];
     if (nextPrayer) onSelectPrayer(nextPrayer.id);
   }
+
+  function goToPrayerCard(index: number) {
+    setSelectedCardIndex(Math.min(Math.max(index, 0), prayerCards.length - 1));
+  }
+
+  const cardTitle = selectedPrayerCard?.title ?? translation.title;
+  const cardMetadata = selectedPrayerCard?.subtitle ?? translation.subtitle ?? readablePrayerCategory(prayer.category, t);
+  const cardText = selectedPrayerCard?.text ?? translation.text;
 
   return (
     <FlipCardDialogShell t={t} onClose={onClose}>
@@ -3994,14 +4008,23 @@ function PrayerCardGameDialog({
         canGoNext={canGoNext}
         canGoPrevious={canGoPrevious}
         frontLabel={t("cardFront")}
-        key={prayer.id}
-        metadata={translation.subtitle ?? readablePrayerCategory(prayer.category, t)}
-        navigationStyle="plain"
-        onNext={() => goToPrayer(selectedIndex + 1)}
-        onPrevious={() => goToPrayer(selectedIndex - 1)}
-        prayerText={translation.text}
+        key={`${prayer.id}-${selectedCardIndex}`}
+        metadata={cardMetadata}
+        navigationStyle={hasPrayerCardDeck ? "stacked" : "plain"}
+        onNext={() =>
+          hasPrayerCardDeck
+            ? goToPrayerCard(selectedCardIndex + 1)
+            : goToPrayer(selectedIndex + 1)
+        }
+        onPrevious={() =>
+          hasPrayerCardDeck
+            ? goToPrayerCard(selectedCardIndex - 1)
+            : goToPrayer(selectedIndex - 1)
+        }
+        prayerText={cardText}
+        remainingCards={hasPrayerCardDeck ? prayerCards.length - selectedCardIndex - 1 : 0}
         textLanguage={language}
-        title={translation.title}
+        title={cardTitle}
         typeLabel={getPrayerCardTypeLabel(prayer, t)}
         t={t}
       />
@@ -5914,6 +5937,9 @@ function getPrayerSearchText(prayer: CatholicPrayer) {
       translation.subtitle ?? "",
       translation.text,
     ]),
+    ...Object.values(prayer.cards ?? {}).flatMap((cards) =>
+      cards.flatMap((card) => [card.title, card.subtitle ?? "", card.text]),
+    ),
   ]
     .join(" ")
     .toLocaleLowerCase();
