@@ -109,27 +109,37 @@ a {
 
 .mascot-vector-ear-left {
   animation: mascot-vector-ear-left 2.9s ease-in-out infinite;
-  transform-origin: 51px 80px;
+  transform-origin: 52px 76px;
 }
 
 .mascot-vector-ear-right {
   animation: mascot-vector-ear-right 3.1s ease-in-out infinite;
-  transform-origin: 130px 80px;
+  transform-origin: 128px 76px;
 }
 
 .mascot-vector-arm-left {
   animation: mascot-vector-wave 1.8s ease-in-out infinite;
-  transform-origin: 55px 116px;
+  transform-origin: 62px 118px;
+}
+
+.mascot-vector-arm-right {
+  animation: mascot-vector-arm-right 2.2s ease-in-out infinite;
+  transform-origin: 122px 119px;
 }
 
 .mascot-vector-book {
   animation: mascot-vector-book 2.4s ease-in-out infinite;
-  transform-origin: 128px 132px;
+  transform-origin: 108px 136px;
 }
 
 .mascot-vector-eyes {
   animation: mascot-vector-blink 4.2s ease-in-out infinite;
-  transform-origin: 93px 89px;
+  transform-origin: 95px 88px;
+}
+
+.mascot-vector-curls {
+  animation: mascot-vector-curls 2.8s ease-in-out infinite;
+  transform-origin: 92px 54px;
 }
 
 .mascot-vector-fleece {
@@ -265,14 +275,36 @@ a {
   }
 }
 
-@keyframes mascot-vector-book {
+@keyframes mascot-vector-arm-right {
   0%,
   100% {
-    transform: rotate(0deg) translateY(0);
+    transform: rotate(0deg);
   }
 
   45% {
-    transform: rotate(2.5deg) translateY(-2px);
+    transform: rotate(-3deg);
+  }
+}
+
+@keyframes mascot-vector-book {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0) scale(1);
+  }
+
+  45% {
+    transform: rotate(1.5deg) translateY(-2px) scale(1.02);
+  }
+}
+
+@keyframes mascot-vector-curls {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  45% {
+    transform: translateY(-1px) scale(1.025);
   }
 }
 

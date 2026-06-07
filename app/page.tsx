@@ -1493,81 +1493,83 @@ function MascotAnimation({ className, title }: { className?: string; title: stri
           <stop offset="0.7" stopColor="#FFF6DA" />
           <stop offset="1" stopColor="#FFE3A3" />
         </radialGradient>
-        <linearGradient id="mascotHoodGradient" x1="35" x2="138" y1="36" y2="150">
-          <stop stopColor="#9AF24A" />
-          <stop offset="0.55" stopColor="#58CC02" />
-          <stop offset="1" stopColor="#2F9300" />
-        </linearGradient>
-        <linearGradient id="mascotBookGradient" x1="102" x2="146" y1="96" y2="148">
-          <stop stopColor="#8BE63D" />
-          <stop offset="1" stopColor="#45B700" />
+        <linearGradient id="mascotBookGradient" x1="70" x2="140" y1="105" y2="155">
+          <stop stopColor="#243041" />
+          <stop offset="1" stopColor="#111827" />
         </linearGradient>
       </defs>
 
-      <ellipse className="mascot-vector-shadow" cx="90" cy="160" fill="#2F9300" opacity="0.18" rx="43" ry="8" />
+      <ellipse className="mascot-vector-shadow" cx="91" cy="160" fill="#7A5A35" opacity="0.18" rx="48" ry="9" />
 
       <g className="mascot-vector-body">
         <g className="mascot-vector-halo">
-          <ellipse cx="91" cy="20" fill="none" rx="41" ry="11" stroke="#FFC928" strokeLinecap="round" strokeWidth="8" />
-          <ellipse cx="91" cy="20" fill="none" opacity="0.5" rx="30" ry="6" stroke="#FFF4A6" strokeWidth="3" />
+          <ellipse cx="91" cy="20" fill="none" rx="34" ry="9" stroke="#FFC928" strokeLinecap="round" strokeWidth="6" />
+          <ellipse cx="91" cy="20" fill="none" opacity="0.5" rx="25" ry="5" stroke="#FFF4A6" strokeWidth="2" />
         </g>
-
-        <path d="M45 80c0-31 24-56 55-56 29 0 49 25 49 56v60c0 13-11 24-24 24H68c-13 0-24-11-24-24V80Z" fill="url(#mascotHoodGradient)" />
-        <path d="M55 82c0-25 19-45 44-45 23 0 38 20 38 45v51c0 10-8 18-18 18H73c-10 0-18-8-18-18V82Z" fill="#83E83A" opacity="0.48" />
 
         <g className="mascot-vector-ear-left">
-          <path d="M49 74c-15-21-37-26-48-15-10 10-2 30 17 38 15 7 31 1 42-11Z" fill="#FFE2B3" />
-          <path d="M20 61c12-4 24 2 31 14-10 9-28 8-37-3 1-4 3-8 6-11Z" fill="#FFB8A2" opacity="0.78" />
+          <path d="M51 69c-14-24-36-31-48-20-12 11-6 35 13 47 16 10 34 5 47-10Z" fill="#FFE2B3" />
+          <path d="M20 51c12-4 25 4 33 18-11 10-29 8-39-4 1-5 3-10 6-14Z" fill="#F3B08E" opacity="0.72" />
         </g>
         <g className="mascot-vector-ear-right">
-          <path d="M132 74c15-21 37-26 48-15 10 10 2 30-17 38-15 7-31 1-42-11Z" fill="#FFE2B3" />
-          <path d="M160 61c-12-4-24 2-31 14 10 9 28 8 37-3-1-4-3-8-6-11Z" fill="#FFB8A2" opacity="0.78" />
+          <path d="M129 69c14-24 36-31 48-20 12 11 6 35-13 47-16 10-34 5-47-10Z" fill="#FFE2B3" />
+          <path d="M160 51c-12-4-25 4-33 18 11 10 29 8 39-4-1-5-3-10-6-14Z" fill="#F3B08E" opacity="0.72" />
         </g>
 
         <g className="mascot-vector-arm-left">
-          <path d="M51 111c-18 2-30 15-29 28 1 9 10 13 18 7 8-6 13-17 22-28Z" fill="#FFF0C0" />
-          <circle cx="31" cy="139" fill="#5A3A28" r="7" />
+          <path d="M56 113c-17 3-27 15-25 27 1 8 10 12 18 6 7-6 12-16 21-27Z" fill="#FFF0C0" />
+          <circle cx="39" cy="140" fill="#8A5B32" r="7" />
         </g>
 
         <g className="mascot-vector-face">
-          <circle cx="55" cy="66" fill="url(#mascotFleeceGradient)" r="14" />
-          <circle cx="70" cy="53" fill="url(#mascotFleeceGradient)" r="17" />
-          <circle cx="91" cy="48" fill="url(#mascotFleeceGradient)" r="20" />
-          <circle cx="112" cy="54" fill="url(#mascotFleeceGradient)" r="17" />
-          <circle cx="127" cy="68" fill="url(#mascotFleeceGradient)" r="14" />
-          <path d="M45 86c0-27 21-47 47-47 27 0 48 20 48 47 0 30-22 55-49 55S45 116 45 86Z" fill="url(#mascotWoolGradient)" />
-          <circle cx="55" cy="96" fill="url(#mascotFleeceGradient)" r="13" />
-          <circle cx="127" cy="96" fill="url(#mascotFleeceGradient)" r="13" />
-          <path d="M64 75c5-5 13-5 18 0" fill="none" stroke="#6B3B2D" strokeLinecap="round" strokeWidth="5" />
-          <path d="M102 75c5-5 13-5 18 0" fill="none" stroke="#6B3B2D" strokeLinecap="round" strokeWidth="5" />
-          <g className="mascot-vector-eyes">
-            <ellipse cx="73" cy="89" fill="#2F2119" rx="6" ry="7" />
-            <ellipse cx="112" cy="89" fill="#2F2119" rx="6" ry="7" />
-            <circle cx="75" cy="86" fill="#FFFFFF" r="2" />
-            <circle cx="114" cy="86" fill="#FFFFFF" r="2" />
+          <g className="mascot-vector-curls">
+            <circle cx="54" cy="62" fill="url(#mascotFleeceGradient)" r="13" />
+            <circle cx="66" cy="49" fill="url(#mascotFleeceGradient)" r="13" />
+            <circle cx="79" cy="43" fill="url(#mascotFleeceGradient)" r="14" />
+            <circle cx="94" cy="40" fill="url(#mascotFleeceGradient)" r="15" />
+            <circle cx="109" cy="45" fill="url(#mascotFleeceGradient)" r="13" />
+            <circle cx="122" cy="55" fill="url(#mascotFleeceGradient)" r="12" />
+            <circle cx="132" cy="70" fill="url(#mascotFleeceGradient)" r="11" />
           </g>
-          <path d="M84 100c5-6 16-6 21 0-3 7-18 7-21 0Z" fill="#FFEFD0" />
-          <path d="M88 99c3-4 10-4 13 0-2 5-11 5-13 0Z" fill="#F78A8A" />
-          <path d="M82 112c8 8 22 8 30 0" fill="none" stroke="#6B3B2D" strokeLinecap="round" strokeWidth="5" />
-          <circle cx="58" cy="105" fill="#FFB5A2" opacity="0.35" r="7" />
-          <circle cx="124" cy="105" fill="#FFB5A2" opacity="0.35" r="7" />
+          <path d="M45 88c0-27 20-48 47-48 28 0 49 21 49 48 0 30-22 54-50 54S45 118 45 88Z" fill="url(#mascotWoolGradient)" />
+          <circle cx="55" cy="98" fill="url(#mascotFleeceGradient)" r="12" />
+          <circle cx="128" cy="98" fill="url(#mascotFleeceGradient)" r="12" />
+          <path d="M65 75c5-4 12-4 17 0" fill="none" stroke="#6B3B2D" strokeLinecap="round" strokeWidth="4" />
+          <g className="mascot-vector-eyes">
+            <ellipse cx="76" cy="88" fill="#171717" rx="5.5" ry="7" />
+            <ellipse cx="114" cy="88" fill="#171717" rx="5.5" ry="7" />
+            <circle cx="78" cy="85" fill="#FFFFFF" opacity="0.75" r="1.5" />
+            <circle cx="116" cy="85" fill="#FFFFFF" opacity="0.75" r="1.5" />
+          </g>
+          <path d="M85 100c5-6 17-6 22 0-3 8-19 8-22 0Z" fill="#FFEFD0" />
+          <path d="M89 99c3-4 10-4 13 0-2 5-11 5-13 0Z" fill="#F2A38B" />
+          <path d="M86 111c6 5 17 5 23 0" fill="none" stroke="#6B3B2D" strokeLinecap="round" strokeWidth="4" />
+          <circle cx="58" cy="105" fill="#F4A58A" opacity="0.38" r="7" />
+          <circle cx="124" cy="105" fill="#F4A58A" opacity="0.38" r="7" />
         </g>
 
         <g className="mascot-vector-fleece">
-          <circle cx="65" cy="130" fill="url(#mascotFleeceGradient)" r="15" />
-          <circle cx="84" cy="136" fill="url(#mascotFleeceGradient)" r="18" />
-          <circle cx="105" cy="134" fill="url(#mascotFleeceGradient)" r="17" />
-          <circle cx="122" cy="125" fill="url(#mascotFleeceGradient)" r="13" />
+          <circle cx="62" cy="126" fill="url(#mascotFleeceGradient)" r="14" />
+          <circle cx="78" cy="136" fill="url(#mascotFleeceGradient)" r="16" />
+          <circle cx="96" cy="139" fill="url(#mascotFleeceGradient)" r="18" />
+          <circle cx="114" cy="135" fill="url(#mascotFleeceGradient)" r="16" />
+          <circle cx="129" cy="123" fill="url(#mascotFleeceGradient)" r="13" />
+        </g>
+
+        <g className="mascot-vector-arm-right">
+          <path d="M129 114c14 4 24 15 23 26-1 8-10 12-18 6-7-6-11-15-20-27Z" fill="#FFF0C0" />
+          <circle cx="143" cy="140" fill="#8A5B32" r="7" />
         </g>
 
         <g className="mascot-vector-book">
-          <rect fill="url(#mascotBookGradient)" height="49" rx="8" stroke="#F2C94C" strokeWidth="4" width="41" x="108" y="107" />
-          <path d="M128 120v21M117 131h22" stroke="#FFEAA0" strokeLinecap="round" strokeWidth="5" />
-          <path d="M108 115c-7 7-11 20-8 33 4 7 15 9 27 7" fill="none" stroke="#2B8A12" strokeLinecap="round" strokeWidth="5" />
+          <path d="M68 115c13-8 28-7 40 2v39c-13-8-27-9-40-2Z" fill="url(#mascotBookGradient)" />
+          <path d="M108 117c13-9 28-10 42-3v39c-14-7-28-5-42 3Z" fill="url(#mascotBookGradient)" />
+          <path d="M108 117v39" stroke="#EBD8A4" strokeLinecap="round" strokeWidth="3" />
+          <path d="M78 126h18M78 134h20M118 126h20M118 134h17" stroke="#EBD8A4" strokeLinecap="round" strokeWidth="2" />
+          <path d="M68 115c13-8 28-7 40 2 13-9 28-10 42-3" fill="none" stroke="#F2C94C" strokeLinecap="round" strokeWidth="3" />
         </g>
 
-        <path d="M69 158h16M105 158h16" stroke="#5A3A28" strokeLinecap="round" strokeWidth="9" />
-        <circle cx="95" cy="146" fill="#F7C948" r="8" stroke="#FFEAA0" strokeWidth="3" />
+        <path d="M65 158h16M112 158h16" stroke="#8A5B32" strokeLinecap="round" strokeWidth="9" />
       </g>
     </svg>
   );
