@@ -825,6 +825,7 @@ export const saintProfiles: SaintProfile[] = [
     feastDay: "March 19",
     patronage: ["families", "workers", "the universal church"],
     tags: ["humility", "work", "family", "silence"],
+    relatedPrayerIds: ["guardian-angel"],
     languages: {
       en: {
         name: "St. Joseph",
@@ -852,6 +853,8 @@ export const saintProfiles: SaintProfile[] = [
     feastDay: "June 26",
     patronage: ["ordinary work", "lay holiness", "daily life"],
     tags: ["work", "holiness", "ordinary life", "plan of life"],
+    relatedPrayerIds: ["work-offering"],
+    relatedNovenaIds: ["daily-work"],
     languages: {
       en: {
         name: "St. Josemaria Escriva",
@@ -879,6 +882,7 @@ export const saintProfiles: SaintProfile[] = [
     feastDay: "October 1",
     patronage: ["missions", "small sacrifices", "trust"],
     tags: ["little way", "trust", "love", "simplicity"],
+    relatedPrayerIds: ["hail-mary"],
     languages: {
       en: {
         name: "St. Therese of Lisieux",
@@ -1015,11 +1019,29 @@ export const catholicPrayers: CatholicPrayer[] = [
       },
     },
   },
+  {
+    id: "work-offering",
+    category: "daily",
+    tags: ["work", "offering", "st josemaria", "ordinary life", "工作", "奉獻", "聖施禮華"],
+    languages: {
+      en: {
+        title: "Prayer to Offer Work",
+        subtitle: "A short prayer to sanctify ordinary work.",
+        text: "Lord Jesus, I offer you my work today. Help me begin with love, work with order, serve others generously, and finish with gratitude. Through the intercession of St. Josemaria, make my ordinary duties a place of meeting with you. Amen.",
+      },
+      zhHant: {
+        title: "奉獻工作的祈禱",
+        subtitle: "為聖化平凡工作而作的短禱。",
+        text: "主耶穌，我把今天的工作奉獻給祢。求祢幫助我以愛開始，以秩序工作，慷慨服務他人，並以感恩完成。藉聖施禮華的轉禱，使我的平凡責任成為與祢相遇的地方。阿們。",
+      },
+    },
+  },
 ];
 
 export const novenas: Novena[] = [
   {
     id: "daily-work",
+    saintId: "st-josemaria",
     title: "Novena for Daily Work",
     description:
       "Nine days of prayer to offer ordinary work to God with faith, order, service, and love.",

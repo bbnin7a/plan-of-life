@@ -44,6 +44,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import packageInfo from "@/package.json";
 import {
   actsOfPiety,
   catholicPrayers,
@@ -81,7 +82,7 @@ import type {
   UserSpiritualProfile,
 } from "@/lib/types";
 
-const CURRENT_APP_VERSION = "0.2.0";
+const CURRENT_APP_VERSION = packageInfo.version;
 
 type AppStage = "welcome" | "onboarding" | "app";
 type Tab = "today" | "explore" | "prayers" | "progress" | "profile";
@@ -232,6 +233,9 @@ const uiText = {
     friendName: "friend",
     today: "Today",
     todayTips: "Today tips",
+    todayNews: "This month",
+    saintFeastsThisMonth: "Saint feast celebrations",
+    noSaintFeastsThisMonth: "No saint feast samples for this month.",
     completedTasks: "Completed",
     tip: "Tip",
     streak: "7 day streak",
@@ -298,6 +302,8 @@ const uiText = {
     saints: "Saints",
     feastDay: "Feast day",
     patronage: "Patronage",
+    relatedPrayers: "Related prayers",
+    relatedNovenas: "Related novenas",
     sacramentalLife: "Sacramental life",
     confessionRhythm: "Confession rhythm",
     date: "Date",
@@ -489,6 +495,9 @@ const uiText = {
     friendName: "朋友",
     today: "今天",
     todayTips: "今日提示",
+    todayNews: "本月消息",
+    saintFeastsThisMonth: "聖人慶日",
+    noSaintFeastsThisMonth: "本月沒有聖人慶日範例。",
     completedTasks: "已完成",
     tip: "提示",
     streak: "連續 7 天",
@@ -555,6 +564,8 @@ const uiText = {
     saints: "聖人",
     feastDay: "慶日",
     patronage: "主保",
+    relatedPrayers: "相關經文",
+    relatedNovenas: "相關九日敬禮",
     sacramentalLife: "聖事生活",
     confessionRhythm: "告解節奏",
     date: "日期",
@@ -849,6 +860,10 @@ export default function App() {
         .filter(({ practice, score }) => practice.kind === "tip" && score > 0)
         .map(({ practice }) => practice),
     [scoredRecommendations],
+  );
+  const currentMonthSaintFeasts = useMemo(
+    () => getSaintFeastsForMonth(today),
+    [today],
   );
   const categoryDistribution = useMemo(
     () => getCategoryDistribution(todayAgenda),
@@ -1209,6 +1224,7 @@ export default function App() {
             personalProfile={personalProfile}
             profile={profile}
             todayAgenda={todayAgenda}
+            currentMonthSaintFeasts={currentMonthSaintFeasts}
             todayTips={todayTips}
             upcomingAgenda={upcomingAgenda}
             streakDays={streakDays}
@@ -1246,6 +1262,8 @@ export default function App() {
             recommendedPieties={scoredRecommendations}
             scheduledPieties={scheduledPieties}
             t={t}
+            onOpenNovena={setSelectedNovenaId}
+            onOpenPrayer={setSelectedPrayerId}
             onAddConfessionLog={addConfessionLog}
             onConfessionFrequencyChange={(confessionFrequencyDays) =>
               setPreferences((currentPreferences) => ({
@@ -1533,6 +1551,7 @@ function OnboardingScreen({
 }
 
 function TodayScreen({
+  currentMonthSaintFeasts,
   personalProfile,
   profile,
   todayAgenda,
@@ -1551,6 +1570,7 @@ function TodayScreen({
   onOpenCalendar,
   onOpenProgress,
 }: {
+  currentMonthSaintFeasts: SaintProfile[];
   personalProfile: PersonalProfile;
   profile: UserSpiritualProfile;
   todayAgenda: AgendaItem[];
@@ -1582,20 +1602,26 @@ function TodayScreen({
           <p className="text-base font-black text-primary-dark">{greeting}</p>
           <h1 className="text-3xl font-black tracking-normal">{t("today")}</h1>
         </div>
-        <button
-          type="button"
-          onClick={onOpenProgress}
-          className="flex items-center gap-2 rounded-full border-4 border-white bg-yellow px-3 py-2 text-sm font-black shadow-playful active:translate-y-1 active:shadow-none"
-        >
-          <AnimatedFireIcon className="size-5" />
-          {t("streakValue", { days: streakDays })}
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            aria-label={t("openCalendar")}
+            title={t("openCalendar")}
+            onClick={onOpenCalendar}
+            className="grid size-11 place-items-center rounded-2xl border-4 border-white bg-primary-light text-primary-dark shadow-playful transition active:translate-y-1 active:shadow-none"
+          >
+            <CalendarDays className="size-5" strokeWidth={3} />
+          </button>
+          <button
+            type="button"
+            onClick={onOpenProgress}
+            className="flex items-center gap-2 rounded-full border-4 border-white bg-yellow px-3 py-2 text-sm font-black shadow-playful active:translate-y-1 active:shadow-none"
+          >
+            <AnimatedFireIcon className="size-5" />
+            {t("streakValue", { days: streakDays })}
+          </button>
+        </div>
       </header>
-
-      <Button type="button" size="lg" variant="secondary" className="w-full" onClick={onOpenCalendar}>
-        {t("openCalendar")}
-        <CalendarDays className="size-5" />
-      </Button>
 
       <AnimatePresence>
         {versionUpdate ? (
@@ -1631,8 +1657,23 @@ function TodayScreen({
       ) : null}
 
       <section>
+        <SectionHeader eyebrow={t("todayNews")} title={t("saintFeastsThisMonth")} />
+        <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2">
+          {currentMonthSaintFeasts.length > 0 ? (
+            currentMonthSaintFeasts.map((saint) => (
+              <SaintFeastNewsCard key={saint.id} saint={saint} language={language} t={t} />
+            ))
+          ) : (
+            <Card className="w-[82%] shrink-0 snap-start border-4 border-border p-4 text-base font-bold text-muted">
+              {t("noSaintFeastsThisMonth")}
+            </Card>
+          )}
+        </div>
+      </section>
+
+      <section>
         <SectionHeader title={t("todayPlan")} />
-        <div className="space-y-4">
+        <div className="space-y-3">
           {activeAgenda.length > 0 ? (
             activeAgenda.map((item) => (
               <AgendaCard
@@ -1663,7 +1704,7 @@ function TodayScreen({
       {completedAgenda.length > 0 ? (
         <section>
           <SectionHeader title={t("completedTasks")} />
-          <div className="space-y-3">
+          <div className="space-y-2">
             {completedAgenda.map((item) => (
               <AgendaCard
                 key={`${item.id}-completed`}
@@ -1731,31 +1772,31 @@ function AgendaCard({
       onClick={onOpen}
       className={cn(
         "cursor-pointer border-4 transition active:translate-y-1 active:shadow-none",
-        compact ? "p-3" : "p-4",
+        compact ? "p-3" : "p-3.5",
         completed ? `${meta.borderClass} ${meta.softClass}` : "border-border",
       )}
     >
-      <div className={cn("flex", compact ? "gap-3" : "gap-4")}>
-        <div className={cn("grid shrink-0 place-items-center text-white", compact ? "size-12 rounded-2xl" : "size-16 rounded-3xl", meta.bgClass)}>
-          <Icon className={cn(compact ? "size-6" : "size-8")} strokeWidth={2.8} />
+      <div className={cn("flex", compact ? "gap-3" : "gap-3.5")}>
+        <div className={cn("grid shrink-0 place-items-center text-white", compact ? "size-12 rounded-2xl" : "size-14 rounded-2xl", meta.bgClass)}>
+          <Icon className={cn(compact ? "size-6" : "size-7")} strokeWidth={2.8} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-start justify-between gap-3">
             <h3 className={cn("font-black leading-tight", compact ? "text-lg" : "text-xl")}>{title}</h3>
-            <span className="shrink-0 rounded-full bg-background px-3 py-1 text-sm font-black text-muted">
+            <span className="shrink-0 rounded-full bg-background px-2.5 py-1 text-sm font-black text-muted">
               {minutes} min
             </span>
           </div>
           {!compact ? (
-            <p className="mb-4 text-base font-bold leading-snug text-muted">
+            <p className="mb-2 text-base font-bold leading-snug text-muted">
               {description}
             </p>
           ) : null}
-          <span className={cn(compact ? "mb-0" : "mb-3", "inline-flex rounded-full px-3 py-1 text-xs font-black", meta.softClass, meta.textClass)}>
+          <span className={cn("inline-flex rounded-full px-3 py-1 text-xs font-black", meta.softClass, meta.textClass)}>
             {item.type === "piety" ? t(meta.labelKey) : t("novena")}
           </span>
           {!compact && showCompleteAction ? (
-            <div className="mt-3 flex justify-end">
+            <div className="mt-2 flex justify-end">
               <Button
                 size="sm"
                 variant={completed ? "secondary" : "default"}
@@ -1898,6 +1939,40 @@ function TipCard({
         </div>
       </div>
       <p className="text-base font-bold leading-relaxed text-muted">{text.content}</p>
+    </Card>
+  );
+}
+
+function SaintFeastNewsCard({
+  language,
+  saint,
+  t,
+}: {
+  language: UiLanguage;
+  saint: SaintProfile;
+  t: Translator;
+}) {
+  const text = saint.languages[language];
+
+  return (
+    <Card className="w-[82%] shrink-0 snap-start border-4 border-blue p-4">
+      <div className="mb-3 flex items-center gap-3">
+        <Image
+          src={saint.imageSrc}
+          alt={text.name}
+          width={64}
+          height={64}
+          className="size-12 shrink-0 rounded-2xl border-4 border-white bg-blue/10 object-cover shadow-soft [image-rendering:pixelated]"
+        />
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase text-blue">{t("feastDay")}</p>
+          <h3 className="truncate text-xl font-black tracking-normal">{text.name}</h3>
+        </div>
+      </div>
+      <p className="text-sm font-black text-muted">{saint.feastDay}</p>
+      <p className="mt-2 text-base font-bold leading-relaxed text-foreground">
+        {text.reflection}
+      </p>
     </Card>
   );
 }
@@ -2224,6 +2299,8 @@ function ExploreScreen({
   onConfessionFrequencyChange,
   onDeleteConfessionLog,
   onUpdatePietySchedule,
+  onOpenNovena,
+  onOpenPrayer,
 }: {
   confessionFrequencyDays: number;
   confessionLogs: ConfessionLogEntry[];
@@ -2239,6 +2316,8 @@ function ExploreScreen({
     updates?: Partial<Omit<PietyScheduleEntry, "id" | "pietyId">>,
     shouldToggle?: boolean,
   ) => void;
+  onOpenNovena: (novenaId: string) => void;
+  onOpenPrayer: (prayerId: string) => void;
 }) {
   const [selectedCategory, setSelectedCategory] = useState<ExploreLibraryCategory | null>(null);
   const [confessionDate, setConfessionDate] = useState(getTodayInputDate());
@@ -2461,7 +2540,14 @@ function ExploreScreen({
         >
         <div className="grid gap-4">
           {saintProfiles.map((saint) => (
-            <SaintCard key={saint.id} language={language} saint={saint} t={t} />
+            <SaintCard
+              key={saint.id}
+              language={language}
+              saint={saint}
+              t={t}
+              onOpenNovena={onOpenNovena}
+              onOpenPrayer={onOpenPrayer}
+            />
           ))}
         </div>
         </CategoryDetailSection>
@@ -2656,14 +2742,24 @@ function LibraryCategoryCard({
 
 function SaintCard({
   language,
+  onOpenNovena,
+  onOpenPrayer,
   saint,
   t,
 }: {
   language: UiLanguage;
+  onOpenNovena: (novenaId: string) => void;
+  onOpenPrayer: (prayerId: string) => void;
   saint: SaintProfile;
   t: Translator;
 }) {
   const text = saint.languages[language];
+  const relatedPrayers = (saint.relatedPrayerIds ?? [])
+    .map((prayerId) => catholicPrayers.find((prayer) => prayer.id === prayerId))
+    .filter((prayer): prayer is CatholicPrayer => Boolean(prayer));
+  const relatedNovenas = (saint.relatedNovenaIds ?? [])
+    .map((novenaId) => novenas.find((novena) => novena.id === novenaId))
+    .filter((novena): novena is Novena => Boolean(novena));
 
   return (
     <Card className="border-4 border-blue p-5">
@@ -2701,6 +2797,52 @@ function SaintCard({
       <p className="mt-4 rounded-2xl bg-blue/10 px-4 py-3 text-base font-black leading-relaxed text-foreground">
         {text.reflection}
       </p>
+
+      {relatedPrayers.length > 0 || relatedNovenas.length > 0 ? (
+        <div className="mt-4 grid gap-3">
+          {relatedPrayers.length > 0 ? (
+            <div>
+              <p className="mb-2 text-sm font-black uppercase text-muted">{t("relatedPrayers")}</p>
+              <div className="grid gap-2">
+                {relatedPrayers.map((prayer) => {
+                  const prayerText = prayer.languages[language === "zhHant" ? "zhHant" : "en"];
+
+                  return (
+                    <button
+                      key={prayer.id}
+                      type="button"
+                      onClick={() => onOpenPrayer(prayer.id)}
+                      className="flex items-center justify-between gap-3 rounded-2xl border-4 border-primary-light bg-white px-3 py-2 text-left shadow-soft transition active:translate-y-1 active:shadow-none"
+                    >
+                      <span className="text-base font-black text-foreground">{prayerText.title}</span>
+                      <Sparkles className="size-5 shrink-0 text-primary-dark" strokeWidth={2.8} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          {relatedNovenas.length > 0 ? (
+            <div>
+              <p className="mb-2 text-sm font-black uppercase text-muted">{t("relatedNovenas")}</p>
+              <div className="grid gap-2">
+                {relatedNovenas.map((novena) => (
+                  <button
+                    key={novena.id}
+                    type="button"
+                    onClick={() => onOpenNovena(novena.id)}
+                    className="flex items-center justify-between gap-3 rounded-2xl border-4 border-yellow bg-white px-3 py-2 text-left shadow-soft transition active:translate-y-1 active:shadow-none"
+                  >
+                    <span className="text-base font-black text-foreground">{novena.title}</span>
+                    <CalendarDays className="size-5 shrink-0 text-yellow" strokeWidth={2.8} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </Card>
   );
 }
@@ -3756,29 +3898,12 @@ function NovenaCardGameDialog({
   return (
     <FlipCardDialogShell t={t} onClose={onClose}>
       <div className="space-y-4">
-        <div className="scrollbar-none -mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1">
-          {novena.days.map((day, index) => {
-            const active = index === selectedIndex;
-            const done = progress?.completedDays.includes(day.day);
-
-            return (
-              <button
-                key={day.day}
-                type="button"
-                onClick={() => setSelectedIndex(index)}
-                className={cn(
-                  "grid size-11 shrink-0 snap-start place-items-center rounded-2xl border-4 text-sm font-black shadow-soft transition active:translate-y-1 active:shadow-none",
-                  active
-                    ? "border-yellow bg-yellow text-white"
-                    : done
-                      ? "border-primary bg-primary text-white"
-                      : "border-border bg-white text-muted",
-                )}
-              >
-                {done ? <Check className="size-5" strokeWidth={4} /> : day.day}
-              </button>
-            );
-          })}
+        <div className="rounded-[1.5rem] border-4 border-white bg-white px-4 py-3 shadow-soft">
+          <p className="text-sm font-black uppercase text-yellow">
+            {t("dayOf", { day: selectedDay.day, total: novena.days.length })}
+          </p>
+          <h2 className="text-2xl font-black leading-tight tracking-normal">{selectedDay.title}</h2>
+          <p className="mt-1 text-base font-bold leading-snug text-muted">{novena.title}</p>
         </div>
 
         <PrayerFlipCard
@@ -3789,8 +3914,8 @@ function NovenaCardGameDialog({
           key={selectedDay.day}
           metadata={`${t("dayOf", { day: selectedDay.day, total: novena.days.length })} · ${selectedDay.reflection}`}
           navigationStyle="stacked"
-          autoFlip={selectedIndex === initialIndex}
-          defaultFlipped={selectedIndex !== initialIndex}
+          autoFlip={false}
+          defaultFlipped={false}
           onNext={() => setSelectedIndex((index) => Math.min(novena.days.length - 1, index + 1))}
           onPrevious={() => setSelectedIndex((index) => Math.max(0, index - 1))}
           prayerText={`${selectedDay.reflection}\n\n${selectedDay.prayer}\n\n${t("action")}: ${selectedDay.action}`}
@@ -3827,6 +3952,14 @@ function FlipCardDialogShell({
   t: Translator;
   onClose: () => void;
 }) {
+  const [closing, setClosing] = useState(false);
+
+  function closeDialog() {
+    if (closing) return;
+    setClosing(true);
+    onClose();
+  }
+
   return (
     <motion.div
       className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-foreground/50 px-2 py-5"
@@ -3835,7 +3968,7 @@ function FlipCardDialogShell({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.16 }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget) closeDialog();
       }}
     >
       <motion.div
@@ -3850,7 +3983,7 @@ function FlipCardDialogShell({
           <button
             type="button"
             aria-label={t("close")}
-            onClick={onClose}
+            onClick={closeDialog}
             className="pointer-events-auto grid size-11 place-items-center rounded-full border-2 border-white bg-white text-xl font-black text-muted shadow-soft"
           >
             ×
@@ -3863,7 +3996,7 @@ function FlipCardDialogShell({
 }
 
 function PrayerFlipCard({
-  autoFlip = true,
+  autoFlip = false,
   backLabel,
   canGoNext = false,
   canGoPrevious = false,
@@ -3987,26 +4120,28 @@ function PrayerFlipCard({
         </motion.div>
       </div>
       {canNavigate ? (
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <Button
-          type="button"
-          size="lg"
-          variant="secondary"
-          disabled={!canGoPrevious}
-          onClick={onPrevious}
-        >
-          <ArrowLeft className="size-5" />
-          {t("previous")}
-        </Button>
-        <Button
-          type="button"
-          size="lg"
-          disabled={!canGoNext}
-          onClick={onNext}
-        >
-          {t("next")}
-          <ChevronRight className="size-5" />
-        </Button>
+      <div className={cn("mt-4 grid gap-3", canGoPrevious && canGoNext ? "grid-cols-2" : "grid-cols-1")}>
+        {canGoPrevious ? (
+          <Button
+            type="button"
+            size="lg"
+            variant="secondary"
+            onClick={onPrevious}
+          >
+            <ArrowLeft className="size-5" />
+            {t("previous")}
+          </Button>
+        ) : null}
+        {canGoNext ? (
+          <Button
+            type="button"
+            size="lg"
+            onClick={onNext}
+          >
+            {t("next")}
+            <ChevronRight className="size-5" />
+          </Button>
+        ) : null}
       </div>
       ) : null}
     </div>
@@ -4014,7 +4149,7 @@ function PrayerFlipCard({
 }
 
 function NovenaDeckBackStack({ remainingCards }: { remainingCards: number }) {
-  const visibleCards = Math.min(remainingCards, 5);
+  const visibleCards = Math.min(remainingCards, 2);
 
   return (
     <div className="pointer-events-none absolute inset-0 z-0">
@@ -5212,6 +5347,32 @@ function getWeekdayOptions(language: UiLanguage) {
       : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return labels.map((label, value) => ({ label, value }));
+}
+
+function getSaintFeastsForMonth(date: string) {
+  const month = parseInputDate(date).getMonth();
+
+  return saintProfiles.filter((saint) => getFeastMonthIndex(saint.feastDay) === month);
+}
+
+function getFeastMonthIndex(feastDay: string) {
+  const monthName = feastDay.split(" ")[0]?.toLocaleLowerCase();
+  const monthNames = [
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+  ];
+
+  return monthNames.indexOf(monthName);
 }
 
 function getBadgeLevels(streakDays: number, completedCount: number, t: Translator) {

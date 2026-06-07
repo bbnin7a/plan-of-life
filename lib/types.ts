@@ -131,6 +131,8 @@ export type SaintProfile = {
   feastDay: string;
   patronage: string[];
   tags: string[];
+  relatedPrayerIds?: string[];
+  relatedNovenaIds?: string[];
   languages: Record<
     UiLanguage,
     {
@@ -167,6 +169,7 @@ export type NovenaDay = {
 
 export type Novena = {
   id: string;
+  saintId?: string;
   title: string;
   description: string;
   intentionPrompt: string;
