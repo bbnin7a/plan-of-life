@@ -941,6 +941,16 @@ export default function App() {
     document.querySelector(".app-content")?.scrollTo({ top: 0, behavior: "auto" });
   }, [selectedDetail]);
 
+  useEffect(() => {
+    if (selectedPrayerId && !selectedPrayer) {
+      setSelectedPrayerId(null);
+    }
+
+    if (selectedNovenaId && !selectedNovena) {
+      setSelectedNovenaId(null);
+    }
+  }, [selectedNovena, selectedNovenaId, selectedPrayer, selectedPrayerId]);
+
   function chooseAnswer(key: OnboardingAnswerKey, value: string) {
     const nextAnswers = { ...answers, [key]: value };
     setAnswers(nextAnswers);
@@ -1351,31 +1361,27 @@ export default function App() {
         {completionMessage ? <CompletionToast message={completionMessage} /> : null}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {selectedPrayer ? (
-          <PrayerCardGameDialog
-            key={selectedPrayer.id}
-            language={preferences.prayerLanguage}
-            prayer={selectedPrayer}
-            t={t}
-            onClose={() => setSelectedPrayerId(null)}
-            onSelectPrayer={setSelectedPrayerId}
-          />
-        ) : null}
-      </AnimatePresence>
+      {selectedPrayer ? (
+        <PrayerCardGameDialog
+          key={selectedPrayer.id}
+          language={preferences.prayerLanguage}
+          prayer={selectedPrayer}
+          t={t}
+          onClose={() => setSelectedPrayerId(null)}
+          onSelectPrayer={setSelectedPrayerId}
+        />
+      ) : null}
 
-      <AnimatePresence>
-        {selectedNovena ? (
-          <NovenaCardGameDialog
-            key={selectedNovena.id}
-            novena={selectedNovena}
-            progress={novenaProgress?.novenaId === selectedNovena.id ? novenaProgress : null}
-            t={t}
-            onClose={() => setSelectedNovenaId(null)}
-            onCompleteDay={completeNovenaDay}
-          />
-        ) : null}
-      </AnimatePresence>
+      {selectedNovena ? (
+        <NovenaCardGameDialog
+          key={selectedNovena.id}
+          novena={selectedNovena}
+          progress={novenaProgress?.novenaId === selectedNovena.id ? novenaProgress : null}
+          t={t}
+          onClose={() => setSelectedNovenaId(null)}
+          onCompleteDay={completeNovenaDay}
+        />
+      ) : null}
 
       <AnimatePresence>
         {installGuideOpen ? (
@@ -3952,21 +3958,13 @@ function FlipCardDialogShell({
   t: Translator;
   onClose: () => void;
 }) {
-  const [closing, setClosing] = useState(false);
-
   function closeDialog() {
-    if (closing) return;
-    setClosing(true);
     onClose();
   }
 
   return (
-    <motion.div
+    <div
       className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-foreground/50 px-2 py-5"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.16 }}
       onClick={(event) => {
         if (event.target === event.currentTarget) closeDialog();
       }}
@@ -3991,7 +3989,7 @@ function FlipCardDialogShell({
         </div>
         {children}
       </motion.div>
-    </motion.div>
+    </div>
   );
 }
 
