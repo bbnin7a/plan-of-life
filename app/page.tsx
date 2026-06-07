@@ -345,6 +345,8 @@ const uiText = {
     typeRosary: "Rosary",
     previousCard: "Previous card",
     nextCard: "Next card",
+    swipeBack: "Back",
+    swipeNext: "Next",
     close: "Close",
     prayerLanguage: "Prayer language",
     searchPrayers: "Search prayers",
@@ -616,6 +618,8 @@ const uiText = {
     typeRosary: "玫瑰經",
     previousCard: "上一張卡",
     nextCard: "下一張卡",
+    swipeBack: "返回",
+    swipeNext: "下一張",
     close: "關閉",
     prayerLanguage: "經文語言",
     searchPrayers: "搜尋經文",
@@ -4159,24 +4163,60 @@ function PrayerFlipCard({
 }) {
   const canNavigate = canGoPrevious || canGoNext;
   const [flipped, setFlipped] = useState(defaultFlipped);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
+  const swipeBackOpacity = Math.min(Math.max(dragOffset / 120, 0), 1);
+  const swipeNextOpacity = Math.min(Math.max(-dragOffset / 120, 0), 1);
 
   useEffect(() => {
     setFlipped(defaultFlipped);
+    setDragOffset(0);
+    setSwipeDirection(null);
     if (!autoFlip) return;
 
     const timer = window.setTimeout(() => setFlipped(true), 520);
     return () => window.clearTimeout(timer);
   }, [autoFlip, defaultFlipped, title]);
 
-  function handleSwipe(offsetX: number) {
-    if (offsetX < -64 && canGoNext) {
-      onNext?.();
+  function triggerSwipe(direction: "left" | "right") {
+    if (swipeDirection) return;
+    if (direction === "left" && !canGoNext) return;
+    if (direction === "right" && !canGoPrevious) return;
+
+    setSwipeDirection(direction);
+    window.setTimeout(() => {
+      if (direction === "left") {
+        onNext?.();
+      } else {
+        onPrevious?.();
+      }
+      setDragOffset(0);
+      setSwipeDirection(null);
+    }, 180);
+  }
+
+  function handleSwipe(offsetX: number, velocityX: number) {
+    const strongSwipe = Math.abs(offsetX) > 92 || Math.abs(velocityX) > 620;
+
+    if (!strongSwipe) {
+      setDragOffset(0);
       return;
     }
 
-    if (offsetX > 64 && canGoPrevious) {
-      onPrevious?.();
+    const wantsNext = offsetX < 0 || velocityX < -620;
+    const wantsPrevious = offsetX > 0 || velocityX > 620;
+
+    if (wantsNext && canGoNext) {
+      triggerSwipe("left");
+      return;
     }
+
+    if (wantsPrevious && canGoPrevious) {
+      triggerSwipe("right");
+      return;
+    }
+
+    setDragOffset(0);
   }
 
   return (
@@ -4187,14 +4227,38 @@ function PrayerFlipCard({
         ) : null}
         <motion.div
           className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing [transform-style:preserve-3d]"
-          animate={{ rotateY: flipped ? 180 : 0, x: 0, rotateZ: 0 }}
-          drag={canNavigate ? "x" : false}
+          animate={{
+            opacity: swipeDirection ? 0 : 1,
+            rotateY: flipped ? 180 : 0,
+            rotateZ: swipeDirection === "left" ? -14 : swipeDirection === "right" ? 14 : dragOffset / 26,
+            scale: swipeDirection ? 0.96 : 1,
+            x: swipeDirection === "left" ? -560 : swipeDirection === "right" ? 560 : 0,
+            y: swipeDirection ? -24 : 0,
+          }}
+          drag={canNavigate && !swipeDirection ? "x" : false}
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.24}
-          whileDrag={{ rotateZ: canGoNext ? -3 : canGoPrevious ? 3 : 0 }}
-          onDragEnd={(_, info) => handleSwipe(info.offset.x)}
-          transition={{ type: "spring", stiffness: 150, damping: 20, mass: 0.9 }}
+          dragElastic={0.48}
+          whileDrag={{ scale: 1.02 }}
+          onDrag={(_, info) => setDragOffset(info.offset.x)}
+          onDragEnd={(_, info) => handleSwipe(info.offset.x, info.velocity.x)}
+          transition={{ type: "spring", stiffness: 180, damping: 20, mass: 0.85 }}
         >
+        {canGoPrevious ? (
+          <motion.div
+            className="pointer-events-none absolute left-6 top-8 z-20 rotate-[-12deg] rounded-2xl border-4 border-blue bg-white px-4 py-2 text-xl font-black uppercase text-blue shadow-soft"
+            style={{ opacity: swipeBackOpacity }}
+          >
+            {t("swipeBack")}
+          </motion.div>
+        ) : null}
+        {canGoNext ? (
+          <motion.div
+            className="pointer-events-none absolute right-6 top-8 z-20 rotate-12 rounded-2xl border-4 border-primary bg-white px-4 py-2 text-xl font-black uppercase text-primary shadow-soft"
+            style={{ opacity: swipeNextOpacity }}
+          >
+            {t("swipeNext")}
+          </motion.div>
+        ) : null}
         <Card className="absolute inset-0 overflow-hidden border-2 border-yellow bg-yellow p-2 shadow-playful [backface-visibility:hidden]">
           <div className="flex h-full flex-col rounded-[1.1rem] border-2 border-white bg-white p-4">
             <div className="rounded-2xl bg-primary-light px-4 py-2 text-center">
@@ -4253,7 +4317,7 @@ function PrayerFlipCard({
             type="button"
             size="lg"
             variant="secondary"
-            onClick={onPrevious}
+            onClick={() => triggerSwipe("right")}
           >
             <ArrowLeft className="size-5" />
             {t("previous")}
@@ -4263,7 +4327,7 @@ function PrayerFlipCard({
           <Button
             type="button"
             size="lg"
-            onClick={onNext}
+            onClick={() => triggerSwipe("left")}
           >
             {t("next")}
             <ChevronRight className="size-5" />
