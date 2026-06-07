@@ -3897,6 +3897,9 @@ function NovenaCardGameDialog({
   const initialIndex = progress?.status === "active" ? currentDayNumber - 1 : 0;
   const [selectedIndex, setSelectedIndex] = useState(initialIndex);
   const selectedDay = novena.days[selectedIndex];
+  const cardTextLanguage = containsHanCharacters(`${selectedDay.title} ${selectedDay.prayer}`)
+    ? "zhHant"
+    : "en";
   const isActiveDay = progress?.status === "active" && selectedDay.day === currentDayNumber;
   const completedToday = progress?.lastCompletedDate === getTodayInputDate();
   const canComplete = Boolean(progress) && isActiveDay && !completedToday;
@@ -3926,7 +3929,7 @@ function NovenaCardGameDialog({
           onPrevious={() => setSelectedIndex((index) => Math.max(0, index - 1))}
           prayerText={`${selectedDay.reflection}\n\n${selectedDay.prayer}\n\n${t("action")}: ${selectedDay.action}`}
           remainingCards={novena.days.length - selectedIndex - 1}
-          textLanguage="en"
+          textLanguage={cardTextLanguage}
           title={selectedDay.title}
           typeLabel={t("typeNovena")}
           t={t}
@@ -5674,6 +5677,10 @@ function getNovenaSearchText(novena: Novena) {
   ]
     .join(" ")
     .toLocaleLowerCase();
+}
+
+function containsHanCharacters(value: string) {
+  return /[\u3400-\u9fff]/.test(value);
 }
 
 function getPracticeText(practice: DailyPlanItem["practice"], language: UiLanguage) {

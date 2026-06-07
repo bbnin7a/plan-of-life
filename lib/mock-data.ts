@@ -904,6 +904,35 @@ export const saintProfiles: SaintProfile[] = [
       },
     },
   },
+  {
+    id: "st-anthony",
+    imageSrc: "/saints/st-anthony.png",
+    feastDay: "June 13",
+    patronage: ["lost things", "the poor", "travelers", "miracles"],
+    tags: ["miracles", "lost things", "preaching", "franciscan"],
+    relatedPrayerIds: ["st-anthony-miracle-hymn"],
+    relatedNovenaIds: ["st-anthony"],
+    languages: {
+      en: {
+        name: "St. Anthony of Padua",
+        title: "Franciscan preacher and Doctor of the Church",
+        introduction:
+          "St. Anthony is loved for his preaching, care for the poor, and powerful intercession, especially for those seeking help in urgent needs.",
+        patronage: "Lost things, the poor, travelers, and those seeking miracles",
+        reflection:
+          "Ask St. Anthony to help you trust God in urgent needs, recover what is lost, and serve the poor with practical charity.",
+      },
+      zhHant: {
+        name: "聖安多尼",
+        title: "方濟會宣講者、教會聖師",
+        introduction:
+          "聖安多尼以宣講、照顧貧苦者和有力的代禱深受敬愛，特別幫助人在急難中信靠天主。",
+        patronage: "失物、貧苦者、旅人與求奇蹟者",
+        reflection:
+          "請聖安多尼幫助你在急難中信靠天主，尋回所失，並以實際愛德服務貧苦者。",
+      },
+    },
+  },
 ];
 
 export const weeklyProgress = [
@@ -1036,6 +1065,23 @@ export const catholicPrayers: CatholicPrayer[] = [
       },
     },
   },
+  {
+    id: "st-anthony-miracle-hymn",
+    category: "daily",
+    tags: ["st anthony", "miracles", "lost things", "saint bonaventure", "聖安多尼", "奇蹟", "聖文德"],
+    languages: {
+      en: {
+        title: "St. Anthony Miracle Hymn",
+        subtitle: "Traditional hymn attributed to St. Bonaventure.",
+        text: "If you seek miracles, death, error, calamity, and demons flee; the sick are made well.\n\nThe sea obeys, chains are broken, lost things are restored; young and old ask and receive.\n\nDangers vanish, needs are relieved. Let those who know tell of it: St. Anthony is powerful in grace and wonders.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit; as it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt. Anthony, pray for us, that we may be made worthy of the promises of Christ. Amen.\n\nLet us pray: Lord, may devotion to St. Anthony, your teacher and servant, bring us lasting joy, help us receive your protection, and lead us to eternal happiness. Through Christ our Lord. Amen.",
+      },
+      zhHant: {
+        title: "聖安多尼奇蹟頌",
+        subtitle: "原作者聖文德。",
+        text: "若求奇蹟，必償所願；異端魔鬼，敗亡逃夭；\n死難疾病，化兇復元。男女老幼，有求必應；\n牢苦巔波，回復安寧；斷肢遺物，失而復現。\n\n驅災除禍，街知巷聞；聖安多尼，大德大能，\n奇恩異蹟，人人爭頌。男女老幼，有求必應；\n牢苦巔波，回復安寧；斷肢遺物，失而復現。\n\n光榮歸於父，及子及聖神；起初如何，今日亦然，直到永遠，亞孟。\n男女老幼，有求必應；牢苦巔波，回復安寧；斷肢遺物，失而復現。\n\n聖安多尼，為我等祈，以致我等，幸承基督所許洪錫。亞孟。\n\n請眾同禱：主啊！願我們對聖師安多尼聖人的敬禮，給我們帶來永久的喜悅，成為我們蒙受寵祐及獲享永福的因由，因主耶穌基督之名，求你俯聽我們的祈禱。亞孟。",
+      },
+    },
+  },
 ];
 
 export const novenas: Novena[] = [
@@ -1127,6 +1173,97 @@ export const novenas: Novena[] = [
         prayer:
           "Lord, thank you for walking with me through these nine days. Strengthen my vocation, bless my work, and help me continue with faith, hope, and love. Amen.",
         action: "Write one grace received and one habit to continue.",
+      },
+    ],
+  },
+  {
+    id: "st-anthony",
+    saintId: "st-anthony",
+    title: "聖安多尼九日敬禮",
+    description:
+      "Nine days asking St. Anthony of Padua for protection, wisdom, healing, humility, charity, and help in urgent needs.",
+    intentionPrompt: "你想請聖安多尼為哪一項急難、失物、病苦或家庭需要代禱？",
+    days: [
+      {
+        day: 1,
+        title: "第一日：投靠聖安多尼",
+        reflection:
+          "天主特別寵愛聖安多尼，選他作仁慈的工具，在世上施行奇蹟，舒解人間急難。",
+        prayer:
+          "幸福的聖安多尼，天主特別寵愛你，選你做祂仁慈的工具，在世上施行奇蹟，舒解人間的急難。我今將自己置於你的蔭庇之下，求你保佑我於各種兇險，指導我於迷茫之時，俾能避惡行善，善盡本份，穩走天國的道路。\n\n加念天主經、聖母經、聖三光榮經和聖安多尼奇蹟頌。",
+        action: "把一項急難或迷茫交託給聖安多尼，並作一個避惡行善的具體決定。",
+      },
+      {
+        day: 2,
+        title: "第二日：急難中的保護",
+        reflection:
+          "在各種遭遇中保持信心和平安，讓思言行為仰合天主聖意。",
+        prayer:
+          "榮福的聖安多尼，我們最尊敬的主保聖人！在我們的急難中，求你做我們的保護者，賜我們在任何遭遇之中，維持對你的信心和心神的平安，使我們的思言行為，均能仰合天主的聖意，俾能光榮天主，救己靈魂。\n\n加念天主經、聖母經、聖三光榮經和聖安多尼奇蹟頌。",
+        action: "今天遇到煩惱時，停下一分鐘，求天主賜平安和正確的言行。",
+      },
+      {
+        day: 3,
+        title: "第三日：熱愛天主聖言",
+        reflection:
+          "聖安多尼是聖經的約櫃、教會的聖師，教導我們以天主聖言獲得真正智慧。",
+        prayer:
+          "智慧的聖安多尼，你是聖經的約櫃，教會的聖師！求你教導我熱愛天主的聖言，默想啟示的真理，俾能獲得真正的智慧：常能以愛主在萬有之上，以及愛人如己的誡命，作為待人接物、處理事務的準則，而成為世界的光和地上的鹽。\n\n加念天主經、聖母經、聖三光榮經和聖安多尼奇蹟頌。",
+        action: "讀一小段福音，選一句話作今天待人處事的準則。",
+      },
+      {
+        day: 4,
+        title: "第四日：修德與克己",
+        reflection:
+          "聖安多尼在聖神指引下溫順而堅決地修德，成為眾人的楷模。",
+        prayer:
+          "精修的聖安多尼，你在聖神的指引下，溫順而又堅決地，在聖德的修練上獲致非凡的成果，堪為眾人的楷模。求你教導我效法你的榜樣，熱愛天主和祂的神國，勤於修練克己、謙遜、純潔、神貧與慷慨等德行。\n\n加念天主經、聖母經、聖三光榮經和聖安多尼奇蹟頌。",
+        action: "選一個小克己，為愛天主和他人而安靜地完成。",
+      },
+      {
+        day: 5,
+        title: "第五日：醫治身心",
+        reflection:
+          "聖安多尼奇能仁愛，曾解人百難、治人百病，幫助人抵抗誘惑。",
+        prayer:
+          "大聖安多尼，奇能仁愛的神醫！你曾靈驗地解人百難，治人百病，令多人得沾化凶為吉、起死回生的大恩。求你醫治我靈魂與肉身的脆弱，助我抵抗三仇的誘惑，以免陷於驕傲、迷色、忿怒、失忍的諸罪。\n\n加念天主經、聖母經、聖三光榮經和聖安多尼奇蹟頌。",
+        action: "為一位病人或身心受苦的人祈禱，並作一件實際關懷。",
+      },
+      {
+        day: 6,
+        title: "第六日：謙遜神貧",
+        reflection:
+          "聖安多尼自幼蒙召、獻身事主，甘願捨棄紅塵，潛心修道。",
+        prayer:
+          "謙遜神貧的聖安多尼，你自幼蒙主聖召，獻身事主，甘願捨棄紅塵，潛心修道。求你教我清心寡慾，善用世物；不求榮華富貴，但求豐衣足食；不求虛假光榮，但求老少平安；事事處處，奉行愛主愛人的誡命。\n\n加念天主經、聖母經、聖三光榮經和聖安多尼奇蹟頌。",
+        action: "今天少一點抱怨或炫耀，把注意力放在一件愛德行動上。",
+      },
+      {
+        day: 7,
+        title: "第七日：善用恩寵",
+        reflection:
+          "聖安多尼是教會的光輝、方濟會的榮耀，以宣講引導眾人走正義道路。",
+        prayer:
+          "大聖安多尼，你是教會的光輝，方濟會的榮耀！你以出眾的口才宣揚天國的福音，教導眾人棄暗投明，走正義的道路。求你也時常引導我，指正我，令我善用天主的恩寵，修德行善；善用天賦與世物，愈顯天主的光榮。\n\n加念天主經、聖母經、聖三光榮經和聖安多尼奇蹟頌。",
+        action: "用一項天賦幫助別人，或說一句能引人向善的話。",
+      },
+      {
+        day: 8,
+        title: "第八日：安慰憂苦者",
+        reflection:
+          "聖安多尼是憂苦者的安慰、急難中的救星，關懷貧困、疾病和無助的人。",
+        prayer:
+          "大聖安多尼，你是憂苦者的安慰，急難中的救星！求你憐恤貧困無靠，疾病無醫，焦急無告的男女老幼，協助他們解決燃眉之急；並賜與忍受苦難之毅力，順聽主命，俾能化險為安，化苦為功。願光榮與讚美歸於上主。\n\n加念天主經、聖母經、聖三光榮經和聖安多尼奇蹟頌。",
+        action: "為一位焦急或無助的人祈禱，並給予一句安慰或實際協助。",
+      },
+      {
+        day: 9,
+        title: "第九日：感恩與善終",
+        reflection:
+          "聖安多尼是耶穌聖嬰的摯友、聖母瑪利亞的寵兒，帶領人以感恩走向天主。",
+        prayer:
+          "大聖安多尼，你是耶穌聖嬰的摯友，聖母瑪利亞的寵兒！回憶過去，藉你的代禱，蒙受了許多恩寵，非常感謝你。求你讓我效法你而生，俾能在我臨終時，蒙主仁慈，在祂的聖愛中而死，得與你在天共享天主的榮光。\n\n加念天主經、聖母經、聖三光榮經和聖安多尼奇蹟頌。",
+        action: "寫下一項已領受的恩寵，並為善終和忠信生活祈禱。",
       },
     ],
   },
