@@ -1476,90 +1476,92 @@ function MascotAnimation({ className, title }: { className?: string; title: stri
   return (
     <svg
       aria-label={title}
-      className={cn("mascot-vector pointer-events-none relative z-10", className)}
+      className={cn("mascot-pixel pointer-events-none relative z-10", className)}
       role="img"
-      viewBox="0 0 180 180"
+      shapeRendering="crispEdges"
+      viewBox="0 0 32 32"
       xmlns="http://www.w3.org/2000/svg"
     >
       <title>{title}</title>
-      <defs>
-        <radialGradient id="mascotWoolGradient" cx="42%" cy="26%" r="76%">
-          <stop stopColor="#FFFFFF" />
-          <stop offset="0.62" stopColor="#FFF4D2" />
-          <stop offset="1" stopColor="#F5D68F" />
-        </radialGradient>
-        <radialGradient id="mascotFleeceGradient" cx="38%" cy="24%" r="75%">
-          <stop stopColor="#FFFFFF" />
-          <stop offset="0.7" stopColor="#FFF6DA" />
-          <stop offset="1" stopColor="#FFE3A3" />
-        </radialGradient>
-      </defs>
+      <rect className="mascot-pixel-shadow" fill="#7A5A35" height="2" opacity="0.16" width="18" x="7" y="29" />
 
-      <ellipse className="mascot-vector-shadow" cx="91" cy="164" fill="#7A5A35" opacity="0.18" rx="43" ry="8" />
-
-      <g className="mascot-vector-body">
-        <g className="mascot-vector-halo">
-          <ellipse cx="91" cy="20" fill="none" rx="34" ry="9" stroke="#FFC928" strokeLinecap="round" strokeWidth="6" />
-          <ellipse cx="91" cy="20" fill="none" opacity="0.5" rx="25" ry="5" stroke="#FFF4A6" strokeWidth="2" />
+      <g className="mascot-pixel-body">
+        <g className="mascot-pixel-wing-left">
+          <rect fill="#EAF6FF" height="2" width="4" x="4" y="10" />
+          <rect fill="#D7ECFF" height="3" width="5" x="3" y="12" />
+          <rect fill="#C7E0F7" height="4" width="4" x="2" y="15" />
+          <rect fill="#EAF6FF" height="4" width="3" x="6" y="16" />
+          <rect fill="#BFD7F0" height="4" width="2" x="4" y="20" />
+          <rect fill="#EAF6FF" height="2" width="4" x="5" y="24" />
+        </g>
+        <g className="mascot-pixel-wing-right">
+          <rect fill="#EAF6FF" height="2" width="4" x="24" y="10" />
+          <rect fill="#D7ECFF" height="3" width="5" x="24" y="12" />
+          <rect fill="#C7E0F7" height="4" width="4" x="26" y="15" />
+          <rect fill="#EAF6FF" height="4" width="3" x="23" y="16" />
+          <rect fill="#BFD7F0" height="4" width="2" x="26" y="20" />
+          <rect fill="#EAF6FF" height="2" width="4" x="23" y="24" />
         </g>
 
-        <g className="mascot-vector-ear-left">
-          <path d="M55 68c-19-21-41-25-50-13-9 13 4 33 24 39 16 5 30-4 39-18Z" fill="#FFE2B3" />
-          <path d="M23 56c12-2 24 7 31 20-11 8-27 5-36-6 0-5 2-10 5-14Z" fill="#F3B08E" opacity="0.72" />
+        <g className="mascot-pixel-ear-left">
+          <rect fill="#F7D2B2" height="2" width="4" x="6" y="9" />
+          <rect fill="#F7D2B2" height="3" width="3" x="5" y="11" />
+          <rect fill="#E7A47F" height="1" width="2" x="6" y="12" />
         </g>
-        <g className="mascot-vector-ear-right">
-          <path d="M125 68c19-21 41-25 50-13 9 13-4 33-24 39-16 5-30-4-39-18Z" fill="#FFE2B3" />
-          <path d="M157 56c-12-2-24 7-31 20 11 8 27 5 36-6 0-5-2-10-5-14Z" fill="#F3B08E" opacity="0.72" />
-        </g>
-
-        <g className="mascot-vector-arm-left">
-          <path d="M63 99c-14 5-21 16-18 26 3 8 13 9 20 2 6-7 8-17 10-28Z" fill="#FFF0C0" />
-          <circle cx="58" cy="112" fill="#9A6A3B" r="9" />
+        <g className="mascot-pixel-ear-right">
+          <rect fill="#F7D2B2" height="2" width="4" x="22" y="9" />
+          <rect fill="#F7D2B2" height="3" width="3" x="24" y="11" />
+          <rect fill="#E7A47F" height="1" width="2" x="24" y="12" />
         </g>
 
-        <g className="mascot-vector-face">
-          <g className="mascot-vector-curls">
-            <circle cx="59" cy="62" fill="url(#mascotFleeceGradient)" r="12" />
-            <circle cx="67" cy="49" fill="url(#mascotFleeceGradient)" r="13" />
-            <circle cx="79" cy="41" fill="url(#mascotFleeceGradient)" r="14" />
-            <circle cx="93" cy="37" fill="url(#mascotFleeceGradient)" r="15" />
-            <circle cx="108" cy="41" fill="url(#mascotFleeceGradient)" r="14" />
-            <circle cx="121" cy="50" fill="url(#mascotFleeceGradient)" r="13" />
-            <circle cx="130" cy="63" fill="url(#mascotFleeceGradient)" r="12" />
-            <circle cx="75" cy="57" fill="url(#mascotFleeceGradient)" r="11" />
-            <circle cx="94" cy="55" fill="url(#mascotFleeceGradient)" r="12" />
-            <circle cx="112" cy="58" fill="url(#mascotFleeceGradient)" r="11" />
+        <g className="mascot-pixel-wool">
+          <rect fill="#FFFFFF" height="2" width="4" x="11" y="4" />
+          <rect fill="#FFFFFF" height="2" width="4" x="15" y="3" />
+          <rect fill="#F7F0DD" height="2" width="4" x="19" y="4" />
+          <rect fill="#FFFFFF" height="3" width="14" x="9" y="6" />
+          <rect fill="#F7F0DD" height="2" width="16" x="8" y="8" />
+          <rect fill="#FFFFFF" height="2" width="4" x="10" y="9" />
+          <rect fill="#FFFFFF" height="2" width="4" x="18" y="9" />
+        </g>
+
+        <g className="mascot-pixel-face">
+          <rect fill="#F8E5C8" height="2" width="12" x="10" y="10" />
+          <rect fill="#F8E5C8" height="6" width="14" x="9" y="12" />
+          <rect fill="#F8E5C8" height="2" width="12" x="10" y="18" />
+          <rect fill="#F2D8B5" height="2" width="2" x="9" y="16" />
+          <rect fill="#F2D8B5" height="2" width="2" x="21" y="16" />
+          <g className="mascot-pixel-eyes">
+            <rect fill="#111111" height="2" width="2" x="12" y="14" />
+            <rect fill="#111111" height="2" width="2" x="18" y="14" />
+            <rect fill="#FFFFFF" height="1" width="1" x="13" y="14" />
+            <rect fill="#FFFFFF" height="1" width="1" x="19" y="14" />
           </g>
-          <path d="M47 87c0-28 20-49 46-49 27 0 48 21 48 49 0 30-22 53-49 53S47 117 47 87Z" fill="url(#mascotWoolGradient)" />
-          <circle cx="57" cy="100" fill="#F4A58A" opacity="0.38" r="7" />
-          <circle cx="124" cy="100" fill="#F4A58A" opacity="0.38" r="7" />
-          <g className="mascot-vector-eyes">
-            <ellipse cx="76" cy="88" fill="#141414" rx="6" ry="7.5" />
-            <ellipse cx="114" cy="88" fill="#141414" rx="6" ry="7.5" />
-            <circle cx="78" cy="85" fill="#FFFFFF" opacity="0.8" r="1.6" />
-            <circle cx="116" cy="85" fill="#FFFFFF" opacity="0.8" r="1.6" />
-          </g>
-          <path d="M84 100c5-7 17-7 22 0-3 7-19 7-22 0Z" fill="#FFEFD0" />
-          <path d="M89 99c3-4 10-4 13 0-2 5-11 5-13 0Z" fill="#F2A38B" />
-          <path d="M86 111c6 5 16 5 22 0" fill="none" stroke="#6B3B2D" strokeLinecap="round" strokeWidth="4" />
+          <rect fill="#F3A18B" height="1" width="2" x="15" y="16" />
+          <rect fill="#6B3B2D" height="1" width="1" x="14" y="17" />
+          <rect fill="#6B3B2D" height="1" width="1" x="17" y="17" />
+          <rect fill="#F0A48E" height="1" width="2" x="10" y="17" opacity="0.65" />
+          <rect fill="#F0A48E" height="1" width="2" x="20" y="17" opacity="0.65" />
         </g>
 
-        <g className="mascot-vector-fleece">
-          <circle cx="65" cy="119" fill="url(#mascotFleeceGradient)" r="13" />
-          <circle cx="79" cy="128" fill="url(#mascotFleeceGradient)" r="14" />
-          <circle cx="94" cy="133" fill="url(#mascotFleeceGradient)" r="16" />
-          <circle cx="109" cy="128" fill="url(#mascotFleeceGradient)" r="14" />
-          <circle cx="123" cy="118" fill="url(#mascotFleeceGradient)" r="13" />
-          <circle cx="76" cy="143" fill="url(#mascotFleeceGradient)" r="12" />
-          <circle cx="109" cy="143" fill="url(#mascotFleeceGradient)" r="12" />
+        <g className="mascot-pixel-hoof-left">
+          <rect fill="#F8E5C8" height="4" width="2" x="7" y="15" />
+          <rect fill="#C48757" height="3" width="3" x="6" y="16" />
+        </g>
+        <g className="mascot-pixel-hoof-right">
+          <rect fill="#F8E5C8" height="4" width="2" x="23" y="15" />
+          <rect fill="#C48757" height="3" width="3" x="23" y="16" />
         </g>
 
-        <g className="mascot-vector-arm-right">
-          <path d="M123 99c14 5 21 16 18 26-3 8-13 9-20 2-6-7-8-17-10-28Z" fill="#FFF0C0" />
-          <circle cx="128" cy="112" fill="#9A6A3B" r="9" />
+        <g className="mascot-pixel-fleece">
+          <rect fill="#FFFFFF" height="3" width="10" x="11" y="20" />
+          <rect fill="#F7F0DD" height="3" width="12" x="10" y="23" />
+          <rect fill="#FFFFFF" height="2" width="4" x="12" y="26" />
+          <rect fill="#FFFFFF" height="2" width="4" x="18" y="26" />
+          <rect fill="#EFE0C6" height="2" width="2" x="14" y="21" />
+          <rect fill="#EFE0C6" height="2" width="2" x="18" y="24" />
+          <rect fill="#C48757" height="2" width="3" x="11" y="28" />
+          <rect fill="#C48757" height="2" width="3" x="20" y="28" />
         </g>
-
-        <path d="M69 160h15M107 160h15" stroke="#9A6A3B" strokeLinecap="round" strokeWidth="9" />
       </g>
     </svg>
   );
