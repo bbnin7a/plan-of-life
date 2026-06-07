@@ -172,6 +172,7 @@ export type Ebook = {
       title: string;
       description: string;
       attribution: string;
+      preview?: string;
     }
   >;
   chapters: EbookChapter[];

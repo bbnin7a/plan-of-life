@@ -3008,6 +3008,12 @@ function EbookReaderCard({
         {text.attribution}
       </p>
 
+      {text.preview ? (
+        <div className="mt-4 max-h-96 overflow-y-auto rounded-2xl border-4 border-border bg-white px-4 py-3 text-base font-bold leading-relaxed text-foreground shadow-inner">
+          <p className="whitespace-pre-line">{text.preview}</p>
+        </div>
+      ) : null}
+
       <a
         href={ebook.sourceUrl}
         target="_blank"
