@@ -104,32 +104,37 @@ a {
 
 .mascot-vector-halo {
   animation: mascot-vector-halo 2.4s ease-in-out infinite;
-  transform-origin: 93px 22px;
+  transform-origin: 91px 20px;
 }
 
 .mascot-vector-ear-left {
   animation: mascot-vector-ear-left 2.9s ease-in-out infinite;
-  transform-origin: 50px 82px;
+  transform-origin: 51px 80px;
 }
 
 .mascot-vector-ear-right {
   animation: mascot-vector-ear-right 3.1s ease-in-out infinite;
-  transform-origin: 132px 82px;
+  transform-origin: 130px 80px;
 }
 
 .mascot-vector-arm-left {
   animation: mascot-vector-wave 1.8s ease-in-out infinite;
-  transform-origin: 51px 110px;
+  transform-origin: 55px 116px;
 }
 
 .mascot-vector-book {
   animation: mascot-vector-book 2.4s ease-in-out infinite;
-  transform-origin: 126px 130px;
+  transform-origin: 128px 132px;
 }
 
 .mascot-vector-eyes {
   animation: mascot-vector-blink 4.2s ease-in-out infinite;
-  transform-origin: 93px 86px;
+  transform-origin: 93px 89px;
+}
+
+.mascot-vector-fleece {
+  animation: mascot-vector-fleece 2.4s ease-in-out infinite;
+  transform-origin: 95px 136px;
 }
 
 .mascot-vector-shadow {
@@ -268,6 +273,17 @@ a {
 
   45% {
     transform: rotate(2.5deg) translateY(-2px);
+  }
+}
+
+@keyframes mascot-vector-fleece {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  45% {
+    transform: scale(1.025);
   }
 }
 
