@@ -93,6 +93,17 @@ a {
   animation: mascot-shadow 2.2s ease-in-out infinite;
 }
 
+.mascot-image-frame {
+  background: radial-gradient(circle at 50% 38%, #ffffff 0%, #efffdf 58%, #d6ffb7 100%);
+}
+
+.mascot-image {
+  animation: mascot-image-float 2.4s ease-in-out infinite;
+  object-position: 50% 42%;
+  transform: scale(1.15);
+  transform-origin: 50% 78%;
+}
+
 @keyframes fire-bounce {
   0%,
   100% {
@@ -148,6 +159,21 @@ a {
 
   72% {
     transform: translateY(0.08rem) rotate(-0.5deg) scale(0.995);
+  }
+}
+
+@keyframes mascot-image-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg) scale(1.15);
+  }
+
+  45% {
+    transform: translateY(-0.18rem) rotate(1deg) scale(1.18);
+  }
+
+  72% {
+    transform: translateY(0.04rem) rotate(-0.4deg) scale(1.14);
   }
 }
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = "acts-of-piety-v0.2.4";
+const CACHE_NAME = "acts-of-piety-v0.2.5";
 const APP_SHELL = ["/", "/manifest.webmanifest", "/icons/icon-192.svg", "/icons/icon-512.svg"];
 
 async function cacheAppShell() {

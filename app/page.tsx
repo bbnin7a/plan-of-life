@@ -1,7 +1,6 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import Lottie from "lottie-react";
 import Image from "next/image";
 import {
   ArrowLeft,
@@ -44,7 +43,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import mascotAnimation from "@/lib/mascot-lottie.json";
 import { cn } from "@/lib/utils";
 import packageInfo from "@/package.json";
 import {
@@ -1463,7 +1461,7 @@ function SplashScreen({ t }: { t: Translator }) {
         className="text-center"
       >
         <div className="mascot-bob relative mx-auto mb-6 grid size-40 place-items-center rounded-[2rem] border-8 border-white bg-primary-light shadow-playful">
-          <MascotLottie title={t("appTitle")} className="size-36" />
+          <MascotAnimation title={t("appTitle")} className="size-36" />
           <span className="mascot-glow absolute inset-x-8 bottom-3 h-3 rounded-full bg-primary/20 blur-sm" />
         </div>
         <h1 className="text-4xl font-black tracking-normal">{t("appTitle")}</h1>
@@ -1474,14 +1472,21 @@ function SplashScreen({ t }: { t: Translator }) {
   );
 }
 
-function MascotLottie({ className, title }: { className?: string; title: string }) {
+function MascotAnimation({ className, title }: { className?: string; title: string }) {
   return (
     <div
       aria-label={title}
-      className={cn("pointer-events-none relative z-10", className)}
+      className={cn("mascot-image-frame pointer-events-none relative z-10 overflow-hidden rounded-[1.35rem]", className)}
       role="img"
     >
-      <Lottie animationData={mascotAnimation} autoplay loop rendererSettings={{ preserveAspectRatio: "xMidYMid meet" }} />
+      <Image
+        alt=""
+        className="mascot-image h-full w-full object-cover"
+        fill
+        priority
+        sizes="144px"
+        src="/mascot-plan-of-life.png"
+      />
     </div>
   );
 }
@@ -4281,7 +4286,7 @@ function ProgressScreen({
       <Card className="overflow-hidden border-4 border-primary-light p-4">
         <div className="flex items-center gap-4">
           <div className="relative grid size-24 shrink-0 place-items-center rounded-[1.5rem] bg-primary-light">
-            <MascotLottie title={t("appTitle")} className="size-24" />
+            <MascotAnimation title={t("appTitle")} className="size-24" />
             <span className="mascot-glow absolute inset-x-5 bottom-3 h-2 rounded-full bg-primary/20 blur-sm" />
           </div>
           <div className="min-w-0">
